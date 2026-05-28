@@ -4,6 +4,8 @@ import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import com.breakinblocks.neosync.common.block.ShellStorageBlock;
 import com.breakinblocks.neosync.client.gui.ShellSelectorGUI;
 import com.breakinblocks.neosync.common.config.SyncConfig;
+import com.breakinblocks.neosync.compat.sable.SableCompat;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
@@ -99,20 +101,41 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
             return;
         }
 
+        Object sublevel = SableCompat.getContainingSublevel(this);
+        Vec3 effectivePos = sublevel != null ? SableCompat.worldToLocal(sublevel, entity.position()) : entity.position();
+
         if (this.entityState == EntityState.NONE) {
-            boolean isInside = BlockPosUtil.isEntityInside(entity, this.worldPosition);
+            boolean isInside = BlockPosUtil.isEntityInside(effectivePos, this.worldPosition);
             PlayerSyncEvents.ShellSelectionFailureReason failureReason = !isInside && client.player == entity ? PlayerSyncEvents.ALLOW_SHELL_SELECTION.invoker().allowShellSelection(player, this) : null;
             this.entityState = isInside || failureReason != null ? EntityState.CHILLING : EntityState.ENTERING;
             if (failureReason != null) {
                 player.displayClientMessage(failureReason.toText(), true);
             }
         } else if (this.entityState != EntityState.CHILLING && client.screen == null) {
-            BlockPosUtil.moveEntity(entity, this.worldPosition, state.getValue(ShellStorageBlock.FACING), this.entityState == EntityState.ENTERING);
+            moveTowardBlock(entity, sublevel, state.getValue(ShellStorageBlock.FACING), this.entityState == EntityState.ENTERING);
         }
 
-        if (this.entityState == EntityState.ENTERING && client.player == entity && client.screen == null && BlockPosUtil.isEntityInside(entity, this.worldPosition)) {
+        if (this.entityState == EntityState.ENTERING && client.player == entity && client.screen == null && BlockPosUtil.isEntityInside(effectivePos, this.worldPosition)) {
             client.setScreen(new ShellSelectorGUI(() -> this.entityState = EntityState.LEAVING, () -> this.entityState = EntityState.CHILLING));
         }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private void moveTowardBlock(Entity entity, Object sublevel, net.minecraft.core.Direction facing, boolean inside) {
+        if (sublevel == null) {
+            BlockPosUtil.moveEntity(entity, this.worldPosition, facing, inside);
+            return;
+        }
+        net.minecraft.core.Direction targetDirection = facing.getOpposite();
+        double tx = this.worldPosition.getX() + 0.5;
+        double tz = this.worldPosition.getZ() + 0.5;
+        if (!inside) {
+            tx += targetDirection.getStepX();
+            tz += targetDirection.getStepZ();
+        }
+        Vec3 targetWorld = SableCompat.localToWorld(sublevel, new Vec3(tx, this.worldPosition.getY(), tz));
+        float yaw = targetDirection.toYRot() + SableCompat.getSublevelYaw(sublevel);
+        BlockPosUtil.moveEntityToward(entity, targetWorld, yaw);
     }
 
     @Override

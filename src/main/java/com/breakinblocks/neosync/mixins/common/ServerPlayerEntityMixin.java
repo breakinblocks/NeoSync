@@ -116,7 +116,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         if (isDead && !this.undead) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_CURRENT_LOCATION);
         }
-        ShellStateContainer currentShellContainer = isDead ? null : ShellStateContainer.find(currentWorld, currentPos);
+        ShellStateContainer currentShellContainer = isDead ? null : ShellStateContainer.findNear(player);
         if (!isDead && (currentShellContainer == null || currentShellContainer.getShellState() != null)) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_CURRENT_LOCATION);
         }
@@ -134,7 +134,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         BlockPos targetPos = state.getPos();
         LevelChunk targetChunk = targetWorld.getChunk(targetPos.getX() >> 4, targetPos.getZ() >> 4);
-        ShellStateContainer targetShellContainer = targetChunk == null ? null : ShellStateContainer.find(targetWorld, targetPos);
+        ShellStateContainer targetShellContainer = targetChunk == null ? null : ShellStateContainer.findAt(targetWorld, targetPos, player, state.getSubLevelUuid());
         if (targetShellContainer == null) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
         }

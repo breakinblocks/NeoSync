@@ -21,6 +21,8 @@ import net.neoforged.api.distmarker.OnlyIn;
 import com.breakinblocks.neosync.common.block.entity.ShellEntity;
 import com.breakinblocks.neosync.common.item.SimpleInventory;
 import com.breakinblocks.neosync.common.utils.WorldUtil;
+import com.breakinblocks.neosync.compat.sable.SableCompat;
+import org.jetbrains.annotations.Nullable;
 import com.breakinblocks.neosync.common.utils.math.Radians;
 import com.breakinblocks.neosync.common.utils.nbt.NbtSerializer;
 import com.breakinblocks.neosync.common.utils.nbt.NbtSerializerFactory;
@@ -87,6 +89,7 @@ public class ShellState {
 
     private ResourceLocation world;
     private BlockPos pos;
+    private UUID subLevelUuid;
 
     private final NbtSerializer<ShellState> serializer;
 
@@ -180,6 +183,11 @@ public class ShellState {
 
     public void setPos(BlockPos pos) {
         this.pos = pos;
+    }
+
+    @Nullable
+    public UUID getSubLevelUuid() {
+        return this.subLevelUuid;
     }
 
     private ShellState() {
@@ -282,6 +290,7 @@ public class ShellState {
 
         shell.world = WorldUtil.getId(player.level());
         shell.pos = pos;
+        shell.subLevelUuid = SableCompat.getSublevelUuid(SableCompat.getTrackingSublevel(player));
 
         return shell;
     }
@@ -395,6 +404,7 @@ public class ShellState {
 
                 .add(ResourceLocation.class, "world", x -> x.world, (x, world) -> x.world = world)
                 .add(BlockPos.class, "pos", x -> x.pos, (x, pos) -> x.pos = pos)
+                .add(UUID.class, "subLevelUuid", x -> x.subLevelUuid, (x, id) -> x.subLevelUuid = id)
                 .build();
     }
 }

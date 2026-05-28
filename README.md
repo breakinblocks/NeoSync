@@ -32,7 +32,7 @@ NeoSync provides *shells*; clones of the player, each with their own inventory, 
 
 - Right-click a shell storage with **dye** to color-code it.
 - Syncing works cross-dimensional (custom dimensions supported).
-- If you die in a shell, you auto-sync back to your original body, or to a random remaining shell if the original is gone. Shell deaths **don't** count towards your death counter.
+- If you die in a shell, you auto-sync back to your original body, or to a random remaining shell if the original is gone. Shell deaths **don't** count towards your death counter. The dead shell's inventory drops at its location — grave mods like Simple Tombs will capture it (see [Mod integration](#mod-integration) for caveats).
 - Hoppers connected to a shell storage can equip or unequip armor/tools on the stored shell.
 - Shell storage needs continuous power to keep its shell alive (configurable); accepts redstone and/or FE.
 - Comparator output from a shell container reports either *build progress* or *inventory fullness*. Right-click the container with a **wrench** (stick by default) to toggle.
@@ -61,6 +61,30 @@ Config file: `config/neosync-common.toml`. Key options:
 - **[Jade](https://www.curseforge.com/minecraft/mc-mods/jade)** — crosshair tooltip for shell constructor / storage / treadmill showing owner, build progress, color, powered state, and energy level.
 
 Both are optional; NeoSync runs fine without them.
+
+### Sable / Create Aeronautics
+
+NeoSync detects when a shell storage is placed on a [Sable](https://www.curseforge.com/minecraft/mc-mods/sable) airship sublevel and converts between world and sublevel-local coordinate frames so the radial menu and sync flow work correctly while the airship is moving or rotated.
+
+- **Shell storage** — fully supported. Walking into a storage on an airship triggers the radial menu, the entity-centering animation runs in the airship's frame (so it doesn't yank you off the deck), and server-side sync validation queries the sublevel's plot instead of the parent world. Coordinate transforms handle both translation and rotation via Sable's `Pose3dc` API.
+- **Shell constructor** — right-clicking to construct a shell works on airships through Sable's standard interaction hooks. The "doors open as you approach" cosmetic animation may not trigger on sublevels in this release.
+- **Treadmill** — runner detection, positioning, and treadmill-drift motion are all transformed into the sublevel's frame. Animals (or players) on a treadmill mounted on a moving/rotated airship are detected, locked to the treadmill pivot in world space, and pushed along the airship's local forward direction so they run "in place" relative to the airship. Energy generation, transfer to neighboring blocks in the plot, and overheat timing are unchanged.
+- **Syncing into shells stored on sublevels** — fully supported, including cross-airship sync. Each shell records the UUID of the sublevel it was stored on (if any). On sync, the target lookup resolves that sublevel by UUID and queries its plot directly; falls back to the player's tracking sublevel, then the parent world. Shells saved before 1.2.0 don't have the UUID field and use the fallback chain.
+
+Sable is an optional dependency — NeoSync runs normally without it, and there is no overhead when it is absent.
+
+### Grave / death-handling mods (Simple Tombs, etc.)
+
+NeoSync coexists with grave mods, but only the parts that hook `LivingDropsEvent` work in the cross-shell death path:
+
+- **Original-body death** uses the vanilla death flow — `LivingDeathEvent`, `LivingDropsEvent`, and `PlayerRespawnEvent` all fire normally, so grave mods behave exactly as they would without NeoSync.
+- **Shell death with another shell available** is intercepted by NeoSync: vanilla `die()` is cancelled and the player auto-syncs into the next shell. `LivingDropsEvent` still fires (so the grave is placed at the dead shell's position with its full inventory), but `LivingDeathEvent` and `PlayerRespawnEvent` do **not** fire.
+
+For Simple Tombs specifically:
+
+- Graves are placed correctly at the dead shell's location and hold its full inventory — walk to the grave to retrieve.
+- The `KEEPPARTS` option (hotbar/armor soulbinding) does **not** carry across a cross-shell auto-sync; those items go into the grave with everything else. If you want consistent behavior across both death paths, set `KEEPPARTS=NONE` in the Simple Tombs config and rely on the grave for everything.
+- The grave key (if `KEYGIVEN=true`) lands in the grave alongside the rest of the loot.
 
 ## Installation
 

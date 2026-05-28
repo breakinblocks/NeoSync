@@ -17,11 +17,14 @@ import java.util.Objects;
 @OnlyIn(Dist.CLIENT)
 @EventBusSubscriber(modid = NeoSync.MOD_ID, value = Dist.CLIENT)
 public class PersistentCameraEntity extends LocalPlayer {
+    private static final long GOAL_IDLE_TIMEOUT_MS = 10_000;
+
     private long lastMovementTime;
     private float initialYaw;
     private float initialPitch;
     private double initialDistance;
     private PersistentCameraEntityGoal goal;
+    private long goalIdleSince = 0;
 
     private PersistentCameraEntity(Minecraft client, ClientLevel world, LocalPlayer player) {
         super(client, world, player.connection, player.getStats(), player.getRecipeBook(), false, false);
@@ -87,6 +90,7 @@ public class PersistentCameraEntity extends LocalPlayer {
         if (this.position().equals(goal.pos)) {
             this.updateLastTickValues();
             this.setGoal(null);
+            this.goalIdleSince = currentTime;
             goal.finish(this);
         }
     }
@@ -108,6 +112,9 @@ public class PersistentCameraEntity extends LocalPlayer {
 
     public void setGoal(PersistentCameraEntityGoal goal) {
         this.goal = goal;
+        if (goal != null) {
+            this.goalIdleSince = 0;
+        }
         this.initialYaw = this.getYRot();
         this.initialPitch = this.getXRot();
         this.lastMovementTime = -1;
@@ -152,17 +159,22 @@ public class PersistentCameraEntity extends LocalPlayer {
     public static void unset(Minecraft client) {
         if (client.getCameraEntity() instanceof PersistentCameraEntity camera) {
             camera.setGoal(null);
-            client.setCameraEntity(client.player);
+            client.setCameraEntity(null);
         }
     }
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Pre event) {
         Minecraft client = Minecraft.getInstance();
-        if (!(client.getCameraEntity() instanceof PersistentCameraEntity camera) || camera.goal == null) {
+        if (!(client.getCameraEntity() instanceof PersistentCameraEntity camera)) {
             return;
         }
-
+        if (camera.goal == null) {
+            if (camera.goalIdleSince > 0 && System.currentTimeMillis() - camera.goalIdleSince > GOAL_IDLE_TIMEOUT_MS) {
+                unset(client);
+            }
+            return;
+        }
         camera.aiStep();
     }
 

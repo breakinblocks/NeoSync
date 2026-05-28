@@ -43,3 +43,10 @@ type="optional"
 versionRange="[15,)"
 ordering="AFTER"
 side="CLIENT"
+
+[[dependencies.neosync]]
+modId="sable"
+type="optional"
+versionRange="[1.2,)"
+ordering="AFTER"
+side="BOTH"
