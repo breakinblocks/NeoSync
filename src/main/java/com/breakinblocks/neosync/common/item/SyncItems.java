@@ -1,5 +1,7 @@
 package com.breakinblocks.neosync.common.item;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -10,14 +12,22 @@ public class SyncItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(NeoSync.MOD_ID);
 
     public static final DeferredItem<Item> SYNC_CORE = ITEMS.register("sync_core",
-            () -> new Item(new Item.Properties().stacksTo(16)));
+            name -> new Item(new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, name))
+                    .stacksTo(16)));
 
     public static final DeferredItem<ShellConstructorItem> SHELL_CONSTRUCTOR = ITEMS.register("shell_constructor",
-            () -> new ShellConstructorItem(SyncBlocks.SHELL_CONSTRUCTOR.get(), new Item.Properties().stacksTo(1)));
+            name -> new ShellConstructorItem(SyncBlocks.SHELL_CONSTRUCTOR.get(), new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, name))
+                    .stacksTo(1)));
 
     public static final DeferredItem<ShellStorageItem> SHELL_STORAGE = ITEMS.register("shell_storage",
-            () -> new ShellStorageItem(SyncBlocks.SHELL_STORAGE.get(), new Item.Properties().stacksTo(1)));
+            name -> new ShellStorageItem(SyncBlocks.SHELL_STORAGE.get(), new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, name))
+                    .stacksTo(1)));
 
     public static final DeferredItem<TreadmillItem> TREADMILL = ITEMS.register("treadmill",
-            () -> new TreadmillItem(SyncBlocks.TREADMILL.get(), new Item.Properties().stacksTo(1)));
+            name -> new TreadmillItem(SyncBlocks.TREADMILL.get(), new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, name))
+                    .stacksTo(1)));
 }

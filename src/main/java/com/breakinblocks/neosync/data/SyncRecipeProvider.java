@@ -1,24 +1,30 @@
 package com.breakinblocks.neosync.data;
 
+import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import com.breakinblocks.neosync.common.item.SyncItems;
 
 import java.util.concurrent.CompletableFuture;
 
 public final class SyncRecipeProvider extends RecipeProvider {
-    public SyncRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
-        super(output, registries);
+    private final HolderGetter<Item> items;
+
+    protected SyncRecipeProvider(HolderLookup.Provider registries, RecipeOutput output) {
+        super(registries, output);
+        this.items = registries.lookupOrThrow(Registries.ITEM);
     }
 
     @Override
-    protected void buildRecipes(RecipeOutput output) {
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SyncItems.SYNC_CORE.get())
+    protected void buildRecipes() {
+        ShapedRecipeBuilder.shaped(items, RecipeCategory.MISC, SyncItems.SYNC_CORE.get())
                 .pattern("DOD")
                 .pattern("Q#Q")
                 .pattern("ERE")
@@ -29,9 +35,9 @@ public final class SyncRecipeProvider extends RecipeProvider {
                 .define('E', Items.EMERALD)
                 .define('R', Items.REDSTONE_BLOCK)
                 .unlockedBy("has_ender_pearl", has(Items.ENDER_PEARL))
-                .save(output);
+                .save(this.output);
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, SyncItems.SHELL_CONSTRUCTOR.get())
+        ShapedRecipeBuilder.shaped(items, RecipeCategory.REDSTONE, SyncItems.SHELL_CONSTRUCTOR.get())
                 .pattern("CSC")
                 .pattern("GGG")
                 .pattern("CRC")
@@ -40,9 +46,9 @@ public final class SyncRecipeProvider extends RecipeProvider {
                 .define('G', Items.GLASS_PANE)
                 .define('R', Items.REDSTONE)
                 .unlockedBy("has_sync_core", has(SyncItems.SYNC_CORE.get()))
-                .save(output);
+                .save(this.output);
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, SyncItems.SHELL_STORAGE.get())
+        ShapedRecipeBuilder.shaped(items, RecipeCategory.REDSTONE, SyncItems.SHELL_STORAGE.get())
                 .pattern("CSC")
                 .pattern("GIG")
                 .pattern("CPC")
@@ -52,9 +58,9 @@ public final class SyncRecipeProvider extends RecipeProvider {
                 .define('I', Items.IRON_BLOCK)
                 .define('P', Items.HEAVY_WEIGHTED_PRESSURE_PLATE)
                 .unlockedBy("has_sync_core", has(SyncItems.SYNC_CORE.get()))
-                .save(output);
+                .save(this.output);
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, SyncItems.TREADMILL.get())
+        ShapedRecipeBuilder.shaped(items, RecipeCategory.REDSTONE, SyncItems.TREADMILL.get())
                 .pattern("  D")
                 .pattern("CCI")
                 .pattern("GGR")
@@ -64,6 +70,22 @@ public final class SyncRecipeProvider extends RecipeProvider {
                 .define('I', Items.IRON_BARS)
                 .define('R', Items.REDSTONE)
                 .unlockedBy("has_daylight_detector", has(Items.DAYLIGHT_DETECTOR))
-                .save(output);
+                .save(this.output);
+    }
+
+    public static final class Runner extends RecipeProvider.Runner {
+        public Runner(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
+            super(output, registries);
+        }
+
+        @Override
+        protected RecipeProvider createRecipeProvider(HolderLookup.Provider registries, RecipeOutput output) {
+            return new SyncRecipeProvider(registries, output);
+        }
+
+        @Override
+        public String getName() {
+            return "NeoSync Recipes";
+        }
     }
 }

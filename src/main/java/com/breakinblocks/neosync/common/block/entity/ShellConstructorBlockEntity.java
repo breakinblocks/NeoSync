@@ -1,6 +1,8 @@
 package com.breakinblocks.neosync.common.block.entity;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.util.RandomSource;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -8,16 +10,18 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.transfer.energy.EnergyHandler;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.common.block.AbstractShellContainerBlock;
 import com.breakinblocks.neosync.common.block.ShellConstructorBlock;
 import com.breakinblocks.neosync.common.config.SyncConfig;
 import com.breakinblocks.neosync.common.entity.damage.FingerstickDamageSource;
 import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import org.jetbrains.annotations.Nullable;
 
-public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEntity implements IEnergyStorage {
+public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEntity implements EnergyHandler {
     public ShellConstructorBlockEntity(BlockPos pos, BlockState state) {
         super(SyncBlockEntities.SHELL_CONSTRUCTOR.get(), pos, state);
     }
@@ -30,12 +34,27 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
         }
     }
 
+    @Override
+    public void onClientTick(Level world, BlockPos pos, BlockState state) {
+        super.onClientTick(world, pos, state);
+        if (!AbstractShellContainerBlock.isBottom(state)) return;
+        ShellState s = this.shell;
+        if (s == null || s.getProgress() >= ShellState.PROGRESS_DONE) return;
+
+        RandomSource rand = world.getRandom();
+        double px = pos.getX() + 0.5 + (rand.nextDouble() - 0.5) * 0.8;
+        double pz = pos.getZ() + 0.5 + (rand.nextDouble() - 0.5) * 0.8;
+        double py = pos.getY() + s.getProgress() * 1.8 + rand.nextDouble() * 0.2;
+        world.addParticle(ParticleTypes.ELECTRIC_SPARK, px, py, pz,
+                (rand.nextDouble() - 0.5) * 0.02, rand.nextDouble() * 0.04, (rand.nextDouble() - 0.5) * 0.02);
+    }
+
     public InteractionResult onUse(Level world, BlockPos pos, Player player, InteractionHand hand) {
         PlayerSyncEvents.ShellConstructionFailureReason failureReason = this.beginShellConstruction(player);
         if (failureReason == null) {
             return InteractionResult.SUCCESS;
         } else {
-            player.displayClientMessage(failureReason.toText(), true);
+            player.sendSystemMessage(failureReason.toText());
             return InteractionResult.CONSUME;
         }
     }
@@ -53,7 +72,7 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
         if (player instanceof ServerPlayer serverPlayer) {
             SyncConfig config = SyncConfig.getInstance();
 
-            float damage = serverPlayer.server.isHardcore() ? config.hardcoreFingerstickDamage() : config.fingerstickDamage();
+            float damage = serverPlayer.level().getServer().isHardcore() ? config.hardcoreFingerstickDamage() : config.fingerstickDamage();
 
             boolean isCreative = !serverPlayer.gameMode.isSurvival();
             boolean isLowOnHealth = (player.getHealth() + player.getAbsorptionAmount()) <= damage;
@@ -74,55 +93,36 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
     }
 
     @Override
-    public int receiveEnergy(int maxReceive, boolean simulate) {
+    public long getAmountAsLong() {
         ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
-        if (bottom == null || bottom.shell == null || bottom.shell.getProgress() >= ShellState.PROGRESS_DONE) {
-            return 0;
-        }
+        if (bottom == null || bottom.shell == null) return 0L;
+        long cap = SyncConfig.getInstance().shellConstructorCapacity();
+        return (long) (bottom.shell.getProgress() * cap);
+    }
 
+    @Override
+    public long getCapacityAsLong() {
+        ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
+        return bottom != null && bottom.shell != null ? SyncConfig.getInstance().shellConstructorCapacity() : 0L;
+    }
+
+    @Override
+    public int insert(int amount, TransactionContext transaction) {
+        ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
+        if (bottom == null || bottom.shell == null || bottom.shell.getProgress() >= ShellState.PROGRESS_DONE) return 0;
         int capacity = (int) SyncConfig.getInstance().shellConstructorCapacity();
         int missingFE = (int) Math.ceil((ShellState.PROGRESS_DONE - bottom.shell.getProgress()) * capacity);
-        int accepted = Math.min(maxReceive, missingFE);
-
-        if (accepted > 0 && !simulate) {
+        int accepted = Math.min(amount, missingFE);
+        if (accepted > 0) {
             bottom.shell.setProgress(bottom.shell.getProgress() + (float) accepted / capacity);
             bottom.setChanged();
             bottom.sync();
         }
-
         return accepted;
     }
 
     @Override
-    public int extractEnergy(int maxExtract, boolean simulate) {
+    public int extract(int amount, TransactionContext transaction) {
         return 0;
-    }
-
-    @Override
-    public int getEnergyStored() {
-        ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
-        if (bottom == null || bottom.shell == null) {
-            return 0;
-        }
-        int cap = (int) SyncConfig.getInstance().shellConstructorCapacity();
-        return (int) (bottom.shell.getProgress() * cap);
-    }
-
-    @Override
-    public int getMaxEnergyStored() {
-        ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
-        return bottom != null && bottom.shell != null
-                ? (int) SyncConfig.getInstance().shellConstructorCapacity()
-                : 0;
-    }
-
-    @Override
-    public boolean canExtract() {
-        return false;
-    }
-
-    @Override
-    public boolean canReceive() {
-        return true;
     }
 }

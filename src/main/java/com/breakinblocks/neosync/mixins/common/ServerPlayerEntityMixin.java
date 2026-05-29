@@ -7,33 +7,24 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.*;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.scores.Team;
-import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
-import com.breakinblocks.neosync.api.networking.PlayerIsAlivePacket;
-import com.breakinblocks.neosync.api.networking.ShellStateUpdatePacket;
-import com.breakinblocks.neosync.api.networking.ShellUpdatePacket;
-import com.breakinblocks.neosync.api.shell.*;
-import com.breakinblocks.neosync.common.entity.KillableEntity;
-import com.breakinblocks.neosync.common.utils.BlockPosUtil;
-import com.breakinblocks.neosync.common.utils.WorldUtil;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -42,7 +33,25 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.*;
+import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
+import com.breakinblocks.neosync.api.networking.PlayerIsAlivePacket;
+import com.breakinblocks.neosync.api.networking.ShellStateUpdatePacket;
+import com.breakinblocks.neosync.api.networking.ShellUpdatePacket;
+import com.breakinblocks.neosync.api.shell.Shell;
+import com.breakinblocks.neosync.api.shell.ServerShell;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.api.shell.ShellStateComponent;
+import com.breakinblocks.neosync.api.shell.ShellStateContainer;
+import com.breakinblocks.neosync.api.shell.ShellStateManager;
+import com.breakinblocks.neosync.api.shell.ShellStateUpdateType;
+import com.breakinblocks.neosync.common.entity.KillableEntity;
+import com.breakinblocks.neosync.common.utils.WorldUtil;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -65,6 +74,13 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     @Shadow
     public ServerGamePacketListenerImpl connection;
 
+    @Shadow
+    protected abstract void removeEntitiesOnShoulder();
+
+    private ServerPlayerEntityMixin(Level level, GameProfile profile) {
+        super(level, profile);
+    }
+
     @Unique
     private boolean isArtificial = false;
 
@@ -80,13 +96,12 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     @Unique
     private Map<UUID, Tuple<ShellStateUpdateType, ShellState>> shellStateChanges = new ConcurrentHashMap<>();
 
-    private ServerPlayerEntityMixin(Level world, BlockPos pos, float yaw, GameProfile profile) {
-        super(world, pos, yaw, profile);
-    }
+    @Shadow
+    protected abstract void tellNeutralMobsThatIDied();
 
     @Override
     public UUID getShellOwnerUuid() {
-        return this.getGameProfile().getId();
+        return ((ServerPlayer) (Object) this).getGameProfile().id();
     }
 
     @Override
@@ -105,18 +120,18 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     @Override
     public Either<ShellState, PlayerSyncEvents.SyncFailureReason> sync(ShellState state) {
         ServerPlayer player = (ServerPlayer)(Object)this;
-        BlockPos currentPos = this.blockPosition();
+        BlockPos currentPos = player.blockPosition();
         Level currentWorld = player.level();
 
         if (!this.canBeApplied(state) || state.getProgress() < ShellState.PROGRESS_DONE) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_SHELL);
         }
 
-        boolean isDead = this.isDeadOrDying();
+        boolean isDead = player.isDeadOrDying();
         if (isDead && !this.undead) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_CURRENT_LOCATION);
         }
-        ShellStateContainer currentShellContainer = isDead ? null : ShellStateContainer.findNear(player);
+        ShellStateContainer currentShellContainer = isDead ? null : ShellStateContainer.find(currentWorld, currentPos);
         if (!isDead && (currentShellContainer == null || currentShellContainer.getShellState() != null)) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_CURRENT_LOCATION);
         }
@@ -126,7 +141,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             return Either.right(selectionFailureReason::toText);
         }
 
-        ResourceLocation targetWorldId = state.getWorld();
+        Identifier targetWorldId = state.getWorld();
         ServerLevel targetWorld = WorldUtil.findWorld(this.server.getAllLevels(), targetWorldId).orElse(null);
         if (targetWorld == null) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
@@ -134,7 +149,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         BlockPos targetPos = state.getPos();
         LevelChunk targetChunk = targetWorld.getChunk(targetPos.getX() >> 4, targetPos.getZ() >> 4);
-        ShellStateContainer targetShellContainer = targetChunk == null ? null : ShellStateContainer.findAt(targetWorld, targetPos, player, state.getSubLevelUuid());
+        ShellStateContainer targetShellContainer = targetChunk == null ? null : ShellStateContainer.find(targetWorld, targetPos);
         if (targetShellContainer == null) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
         }
@@ -169,7 +184,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         Objects.requireNonNull(state);
 
         ServerPlayer serverPlayer = (ServerPlayer)(Object)this;
-        MinecraftServer server = Objects.requireNonNull(this.getServer());
+        MinecraftServer server = Objects.requireNonNull(serverPlayer.level().getServer());
         ServerLevel targetWorld = WorldUtil.findWorld(server.getAllLevels(), state.getWorld()).orElse(null);
         if (targetWorld == null) {
             return;
@@ -183,25 +198,23 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         this.removeAllEffects();
 
         new PlayerIsAlivePacket(serverPlayer).sendToAll(server);
-        this.teleport(targetWorld, state.getPos());
         this.isArtificial = state.isArtificial();
 
-        Inventory inventory = this.getInventory();
-        int selectedSlot = inventory.selected;
+        Inventory inventory = serverPlayer.getInventory();
+        int selectedSlot = inventory.getSelectedSlot();
         state.getInventory().copyTo(inventory);
-        inventory.selected = selectedSlot;
+        inventory.setSelectedSlot(selectedSlot);
 
         ShellStateComponent playerComponent = ShellStateComponent.of(serverPlayer);
         playerComponent.clone(state.getComponent());
 
         serverPlayer.setGameMode(GameType.byId(state.getGameMode()));
-        this.setHealth(state.getHealth());
-        this.experienceLevel = state.getExperienceLevel();
-        this.experienceProgress = state.getExperienceProgress();
-        this.totalExperience = state.getTotalExperience();
-        this.getFoodData().setFoodLevel(state.getFoodLevel());
-        this.getFoodData().setSaturation(state.getSaturationLevel());
-        this.getFoodData().setExhaustion(state.getExhaustion());
+        serverPlayer.setHealth(state.getHealth());
+        serverPlayer.experienceLevel = state.getExperienceLevel();
+        serverPlayer.experienceProgress = state.getExperienceProgress();
+        serverPlayer.totalExperience = state.getTotalExperience();
+        serverPlayer.getFoodData().setFoodLevel(state.getFoodLevel());
+        serverPlayer.getFoodData().setSaturation(state.getSaturationLevel());
 
         this.undead = false;
         this.dead = false;
@@ -234,17 +247,13 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         if (!this.canBeApplied(state)) {
             return;
         }
-
         this.shellsById.put(state.getUuid(), state);
         this.shellStateChanges.put(state.getUuid(), new Tuple<>(ShellStateUpdateType.ADD, state));
     }
 
     @Override
     public void remove(ShellState state) {
-        if (state == null) {
-            return;
-        }
-
+        if (state == null) return;
         if (this.shellsById.remove(state.getUuid()) != null) {
             this.shellStateChanges.put(state.getUuid(), new Tuple<>(ShellStateUpdateType.REMOVE, state));
         }
@@ -252,10 +261,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
     @Override
     public void update(ShellState state) {
-        if (state == null) {
-            return;
-        }
-
+        if (state == null) return;
         boolean updated;
         if (this.canBeApplied(state)) {
             updated = this.shellsById.put(state.getUuid(), state) != null;
@@ -272,7 +278,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         if (this.shellDirty) {
             this.shellDirty = false;
             this.shellStateChanges.clear();
-            new ShellUpdatePacket(WorldUtil.getId(this.level()), this.isArtificial, this.shellsById.values()).send(player);
+            new ShellUpdatePacket(WorldUtil.getId(player.level()), this.isArtificial, this.shellsById.values()).send(player);
         }
 
         for (Tuple<ShellStateUpdateType, ShellState> upd : this.shellStateChanges.values()) {
@@ -287,24 +293,21 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             return;
         }
 
-        ShellState respawnShell = this.shellsById.values().stream().filter(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE).findAny().orElse(null);
+        ServerPlayer player = (ServerPlayer)(Object)this;
+        ShellState respawnShell = this.shellsById.values().stream()
+                .filter(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE)
+                .findAny().orElse(null);
         if (respawnShell == null) {
             return;
         }
 
-        if (this.level().getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES)) {
-            this.sendDeathMessageInChat();
-        } else {
-            this.sendEmptyDeathMessageInChat();
-        }
+        sendDeathMessageInChat(player, source);
 
         this.removeEntitiesOnShoulder();
-        if (this.level().getGameRules().getBoolean(GameRules.RULE_FORGIVE_DEAD_PLAYERS)) {
-            this.tellNeutralMobsThatIDied();
-        }
+        this.tellNeutralMobsThatIDied();
 
-        if (!this.isSpectator() && this.level() instanceof ServerLevel serverLevel) {
-            this.dropAllDeathLoot(serverLevel, source);
+        if (!this.isSpectator()) {
+            this.dropAllDeathLoot(player.level(), source);
         }
 
         this.undead = true;
@@ -313,83 +316,61 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
     @Override
     public boolean updateKillableEntityPostDeath() {
-        this.deathTime = Mth.clamp(++this.deathTime, 0, 20);
+        ServerPlayer player = (ServerPlayer)(Object)this;
+        player.deathTime = Mth.clamp(++player.deathTime, 0, 20);
         if (this.isArtificial && this.shellsById.values().stream().anyMatch(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE)) {
             return true;
         }
 
         if (this.undead) {
-            this.die(level().damageSources().magic());
+            player.die(player.level().damageSources().magic());
             this.undead = false;
         }
 
-        if (this.deathTime == 20) {
-            this.level().broadcastEntityEvent(this, (byte)60);
-            this.remove(RemovalReason.KILLED);
+        if (player.deathTime == 20) {
+            player.level().broadcastEntityEvent(player, (byte)60);
+            player.remove(Entity.RemovalReason.KILLED);
         }
         return true;
     }
 
     @Unique
-    private void sendDeathMessageInChat() {
-        Component text = this.getCombatTracker().getDeathMessage();
-        this.connection.send(new ClientboundPlayerCombatKillPacket(this.getId(), text));
-        Team team = this.getTeam();
+    private static void sendDeathMessageInChat(ServerPlayer player, DamageSource source) {
+        Component text = player.getCombatTracker().getDeathMessage();
+        player.connection.send(new ClientboundPlayerCombatKillPacket(player.getId(), text));
+        Team team = player.getTeam();
         if (team != null && team.getDeathMessageVisibility() != Team.Visibility.ALWAYS) {
             if (team.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OTHER_TEAMS) {
-                this.server.getPlayerList().broadcastSystemToTeam(this, text);
+                player.level().getServer().getPlayerList().broadcastSystemToTeam(player, text);
             } else if (team.getDeathMessageVisibility() == Team.Visibility.HIDE_FOR_OWN_TEAM) {
-                this.server.getPlayerList().broadcastSystemToAllExceptTeam(this, text);
+                player.level().getServer().getPlayerList().broadcastSystemToAllExceptTeam(player, text);
             }
         } else {
-            this.server.getPlayerList().broadcastSystemMessage(text, false);
+            player.level().getServer().getPlayerList().broadcastSystemMessage(text, false);
         }
     }
 
-    @Unique
-    private void sendEmptyDeathMessageInChat() {
-        this.connection.send(new ClientboundPlayerCombatKillPacket(this.getId(), Component.empty()));
-    }
-
-    @Shadow
-    protected abstract void tellNeutralMobsThatIDied();
-
-    @Shadow
-    protected abstract void triggerDimensionChangeTriggers(ServerLevel serverLevel);
-
-    @Shadow public abstract ServerLevel serverLevel();
-
-    @Shadow public abstract boolean isChangingDimension();
-
-    @Shadow private boolean isChangingDimension;
-
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
-    private void writeCustomDataToNbt(CompoundTag nbt, CallbackInfo ci) {
-        ListTag shellList = new ListTag();
-        this.shellsById
-                .values()
-                .stream()
-                .map(x -> x.writeNbt(new CompoundTag()))
-                .forEach(shellList::add);
-
-        nbt.putBoolean("IsArtificial", this.isArtificial);
-        nbt.put("Shells", shellList);
+    private void writeCustomDataToNbt(ValueOutput out, CallbackInfo ci) {
+        out.putBoolean("IsArtificial", this.isArtificial);
+        ValueOutput.TypedOutputList<CompoundTag> list = out.list("Shells", CompoundTag.CODEC);
+        this.shellsById.values().forEach(s -> list.add(s.writeNbt(new CompoundTag())));
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
-    private void readCustomDataFromNbt(CompoundTag nbt, CallbackInfo ci) {
-        this.isArtificial = nbt.getBoolean("IsArtificial");
-        this.shellsById = nbt.getList("Shells", Tag.TAG_COMPOUND)
-                .stream()
-                .map(x -> ShellState.fromNbt((CompoundTag)x))
+    private void readCustomDataFromNbt(ValueInput in, CallbackInfo ci) {
+        this.isArtificial = in.getBooleanOr("IsArtificial", false);
+        ValueInput.TypedInputList<CompoundTag> list = in.listOrEmpty("Shells", CompoundTag.CODEC);
+        this.shellsById = list.stream()
+                .map(ShellState::fromNbt)
                 .collect(Collectors.toConcurrentMap(ShellState::getUuid, x -> x));
 
-        Collection<Tuple<ShellStateUpdateType, ShellState>> updates = ((ShellStateManager)this.server).popPendingUpdates(this.uuid);
+        Collection<Tuple<ShellStateUpdateType, ShellState>> updates = ((ShellStateManager)this.server).popPendingUpdates(this.getShellOwnerUuid());
         for (Tuple<ShellStateUpdateType, ShellState> update : updates) {
             ShellState state = update.getB();
             switch (update.getA()) {
                 case ADD, UPDATE -> {
-                    if (this.uuid.equals(state.getOwnerUuid())) {
+                    if (this.getShellOwnerUuid().equals(state.getOwnerUuid())) {
                         this.shellsById.put(state.getUuid(), state);
                     }
                 }
@@ -412,56 +393,8 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
     @Inject(method = "setServerLevel", at = @At("HEAD"))
     private void setWorld(ServerLevel world, CallbackInfo ci) {
-        if (world != this.level()) {
+        if (world != ((ServerPlayer)(Object)this).level()) {
             this.shellDirty = true;
         }
-    }
-
-    @Unique
-    private void teleport(ServerLevel targetWorld, BlockPos pos) {
-        this.isChangingDimension = true;
-        LevelChunk chunk = targetWorld.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
-        double x = pos.getX() + 0.5;
-        double y = pos.getY();
-        double z = pos.getZ() + 0.5;
-        float yaw = BlockPosUtil.getHorizontalFacing(pos, chunk).map(d -> d.getOpposite().toYRot()).orElse(0F);
-        float pitch = 0;
-
-        if (this.level() == targetWorld) {
-            this.connection.teleport(x, y, z, yaw, pitch);
-            return;
-        }
-
-        ServerLevel serverWorld = this.serverLevel();
-        ServerPlayer serverPlayer = (ServerPlayer)(Object)this;
-
-        CommonPlayerSpawnInfo spawnInfo = new CommonPlayerSpawnInfo(
-                targetWorld.dimensionTypeRegistration(),
-                targetWorld.dimension(),
-                BiomeManager.obfuscateSeed(targetWorld.getSeed()),
-                serverPlayer.gameMode.getGameModeForPlayer(),
-                serverPlayer.gameMode.getPreviousGameModeForPlayer(),
-                targetWorld.isDebug(),
-                targetWorld.isFlat(),
-                this.getLastDeathLocation(),
-                3
-        );
-        serverPlayer.connection.send(new ClientboundRespawnPacket(spawnInfo, (byte) 1));
-        serverPlayer.connection.send(new ClientboundChangeDifficultyPacket(targetWorld.getDifficulty(), targetWorld.getLevelData().isDifficultyLocked()));
-        PlayerList playerManager = Objects.requireNonNull(this.level().getServer()).getPlayerList();
-        playerManager.sendPlayerPermissionLevel(serverPlayer);
-        serverWorld.removePlayerImmediately(serverPlayer, RemovalReason.CHANGED_DIMENSION);
-        this.unsetRemoved();
-        serverPlayer.setServerLevel(targetWorld);
-        targetWorld.addDuringTeleport(serverPlayer);
-        this.connection.teleport(x, y, z, yaw, pitch);
-        this.triggerDimensionChangeTriggers(targetWorld);
-        serverPlayer.connection.send(new ClientboundPlayerAbilitiesPacket(serverPlayer.getAbilities()));
-        playerManager.sendLevelInfo(serverPlayer, targetWorld);
-        playerManager.sendAllPlayerInfo(serverPlayer);
-        for (MobEffectInstance effectInstance : this.getActiveEffects()) {
-            this.connection.send(new ClientboundUpdateMobEffectPacket(this.getId(), effectInstance, false));
-        }
-        this.triggerDimensionChangeTriggers(targetWorld);
     }
 }

@@ -18,7 +18,6 @@
       "translate": "advancements.neosync.place_constructor.description"
     },
     "icon": {
-      "count": 1,
       "id": "neosync:shell_constructor"
     },
     "title": {

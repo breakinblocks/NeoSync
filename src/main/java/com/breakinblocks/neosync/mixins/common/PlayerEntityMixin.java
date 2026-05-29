@@ -4,7 +4,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import com.breakinblocks.neosync.api.shell.Shell;
 import org.spongepowered.asm.mixin.Final;
@@ -36,8 +36,7 @@ abstract class PlayerEntityMixin extends LivingEntity {
 
     @Inject(method = "die", at = @At("RETURN"))
     private void forceDropInventory(CallbackInfo ci) {
-        if (this instanceof Shell shell && shell.isArtificial() && !this.isSpectator() &&
-                this.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
+        if (this instanceof Shell shell && shell.isArtificial() && !this.isSpectator()) {
             this.destroyVanishingCursedItems();
             this.inventory.dropAll();
         }
@@ -45,8 +44,7 @@ abstract class PlayerEntityMixin extends LivingEntity {
 
     @Inject(method = "getBaseExperienceReward", at = @At("RETURN"), cancellable = true)
     private void forceDropXp(CallbackInfoReturnable<Integer> cir) {
-        if (cir.getReturnValue() == 0 && this instanceof Shell shell && shell.isArtificial() &&
-                !this.isSpectator() && this.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
+        if (cir.getReturnValue() == 0 && this instanceof Shell shell && shell.isArtificial() && !this.isSpectator()) {
             cir.setReturnValue(Math.min(this.experienceLevel * 7, 100));
         }
     }

@@ -7,7 +7,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.entity.player.Player;
@@ -16,12 +18,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -33,14 +33,12 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.breakinblocks.neosync.common.utils.ItemUtil;
 
 @SuppressWarnings("deprecation")
 public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
-    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
     public static final EnumProperty<ComparatorOutputType> OUTPUT = EnumProperty.create("output", ComparatorOutputType.class);
 
@@ -96,20 +94,10 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     }
 
     @Override
-    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor world, BlockPos pos, BlockPos neighborPos) {
-        DoubleBlockHalf doubleBlockHalf = state.getValue(HALF);
-        if (direction.getAxis() == Direction.Axis.Y && (doubleBlockHalf == DoubleBlockHalf.LOWER) == (direction == Direction.UP)) {
-            return neighborState.is(this) && neighborState.getValue(HALF) != doubleBlockHalf ? state.setValue(FACING, neighborState.getValue(FACING)) : Blocks.AIR.defaultBlockState();
-        } else {
-            return doubleBlockHalf == DoubleBlockHalf.LOWER && direction == Direction.DOWN && !state.canSurvive(world, pos) ? Blocks.AIR.defaultBlockState() : super.updateShape(state, direction, neighborState, world, pos, neighborPos);
-        }
-    }
-
-    @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         Level world = ctx.getLevel();
         BlockPos blockPos = ctx.getClickedPos();
-        if (blockPos.getY() < world.getMaxBuildHeight() - 1 && world.getBlockState(blockPos.above()).canBeReplaced(ctx)) {
+        if (blockPos.getY() < world.getMaxY() && world.getBlockState(blockPos.above()).canBeReplaced(ctx)) {
             return this.defaultBlockState().setValue(FACING, ctx.getHorizontalDirection()).setValue(HALF, DoubleBlockHalf.LOWER);
         }
 
@@ -122,61 +110,36 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     }
 
     @Override
-    public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
-        super.entityInside(state, world, pos, entity);
-        if (!world.isClientSide && entity instanceof Player && isBottom(state)) {
+    protected void entityInside(BlockState state, Level world, BlockPos pos, Entity entity,
+            InsideBlockEffectApplier effectApplier, boolean isPrecise) {
+        if (!world.isClientSide() && entity instanceof Player && isBottom(state)) {
             setOpen(state, world, pos, true);
         }
     }
 
     @Override
-    public BlockState playerWillDestroy(Level world, BlockPos pos, BlockState state, Player player) {
-        boolean bottom = isBottom(state);
-        BlockPos bottomPos = bottom ? pos : pos.below();
-        if (!world.isClientSide && player.isCreative()) {
-            if (!bottom) {
-                BlockState blockState = world.getBlockState(bottomPos);
-                if (blockState.getBlock() == state.getBlock() && blockState.getValue(HALF) == DoubleBlockHalf.LOWER) {
-                    world.setBlock(bottomPos, Blocks.AIR.defaultBlockState(), 35);
-                    world.levelEvent(player, 2001, bottomPos, Block.getId(blockState));
-                }
-            }
-        }
-        return super.playerWillDestroy(world, pos, state, player);
-    }
-
-    @Override
-    public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean moved) {
-        if (!state.is(newState.getBlock())) {
-            if (isBottom(state) && world.getBlockEntity(pos) instanceof AbstractShellContainerBlockEntity shellContainer) {
-                shellContainer.onBreak(world, pos);
-            }
-            world.removeBlockEntity(pos);
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel world, BlockPos pos, boolean movedByPiston) {
+        if (isBottom(state) && world.getBlockEntity(pos) instanceof AbstractShellContainerBlockEntity shellContainer) {
+            shellContainer.onBreak(world, pos);
         }
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (ItemUtil.isWrench(stack)) {
-            if (!world.isClientSide) {
+            if (!world.isClientSide()) {
                 world.setBlock(pos, state.cycle(OUTPUT), 10);
                 world.updateNeighbourForOutputSignal(pos, state.getBlock());
+                return InteractionResult.SUCCESS_SERVER;
             }
-            return ItemInteractionResult.sidedSuccess(world.isClientSide);
+            return InteractionResult.SUCCESS;
         }
 
         BlockPos targetPos = isBottom(state) ? pos : pos.below();
         if (world.getBlockEntity(targetPos) instanceof AbstractShellContainerBlockEntity shellContainer) {
-            InteractionResult result = shellContainer.onUse(world, targetPos, player, hand);
-            return switch (result) {
-                case SUCCESS -> ItemInteractionResult.SUCCESS;
-                case CONSUME -> ItemInteractionResult.CONSUME;
-                case FAIL -> ItemInteractionResult.FAIL;
-                case PASS -> ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-                default -> ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-            };
+            return shellContainer.onUse(world, targetPos, player, hand);
         }
-        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return InteractionResult.TRY_WITH_EMPTY_HAND;
     }
 
     @Override
@@ -199,7 +162,7 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     }
 
     @Override
-    public int getAnalogOutputSignal(BlockState state, Level world, BlockPos pos) {
+    public int getAnalogOutputSignal(BlockState state, Level world, BlockPos pos, Direction direction) {
         return world.getBlockEntity(pos) instanceof AbstractShellContainerBlockEntity shellContainer
                 ? state.getValue(OUTPUT) == ComparatorOutputType.PROGRESS
                 ? shellContainer.getProgressComparatorOutput()
@@ -217,7 +180,6 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
         return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
-    @OnlyIn(Dist.CLIENT)
     public long getSeed(BlockState state, BlockPos pos) {
         return Mth.getSeed(pos.getX(), pos.below(state.getValue(HALF) == DoubleBlockHalf.LOWER ? 0 : 1).getY(), pos.getZ());
     }
@@ -232,7 +194,7 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
         if (!isBottom(state)) {
             return null;
         }
-        return world.isClientSide ? TickableBlockEntity::clientTicker : TickableBlockEntity::serverTicker;
+        return world.isClientSide() ? TickableBlockEntity::clientTicker : TickableBlockEntity::serverTicker;
     }
 
     @Override

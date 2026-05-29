@@ -6,24 +6,24 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import com.breakinblocks.neosync.NeoSync;
 
-@EventBusSubscriber(modid = NeoSync.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = NeoSync.MOD_ID)
 public final class SyncCapabilities {
     private SyncCapabilities() {}
 
     @SubscribeEvent
     public static void register(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(
-                Capabilities.EnergyStorage.BLOCK,
+                Capabilities.Energy.BLOCK,
                 SyncBlockEntities.SHELL_STORAGE.get(),
                 (be, side) -> be);
 
         event.registerBlockEntity(
-                Capabilities.EnergyStorage.BLOCK,
+                Capabilities.Energy.BLOCK,
                 SyncBlockEntities.SHELL_CONSTRUCTOR.get(),
                 (be, side) -> be);
 
         event.registerBlockEntity(
-                Capabilities.EnergyStorage.BLOCK,
+                Capabilities.Energy.BLOCK,
                 SyncBlockEntities.TREADMILL.get(),
                 (be, side) -> be);
     }

@@ -37,7 +37,7 @@ public final class SyncRegistries {
         if (server != null) {
             return server.registryAccess();
         }
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             HolderLookup.Provider client = ClientRegistryHelper.tryProvider();
             if (client != null) {
                 return client;

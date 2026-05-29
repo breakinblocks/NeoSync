@@ -12,7 +12,7 @@ import com.breakinblocks.neosync.api.networking.ShellUpdatePacket;
 import com.breakinblocks.neosync.api.networking.SynchronizationRequestPacket;
 import com.breakinblocks.neosync.api.networking.SynchronizationResponsePacket;
 
-@EventBusSubscriber(modid = NeoSync.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = NeoSync.MOD_ID)
 public final class SyncPackets {
     private static final String PROTOCOL_VERSION = "1";
 

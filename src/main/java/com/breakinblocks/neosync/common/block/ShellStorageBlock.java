@@ -1,18 +1,22 @@
 package com.breakinblocks.neosync.common.block;
 
 import com.mojang.serialization.MapCodec;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.redstone.Orientation;
+import org.jetbrains.annotations.Nullable;
+import com.breakinblocks.neosync.client.ClientShellStorageInteraction;
 import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
 
 @SuppressWarnings("deprecation")
@@ -57,8 +61,16 @@ public class ShellStorageBlock extends AbstractShellContainerBlock {
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level world, BlockPos pos, Block block, BlockPos fromPos, boolean notify) {
-        if (!world.isClientSide) {
+    public void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
+        if (state.getValue(ENABLED) && !shouldBeEnabled(state, world, pos)) {
+            world.setBlock(pos, state.setValue(ENABLED, false), 2);
+        }
+    }
+
+    @Override
+    protected void neighborChanged(BlockState state, Level world, BlockPos pos, Block block,
+            @Nullable Orientation orientation, boolean movedByPiston) {
+        if (!world.isClientSide()) {
             boolean enabled = state.getValue(ENABLED);
             boolean shouldBeEnabled = shouldBeEnabled(state, world, pos);
             if (enabled != shouldBeEnabled) {
@@ -78,19 +90,12 @@ public class ShellStorageBlock extends AbstractShellContainerBlock {
     }
 
     @Override
-    public void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
-        if (state.getValue(ENABLED) && !shouldBeEnabled(state, world, pos)) {
-            world.setBlock(pos, state.setValue(ENABLED, false), 2);
-        }
-    }
-
-    @Override
-    public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
-        super.entityInside(state, world, pos, entity);
-        if (world.isClientSide && entity instanceof Player && isBottom(state)) {
+    protected void entityInside(BlockState state, Level world, BlockPos pos, Entity entity,
+            InsideBlockEffectApplier effectApplier, boolean isPrecise) {
+        if (world.isClientSide() && entity instanceof Player && isBottom(state)) {
             BlockEntity blockEntity = world.getBlockEntity(pos);
-            if (blockEntity instanceof ShellStorageBlockEntity) {
-                ((ShellStorageBlockEntity)blockEntity).onEntityCollisionClient(entity, state);
+            if (blockEntity instanceof ShellStorageBlockEntity storage) {
+                ClientShellStorageInteraction.onEntityCollision(storage, entity, state);
             }
         }
     }

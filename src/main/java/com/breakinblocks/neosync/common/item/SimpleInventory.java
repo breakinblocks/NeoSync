@@ -2,11 +2,15 @@ package com.breakinblocks.neosync.common.item;
 
 import com.breakinblocks.neosync.common.utils.nbt.SyncRegistries;
 import com.google.common.collect.ImmutableList;
+import com.mojang.serialization.DataResult;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.Nameable;
@@ -128,15 +132,19 @@ public class SimpleInventory implements Container, Nameable {
     }
 
     public ListTag writeNbt(ListTag nbtList, HolderLookup.Provider registries) {
+        RegistryOps<Tag> ops = registries.createSerializationContext(NbtOps.INSTANCE);
         for (Map.Entry<NonNullList<ItemStack>, Integer> inventoryInfo : Map.of(this.main, 0, this.armor, 100, this.offHand, 150).entrySet()) {
             NonNullList<ItemStack> inventory = inventoryInfo.getKey();
             int delta = inventoryInfo.getValue();
             for(int i = 0; i < inventory.size(); ++i) {
-                if (!inventory.get(i).isEmpty()) {
-                    CompoundTag compound = new CompoundTag();
-                    compound.putByte("Slot", (byte)(i + delta));
-                    inventory.get(i).save(registries, compound);
-                    nbtList.add(compound);
+                ItemStack stack = inventory.get(i);
+                if (!stack.isEmpty()) {
+                    DataResult<Tag> result = ItemStack.CODEC.encodeStart(ops, stack);
+                    Tag encoded = result.result().orElse(null);
+                    if (encoded instanceof CompoundTag stackTag) {
+                        stackTag.putByte("Slot", (byte) (i + delta));
+                        nbtList.add(stackTag);
+                    }
                 }
             }
         }
@@ -148,10 +156,11 @@ public class SimpleInventory implements Container, Nameable {
         this.armor.clear();
         this.offHand.clear();
 
-        for(int i = 0; i < nbtList.size(); ++i) {
-            CompoundTag nbtCompound = nbtList.getCompound(i);
-            int j = nbtCompound.getByte("Slot") & 255;
-            ItemStack itemStack = ItemStack.parseOptional(registries, nbtCompound);
+        RegistryOps<Tag> ops = registries.createSerializationContext(NbtOps.INSTANCE);
+        for (int i = 0; i < nbtList.size(); ++i) {
+            CompoundTag nbtCompound = nbtList.getCompound(i).orElse(new CompoundTag());
+            int j = nbtCompound.getByteOr("Slot", (byte) 0) & 255;
+            ItemStack itemStack = ItemStack.CODEC.parse(ops, nbtCompound).result().orElse(ItemStack.EMPTY);
             if (!itemStack.isEmpty()) {
                 if (j < this.main.size()) {
                     this.main.set(j, itemStack);
@@ -172,7 +181,7 @@ public class SimpleInventory implements Container, Nameable {
         }
 
         if (other instanceof Inventory playerInventory) {
-            this.selectedSlot = playerInventory.selected;
+            this.selectedSlot = playerInventory.getSelectedSlot();
         } else if (other instanceof SimpleInventory simpleInventory) {
             this.selectedSlot = simpleInventory.selectedSlot;
         }
@@ -186,7 +195,7 @@ public class SimpleInventory implements Container, Nameable {
         }
 
         if (other instanceof Inventory playerInventory) {
-            playerInventory.selected = this.selectedSlot;
+            playerInventory.setSelectedSlot(this.selectedSlot);
         } else if (other instanceof SimpleInventory simpleInventory) {
             simpleInventory.selectedSlot = this.selectedSlot;
         }

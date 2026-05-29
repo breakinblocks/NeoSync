@@ -1,7 +1,7 @@
 package com.breakinblocks.neosync.common.config;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@EventBusSubscriber(modid = NeoSync.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = NeoSync.MOD_ID)
 public class SyncConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
     public static final ModConfigSpec SPEC;
@@ -401,12 +401,11 @@ public class SyncConfig {
         }
 
         default EntityType<?> getEntityType() {
-            ResourceLocation id = ResourceLocation.tryParse(this.entityId());
+            Identifier id = Identifier.tryParse(this.entityId());
             if (id == null) {
                 return EntityType.PIG;
             }
-            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(id);
-            return type == null ? EntityType.PIG : type;
+            return BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(EntityType.PIG);
         }
 
         static EnergyMapEntry of(EntityType<?> entityType, long outputEnergyQuantity) {

@@ -1,9 +1,11 @@
 package com.breakinblocks.neosync.common.utils.nbt;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.Identifier;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -47,10 +49,6 @@ public class NbtSerializerFactoryBuilder<TTarget> {
         return new NbtSerializerFactory<>(this.readers, this.writers);
     }
 
-    private static BiFunction<CompoundTag, String, ?> getOrDefault(BiFunction<CompoundTag, String, ?> f) {
-        return (nbt, key) -> nbt.contains(key) ? f.apply(nbt, key) : null;
-    }
-
     private static TriConsumer<CompoundTag, String, ?> setIfNotNull(TriConsumer<CompoundTag, String, Object> f) {
         return (nbt, key, x) -> {
             if (x != null) {
@@ -61,22 +59,26 @@ public class NbtSerializerFactoryBuilder<TTarget> {
 
     static {
         NBT_GETTERS = new HashMap<>();
-        NBT_GETTERS.put(Boolean.class, getOrDefault(CompoundTag::getBoolean));
-        NBT_GETTERS.put(Byte.class, getOrDefault(CompoundTag::getByte));
-        NBT_GETTERS.put(Double.class, getOrDefault(CompoundTag::getDouble));
-        NBT_GETTERS.put(Float.class, getOrDefault(CompoundTag::getFloat));
-        NBT_GETTERS.put(Integer.class, getOrDefault(CompoundTag::getInt));
-        NBT_GETTERS.put(Long.class, getOrDefault(CompoundTag::getLong));
-        NBT_GETTERS.put(Short.class, getOrDefault(CompoundTag::getShort));
-        NBT_GETTERS.put(String.class, getOrDefault(CompoundTag::getString));
-        NBT_GETTERS.put(ResourceLocation.class, getOrDefault((x, key) -> ResourceLocation.parse(x.getString(key))));
-        NBT_GETTERS.put(UUID.class, getOrDefault(CompoundTag::getUUID));
-        NBT_GETTERS.put(CompoundTag.class, getOrDefault(CompoundTag::getCompound));
-        NBT_GETTERS.put(ListTag.class, getOrDefault(CompoundTag::get));
-        NBT_GETTERS.put(BlockPos.class, getOrDefault((nbt, key) -> {
-            CompoundTag compound = nbt.getCompound(key);
-            return new BlockPos(compound.getInt("x"), compound.getInt("y"), compound.getInt("z"));
-        }));
+        NBT_GETTERS.put(Boolean.class, (nbt, key) -> nbt.getBoolean(key).orElse(null));
+        NBT_GETTERS.put(Byte.class, (nbt, key) -> nbt.getByte(key).orElse(null));
+        NBT_GETTERS.put(Double.class, (nbt, key) -> nbt.getDouble(key).orElse(null));
+        NBT_GETTERS.put(Float.class, (nbt, key) -> nbt.getFloat(key).orElse(null));
+        NBT_GETTERS.put(Integer.class, (nbt, key) -> nbt.getInt(key).orElse(null));
+        NBT_GETTERS.put(Long.class, (nbt, key) -> nbt.getLong(key).orElse(null));
+        NBT_GETTERS.put(Short.class, (nbt, key) -> nbt.getShort(key).orElse(null));
+        NBT_GETTERS.put(String.class, (nbt, key) -> nbt.getString(key).orElse(null));
+        NBT_GETTERS.put(Identifier.class, (nbt, key) -> nbt.getString(key).map(Identifier::parse).orElse(null));
+        NBT_GETTERS.put(UUID.class, (nbt, key) -> nbt.read(key, UUIDUtil.CODEC).orElse(null));
+        NBT_GETTERS.put(CompoundTag.class, (nbt, key) -> nbt.getCompound(key).orElse(null));
+        NBT_GETTERS.put(ListTag.class, (nbt, key) -> {
+            if (!nbt.contains(key)) return null;
+            return nbt.get(key) instanceof ListTag list ? list : null;
+        });
+        NBT_GETTERS.put(BlockPos.class, (nbt, key) -> nbt.getCompound(key).map(compound -> new BlockPos(
+                compound.getIntOr("x", 0),
+                compound.getIntOr("y", 0),
+                compound.getIntOr("z", 0)
+        )).orElse(null));
 
         NBT_SETTERS = new HashMap<>();
         NBT_SETTERS.put(Boolean.class, setIfNotNull((nbt, key, x) -> nbt.putBoolean(key, (boolean)x)));
@@ -87,8 +89,8 @@ public class NbtSerializerFactoryBuilder<TTarget> {
         NBT_SETTERS.put(Long.class, setIfNotNull((nbt, key, x) -> nbt.putLong(key, (long)x)));
         NBT_SETTERS.put(Short.class, setIfNotNull((nbt, key, x) -> nbt.putShort(key, (short)x)));
         NBT_SETTERS.put(String.class, setIfNotNull((nbt, key, x) -> nbt.putString(key, (String)x)));
-        NBT_SETTERS.put(ResourceLocation.class, setIfNotNull((nbt, key, x) -> nbt.putString(key, x.toString())));
-        NBT_SETTERS.put(UUID.class, setIfNotNull((nbt, key, x) -> nbt.putUUID(key, (UUID)x)));
+        NBT_SETTERS.put(Identifier.class, setIfNotNull((nbt, key, x) -> nbt.putString(key, x.toString())));
+        NBT_SETTERS.put(UUID.class, setIfNotNull((nbt, key, x) -> nbt.store(key, UUIDUtil.CODEC, (UUID) x)));
         NBT_SETTERS.put(CompoundTag.class, setIfNotNull((nbt, key, x) -> nbt.put(key, (CompoundTag)x)));
         NBT_SETTERS.put(ListTag.class, setIfNotNull((nbt, key, x) -> nbt.put(key, (ListTag)x)));
         NBT_SETTERS.put(BlockPos.class, setIfNotNull((nbt, key, x) -> {

@@ -1,6 +1,5 @@
 package com.breakinblocks.neosync;
 
-import com.breakinblocks.neosync.client.render.CustomGameRenderer;
 import com.breakinblocks.neosync.client.render.SyncRenderers;
 import com.breakinblocks.neosync.common.block.SyncBlocks;
 import com.breakinblocks.neosync.common.block.entity.SyncBlockEntities;
@@ -8,7 +7,7 @@ import com.breakinblocks.neosync.common.command.SyncCommands;
 import com.breakinblocks.neosync.common.config.SyncConfig;
 import com.breakinblocks.neosync.common.item.SyncCreativeTabs;
 import com.breakinblocks.neosync.common.item.SyncItems;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -37,11 +36,10 @@ public class NeoSync {
     }
 
     private void onClientSetup(FMLClientSetupEvent event) {
-        CustomGameRenderer.initClient();
         SyncRenderers.initClient();
     }
 
-    public static ResourceLocation locate(String location) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, location);
+    public static Identifier locate(String location) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, location);
     }
 }

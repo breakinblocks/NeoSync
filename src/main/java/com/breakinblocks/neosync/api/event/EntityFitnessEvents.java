@@ -1,7 +1,7 @@
 package com.breakinblocks.neosync.api.event;
 
 import net.minecraft.world.entity.Entity;
-import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.transfer.energy.EnergyHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -32,7 +32,7 @@ public final class EntityFitnessEvents {
             startRunningListeners,
             new StartRunning() {
                 @Override
-                public void onStartRunning(Entity entity, IEnergyStorage energyStorage) {
+                public void onStartRunning(Entity entity, EnergyHandler energyStorage) {
                     for (StartRunning callback : startRunningListeners) {
                         callback.onStartRunning(entity, energyStorage);
                     }
@@ -47,7 +47,7 @@ public final class EntityFitnessEvents {
             stopRunningListeners,
             new StopRunning() {
                 @Override
-                public void onStopRunning(Entity entity, IEnergyStorage energyStorage) {
+                public void onStopRunning(Entity entity, EnergyHandler energyStorage) {
                     for (StopRunning callback : stopRunningListeners) {
                         callback.onStopRunning(entity, energyStorage);
                     }
@@ -63,7 +63,7 @@ public final class EntityFitnessEvents {
             new ModifyOutputEnergyQuantity() {
                 @Override
                 @Nullable
-                public Long modifyOutputEnergyQuantity(Entity entity, IEnergyStorage energyStorage, @Nullable Long outputEnergyQuantity) {
+                public Long modifyOutputEnergyQuantity(Entity entity, EnergyHandler energyStorage, @Nullable Long outputEnergyQuantity) {
                     Long result = outputEnergyQuantity;
                     for (ModifyOutputEnergyQuantity callback : modifyEnergyListeners) {
                         result = callback.modifyOutputEnergyQuantity(entity, energyStorage, result);
@@ -84,7 +84,7 @@ public final class EntityFitnessEvents {
          * @return Amount of energy that will be produced by the entity every tick, or null if the given entity cannot use treadmills.
          */
         @Nullable
-        Long modifyOutputEnergyQuantity(Entity entity, IEnergyStorage energyStorage, @Nullable Long outputEnergyQuantity);
+        Long modifyOutputEnergyQuantity(Entity entity, EnergyHandler energyStorage, @Nullable Long outputEnergyQuantity);
     }
 
     @FunctionalInterface
@@ -95,7 +95,7 @@ public final class EntityFitnessEvents {
          * @param entity The running entity.
          * @param energyStorage The energy storage that stores energy being produced by the entity.
          */
-        void onStartRunning(Entity entity, IEnergyStorage energyStorage);
+        void onStartRunning(Entity entity, EnergyHandler energyStorage);
     }
 
     @FunctionalInterface
@@ -106,7 +106,7 @@ public final class EntityFitnessEvents {
          * @param entity The running entity.
          * @param energyStorage The energy storage that stores energy being produced by the entity.
          */
-        void onStopRunning(Entity entity, IEnergyStorage energyStorage);
+        void onStopRunning(Entity entity, EnergyHandler energyStorage);
     }
 
     /**

@@ -107,10 +107,10 @@ public abstract class MinecraftServerMixin implements ShellStateManager {
             }
 
             OfflinePlayerNbtManager.editPlayerNbt((MinecraftServer)(Object)this, userId, nbt -> {
-                Map<UUID, ShellState> shells = nbt
-                        .getList("Shells", Tag.TAG_COMPOUND)
-                        .stream()
-                        .map(x -> ShellState.fromNbt((CompoundTag)x))
+                ListTag list = nbt.getList("Shells").orElse(new ListTag());
+                Map<UUID, ShellState> shells = list.stream()
+                        .filter(t -> t instanceof CompoundTag)
+                        .map(t -> ShellState.fromNbt((CompoundTag) t))
                         .collect(Collectors.toMap(ShellState::getUuid, x -> x));
 
                 for (Tuple<ShellStateUpdateType, ShellState> update : updates) {

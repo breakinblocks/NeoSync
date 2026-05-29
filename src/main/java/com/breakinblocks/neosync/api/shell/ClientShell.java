@@ -3,9 +3,7 @@ package com.breakinblocks.neosync.api.shell;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraft.resources.Identifier;
 import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,7 +12,6 @@ import java.util.Optional;
 /**
  * Client-side version of the {@link Shell}.
  */
-@OnlyIn(Dist.CLIENT)
 public interface ClientShell extends Shell {
     @Override
     default boolean isClient() {
@@ -40,7 +37,7 @@ public interface ClientShell extends Shell {
      * @param targetFacing Direction the target shell is currently looking at.
      * @param storedState New state that was generated during the sync process, if any; otherwise, null.
      */
-    void endSync(ResourceLocation startWorld, BlockPos startPos, Direction startFacing, ResourceLocation targetWorld, BlockPos targetPos, Direction targetFacing, @Nullable ShellState storedState);
+    void endSync(Identifier startWorld, BlockPos startPos, Direction startFacing, Identifier targetWorld, BlockPos targetPos, Direction targetFacing, @Nullable ShellState storedState);
 
 
     /**

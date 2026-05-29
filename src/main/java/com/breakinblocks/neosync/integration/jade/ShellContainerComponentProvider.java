@@ -2,7 +2,7 @@ package com.breakinblocks.neosync.integration.jade;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import com.breakinblocks.neosync.NeoSync;
@@ -17,7 +17,7 @@ import snownee.jade.api.config.IPluginConfig;
 
 public final class ShellContainerComponentProvider implements IBlockComponentProvider {
     public static final ShellContainerComponentProvider INSTANCE = new ShellContainerComponentProvider();
-    private static final ResourceLocation UID = NeoSync.locate("shell_container");
+    private static final Identifier UID = NeoSync.locate("shell_container");
 
     private ShellContainerComponentProvider() {}
 
@@ -60,7 +60,7 @@ public final class ShellContainerComponentProvider implements IBlockComponentPro
     }
 
     @Override
-    public ResourceLocation getUid() {
+    public Identifier getUid() {
         return UID;
     }
 }

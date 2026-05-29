@@ -1,10 +1,7 @@
 package com.breakinblocks.neosync.client.utils.render;
 
 import net.minecraft.world.item.DyeColor;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
-@OnlyIn(Dist.CLIENT)
 public final class ColorUtil {
     public static int fromDyeColor(DyeColor color) {
         return fromDyeColor(color, 1F);

@@ -17,7 +17,6 @@
       "translate": "advancements.neosync.root.description"
     },
     "icon": {
-      "count": 1,
       "id": "neosync:sync_core"
     },
     "title": {

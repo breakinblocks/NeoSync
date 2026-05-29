@@ -3,9 +3,17 @@ package com.breakinblocks.neosync.common.block.entity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.util.RandomSource;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.Connection;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -20,17 +28,18 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.transfer.energy.EnergyHandler;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 import com.breakinblocks.neosync.api.event.EntityFitnessEvents;
 import com.breakinblocks.neosync.common.block.TreadmillBlock;
 import com.breakinblocks.neosync.common.config.SyncConfig;
-import com.breakinblocks.neosync.compat.sable.SableCompat;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEntity, TickableBlockEntity, IEnergyStorage {
+public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEntity, TickableBlockEntity, EnergyHandler {
     private static final int MAX_RUNNING_TIME = 20 * 60 * 15;
     private static final double MAX_SQUARED_DISTANCE = 0.5;
     private static final Map<EntityType<? extends Entity>, Long> ENERGY_MAP;
@@ -86,7 +95,7 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
             return;
         }
 
-        if (!this.level.isClientSide) {
+        if (!this.level.isClientSide()) {
             this.setChanged();
             this.sync();
         }
@@ -104,6 +113,28 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
         }
 
         this.runningTime = Math.min(++this.runningTime, MAX_RUNNING_TIME);
+
+        if (!TreadmillBlock.isBack(state)) {
+            RandomSource rand = world.getRandom();
+            Direction face = state.getValue(TreadmillBlock.FACING);
+            double cx = pos.getX() + 0.5;
+            double cz = pos.getZ() + 0.5;
+            double cy = pos.getY() + 0.75;
+            for (int i = 0; i < 2; ++i) {
+                double dx = (rand.nextDouble() - 0.5) * 0.4;
+                double dz = (rand.nextDouble() - 0.5) * 0.4;
+                world.addParticle(ParticleTypes.SMOKE,
+                        cx + dx, cy + rand.nextDouble() * 0.1, cz + dz,
+                        face.getStepX() * -0.05, 0.02, face.getStepZ() * -0.05);
+            }
+            if (this.isOverheated() && this.runningTime % 4 == 0) {
+                world.addParticle(ParticleTypes.LARGE_SMOKE,
+                        cx + (rand.nextDouble() - 0.5) * 0.3,
+                        cy + 0.2,
+                        cz + (rand.nextDouble() - 0.5) * 0.3,
+                        0, 0.05, 0);
+            }
+        }
     }
 
     @Override
@@ -118,20 +149,15 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
         }
 
         Direction face = state.getValue(TreadmillBlock.FACING);
-        Vec3 localAnchor = computeTreadmillPivot(pos, face);
-        Object sublevel = SableCompat.getContainingSublevel(this);
-        Vec3 runnerLocalPos = sublevel != null ? SableCompat.worldToLocal(sublevel, this.runner.position()) : this.runner.position();
-        if (!isValidEntity(this.runner) || !isEntityNear(runnerLocalPos, localAnchor)) {
+        Vec3 anchor = computeTreadmillPivot(pos, face);
+        if (!isValidEntity(this.runner) || !isEntityNear(this.runner, anchor)) {
             this.setRunner(null);
             return;
         }
 
-        Vec3 worldAnchor = sublevel != null ? SableCompat.localToWorld(sublevel, localAnchor) : localAnchor;
-        float yawOffset = sublevel != null ? SableCompat.getSublevelYaw(sublevel) : 0F;
-
         if (!(this.runner instanceof Player)) {
-            float yaw = face.toYRot() + yawOffset;
-            this.runner.moveTo(worldAnchor.x, worldAnchor.y, worldAnchor.z, yaw, 0);
+            float yaw = face.toYRot();
+            this.runner.snapTo(anchor.x, anchor.y, anchor.z, yaw, 0F);
             this.runner.setYHeadRot(yaw);
             this.runner.setYBodyRot(yaw);
             this.runner.setYRot(yaw);
@@ -140,9 +166,7 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
 
         if (this.runner instanceof LivingEntity livingEntity) {
             livingEntity.setSpeed(0.15F);
-            Vec3 localMotion = HORIZONTAL_MOTION[face.ordinal()];
-            Vec3 worldMotion = sublevel != null ? SableCompat.transformDirectionToWorld(sublevel, localMotion) : localMotion;
-            livingEntity.setDeltaMovement(worldMotion);
+            livingEntity.setDeltaMovement(HORIZONTAL_MOTION[face.ordinal()]);
 
             if (livingEntity instanceof Mob mob) {
                 mob.getNavigation().stop();
@@ -164,10 +188,7 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
     }
 
     public void onSteppedOn(BlockPos pos, BlockState state, Entity entity) {
-        Vec3 localAnchor = computeTreadmillPivot(pos, state.getValue(TreadmillBlock.FACING));
-        Object sublevel = SableCompat.getContainingSublevel(this);
-        Vec3 entityLocalPos = sublevel != null ? SableCompat.worldToLocal(sublevel, entity.position()) : entity.position();
-        if (this.runner != null || !isEntityNear(entityLocalPos, localAnchor)) {
+        if (this.runner != null || !isEntityNear(entity, computeTreadmillPivot(pos, state.getValue(TreadmillBlock.FACING)))) {
             return;
         }
 
@@ -183,66 +204,53 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
     }
 
     @Override
-    public int receiveEnergy(int maxReceive, boolean simulate) {
+    public long getAmountAsLong() {
+        TreadmillBlockEntity back = this.getBackPart();
+        return back == null ? 0L : back.storedEnergy;
+    }
+
+    @Override
+    public long getCapacityAsLong() {
+        TreadmillBlockEntity back = this.getBackPart();
+        if (back == null || back.runner == null) return 0L;
+        return (long) (back.producibleEnergyQuantity * (1.0 + 0.5 * back.runningTime / MAX_RUNNING_TIME));
+    }
+
+    @Override
+    public int insert(int amount, TransactionContext transaction) {
         return 0;
     }
 
     @Override
-    public int extractEnergy(int maxExtract, boolean simulate) {
+    public int extract(int amount, TransactionContext transaction) {
         TreadmillBlockEntity back = this.getBackPart();
-        if (back == null) {
-            return 0;
-        }
-
-        int extracted = (int) Math.min(back.storedEnergy, maxExtract);
-        if (!simulate && extracted > 0) {
+        if (back == null) return 0;
+        int extracted = (int) Math.min(back.storedEnergy, amount);
+        if (extracted > 0) {
             back.storedEnergy -= extracted;
         }
         return extracted;
     }
 
-    @Override
-    public int getEnergyStored() {
-        TreadmillBlockEntity back = this.getBackPart();
-        return back == null ? 0 : (int) back.storedEnergy;
-    }
-
-    @Override
-    public int getMaxEnergyStored() {
-        TreadmillBlockEntity back = this.getBackPart();
-        if (back == null || back.runner == null) {
-            return 0;
-        }
-        return (int) (back.producibleEnergyQuantity * (1.0 + 0.5 * back.runningTime / MAX_RUNNING_TIME));
-    }
-
-    @Override
-    public boolean canExtract() {
-        return true;
-    }
-
-    @Override
-    public boolean canReceive() {
-        return false;
-    }
-
     private void transferEnergy(Level world, BlockPos pos) {
+        if (!(world instanceof ServerLevel serverLevel)) return;
         TreadmillBlockEntity back = this.getBackPart();
-        if (back == null || back.storedEnergy <= 0) {
-            return;
-        }
+        if (back == null || back.storedEnergy <= 0) return;
 
         for (int i = 0; i < 2; ++i) {
             for (Direction direction : Direction.values()) {
+                if (back.storedEnergy <= 0) return;
                 BlockPos neighborPos = pos.relative(direction);
-                IEnergyStorage storage = world.getCapability(Capabilities.EnergyStorage.BLOCK, neighborPos, direction.getOpposite());
-                if (storage != null && storage.canReceive()) {
-                    int transferred = storage.receiveEnergy((int) back.storedEnergy, false);
-                    back.storedEnergy -= transferred;
-                }
-
-                if (back.storedEnergy <= 0) {
-                    return;
+                EnergyHandler neighbor = serverLevel.getCapability(Capabilities.Energy.BLOCK,
+                        neighborPos, direction.getOpposite());
+                if (neighbor != null) {
+                    try (Transaction tx = Transaction.openRoot()) {
+                        int transferred = neighbor.insert((int) Math.min(back.storedEnergy, Integer.MAX_VALUE), tx);
+                        if (transferred > 0) {
+                            back.storedEnergy -= transferred;
+                            tx.commit();
+                        }
+                    }
                 }
             }
             pos = pos.relative(this.getBlockState().getValue(TreadmillBlock.FACING));
@@ -282,44 +290,37 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        CompoundTag tag = super.getUpdateTag(registries);
-        saveAdditional(tag, registries);
-        return tag;
+        TagValueOutput out = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
+        this.saveCustomOnly(out);
+        return out.buildResult();
+    }
+
+
+    @Override
+    protected void loadAdditional(ValueInput in) {
+        super.loadAdditional(in);
+        this.runnerUUID = in.read("runner", UUIDUtil.CODEC).orElse(null);
+        this.runnerId = in.getInt("runnerId").orElse(null);
+        this.producibleEnergyQuantity = in.getLongOr("energy", 0L);
+        this.runningTime = in.getIntOr("time", 0);
     }
 
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider registries) {
-        CompoundTag tag = pkt.getTag();
-        if (tag != null) {
-            loadAdditional(tag, registries);
-        }
-    }
-
-    @Override
-    protected void loadAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
-        super.loadAdditional(nbt, registries);
-        this.runnerUUID = nbt.hasUUID("runner") ? nbt.getUUID("runner") : null;
-        this.runnerId = nbt.contains("runnerId", Tag.TAG_INT) ? nbt.getInt("runnerId") : null;
-        this.producibleEnergyQuantity = nbt.getLong("energy");
-        this.runningTime = nbt.getInt("time");
-    }
-
-    @Override
-    protected void saveAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
-        super.saveAdditional(nbt, registries);
+    protected void saveAdditional(ValueOutput out) {
+        super.saveAdditional(out);
         UUID runnerUuid = this.runnerUUID == null ? this.runner == null ? null : this.runner.getUUID() : this.runnerUUID;
         if (runnerUuid != null) {
-            nbt.putUUID("runner", runnerUuid);
+            out.store("runner", UUIDUtil.CODEC, runnerUuid);
         }
         Integer runnerId = this.runner == null ? null : this.runner.getId();
         if (runnerId != null) {
-            nbt.putInt("runnerId", runnerId);
+            out.putInt("runnerId", runnerId);
         }
-        nbt.putLong("energy", this.producibleEnergyQuantity);
-        nbt.putInt("time", this.runningTime);
+        out.putLong("energy", this.producibleEnergyQuantity);
+        out.putInt("time", this.runningTime);
     }
 
-    private static Long getOutputEnergyQuantityForEntity(Entity entity, IEnergyStorage energyStorage) {
+    private static Long getOutputEnergyQuantityForEntity(Entity entity, EnergyHandler energyStorage) {
         return EntityFitnessEvents.MODIFY_OUTPUT_ENERGY_QUANTITY.invoker().modifyOutputEnergyQuantity(entity, energyStorage, ENERGY_MAP.get(entity.getType()));
     }
 
@@ -336,8 +337,8 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
         );
     }
 
-    private static boolean isEntityNear(Vec3 entityEffectivePos, Vec3 pos) {
-        return entityEffectivePos.distanceToSqr(pos) < MAX_SQUARED_DISTANCE;
+    private static boolean isEntityNear(Entity entity, Vec3 pos) {
+        return entity.distanceToSqr(pos) < MAX_SQUARED_DISTANCE;
     }
 
     private static Vec3 computeTreadmillPivot(BlockPos pos, Direction face) {

@@ -14,7 +14,7 @@ import com.breakinblocks.neosync.common.utils.reflect.Activator;
 import java.util.HashSet;
 import java.util.Set;
 
-@EventBusSubscriber(modid = NeoSync.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = NeoSync.MOD_ID)
 public class SyncCommands {
     private static final Set<Command> COMMANDS = new HashSet<>();
 

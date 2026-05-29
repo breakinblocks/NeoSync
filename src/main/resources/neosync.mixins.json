@@ -13,11 +13,7 @@
     "client.ClientPlayerEntityMixin",
     "client.ClientPlayerInteractionManagerMixin",
     "client.EntityMixin",
-    "client.EntityRenderDispatcherMixin",
-    "client.LivingEntityRendererAccessor",
-    "client.MinecraftClientMixin",
-    "client.PlayerEntityModelMixin",
-    "client.WorldRendererMixin"
+    "client.MinecraftClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1

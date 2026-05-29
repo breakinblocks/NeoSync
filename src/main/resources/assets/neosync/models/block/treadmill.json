@@ -1,5 +1,7 @@
 {
+  "parent": "minecraft:block/cube_all",
   "textures": {
-    "particle": "minecraft:block/gray_concrete"
+    "all": "neosync:block/treadmill",
+    "particle": "neosync:block/treadmill"
   }
 }

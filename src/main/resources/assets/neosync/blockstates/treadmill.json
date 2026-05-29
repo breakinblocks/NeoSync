@@ -1,7 +1,12 @@
 {
   "variants": {
-    "": {
-      "model": "neosync:block/treadmill"
-    }
+    "treadmill_part=front,facing=north": { "model": "neosync:block/treadmill_front", "y": 180 },
+    "treadmill_part=front,facing=south": { "model": "neosync:block/treadmill_front" },
+    "treadmill_part=front,facing=east": { "model": "neosync:block/treadmill_front", "y": 270 },
+    "treadmill_part=front,facing=west": { "model": "neosync:block/treadmill_front", "y": 90 },
+    "treadmill_part=back,facing=north": { "model": "neosync:block/treadmill_back", "y": 180 },
+    "treadmill_part=back,facing=south": { "model": "neosync:block/treadmill_back" },
+    "treadmill_part=back,facing=east": { "model": "neosync:block/treadmill_back", "y": 270 },
+    "treadmill_part=back,facing=west": { "model": "neosync:block/treadmill_back", "y": 90 }
   }
 }

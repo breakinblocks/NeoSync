@@ -3,12 +3,9 @@ package com.breakinblocks.neosync.common.entity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.function.Consumer;
 
-@OnlyIn(Dist.CLIENT)
 public class PersistentCameraEntityGoal {
     public static final double MAX_DISTANCE = 25;
     public static final long PHASE_DELAY = 200;

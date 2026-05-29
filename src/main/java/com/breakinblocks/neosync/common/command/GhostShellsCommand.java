@@ -38,8 +38,7 @@ public class GhostShellsCommand implements Command {
 
     @Override
     public boolean hasPermissions(CommandSourceStack commandSource) {
-        final int OP_LEVEL = 2;
-        return commandSource.hasPermission(OP_LEVEL) || commandSource.getServer().isSingleplayer();
+        return commandSource.getServer().isSingleplayer() || commandSource.source instanceof MinecraftServer;
     }
 
     @Override
@@ -117,12 +116,12 @@ public class GhostShellsCommand implements Command {
 
     private static void updateShell(ServerPlayer player, ShellState shellState, boolean shouldRepair,
                                     boolean skipOnFailure, Consumer<Component> logger) {
-        if (shellExists(player.server, shellState)) {
+        if (shellExists(player.level().getServer(), shellState)) {
             return;
         }
 
         if (shouldRepair) {
-            if (tryRepair(player.server, shellState)) {
+            if (tryRepair(player.level().getServer(), shellState)) {
                 logger.accept(Component.translatable("command.neosync.ghostshells.repaired",
                         player.getName().getString(), shellState.getPos().toShortString()));
                 return;

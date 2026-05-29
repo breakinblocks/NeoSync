@@ -6,7 +6,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -16,10 +16,10 @@ import com.breakinblocks.neosync.api.shell.ShellState;
 import java.util.Optional;
 
 public record SynchronizationResponsePacket(
-        ResourceLocation startWorld,
+        Identifier startWorld,
         BlockPos startPos,
         Direction startFacing,
-        ResourceLocation targetWorld,
+        Identifier targetWorld,
         BlockPos targetPos,
         Direction targetFacing,
         Optional<ShellState> storedState
@@ -42,20 +42,20 @@ public record SynchronizationResponsePacket(
     }
 
     private static void encode(RegistryFriendlyByteBuf buf, SynchronizationResponsePacket payload) {
-        buf.writeResourceLocation(payload.startWorld);
+        buf.writeIdentifier(payload.startWorld);
         buf.writeBlockPos(payload.startPos);
         buf.writeVarInt(payload.startFacing.get3DDataValue());
-        buf.writeResourceLocation(payload.targetWorld);
+        buf.writeIdentifier(payload.targetWorld);
         buf.writeBlockPos(payload.targetPos);
         buf.writeVarInt(payload.targetFacing.get3DDataValue());
         ByteBufCodecs.optional(ShellState.STREAM_CODEC).encode(buf, payload.storedState);
     }
 
     private static SynchronizationResponsePacket decode(RegistryFriendlyByteBuf buf) {
-        ResourceLocation startWorld = buf.readResourceLocation();
+        Identifier startWorld = buf.readIdentifier();
         BlockPos startPos = buf.readBlockPos();
         Direction startFacing = Direction.from3DDataValue(buf.readVarInt());
-        ResourceLocation targetWorld = buf.readResourceLocation();
+        Identifier targetWorld = buf.readIdentifier();
         BlockPos targetPos = buf.readBlockPos();
         Direction targetFacing = Direction.from3DDataValue(buf.readVarInt());
         Optional<ShellState> storedState = ByteBufCodecs.optional(ShellState.STREAM_CODEC).decode(buf);

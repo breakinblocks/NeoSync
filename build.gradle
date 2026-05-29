@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.78'
+    id 'net.neoforged.moddev' version '2.0.141'
     id 'me.modmuss50.mod-publish-plugin' version '1.1.0'
 }
 
@@ -14,7 +14,7 @@ base {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
@@ -24,10 +24,6 @@ repositories {
     maven {
         name = 'NeoForged'
         url = 'https://maven.neoforged.net/releases'
-    }
-    maven {
-        name = 'ParchmentMC'
-        url = 'https://maven.parchmentmc.org'
     }
     maven {
         url = 'https://cursemaven.com'
@@ -42,23 +38,11 @@ repositories {
         url = 'https://api.modrinth.com/maven'
         content { includeGroup 'maven.modrinth' }
     }
-    maven {
-        url = 'https://maven.ryanhcode.dev/releases'
-        content {
-            includeGroup 'dev.ryanhcode.sable'
-            includeGroup 'dev.ryanhcode.sable-companion'
-        }
-    }
     mavenCentral()
 }
 
 neoForge {
     version = project.neoforge_version
-
-    parchment {
-        mappingsVersion = project.parchment_mappings
-        minecraftVersion = project.parchment_minecraft
-    }
 
     runs {
         configureEach {
@@ -70,8 +54,8 @@ neoForge {
         server {
             server()
         }
-        data {
-            data()
+        clientData {
+            clientData()
             programArguments.addAll '--mod', project.mod_id,
                 '--all',
                 '--output', file('src/generated/resources/').getAbsolutePath(),
@@ -95,22 +79,18 @@ dependencies {
     annotationProcessor "io.github.llamalad7:mixinextras-common:${project.mixinextras_version}"
 
     // JEI — compile against API only, runtime via localRuntime
-    compileOnly "mezz.jei:jei-1.21.1-common-api:${project.jei_version}"
-    compileOnly "mezz.jei:jei-1.21.1-neoforge-api:${project.jei_version}"
-    localRuntime "mezz.jei:jei-1.21.1-neoforge:${project.jei_version}"
+    compileOnly "mezz.jei:jei-${project.minecraft_version}-common-api:${project.jei_version}"
+    compileOnly "mezz.jei:jei-${project.minecraft_version}-neoforge-api:${project.jei_version}"
+    localRuntime "mezz.jei:jei-${project.minecraft_version}-neoforge:${project.jei_version}"
 
     // Jade — single jar contains both API and impl
     compileOnly "maven.modrinth:jade:${project.jade_version}"
     localRuntime "maven.modrinth:jade:${project.jade_version}"
-
-    compileOnly("dev.ryanhcode.sable:sable-neoforge-1.21.1:${project.sable_version}") { transitive = false }
-    localRuntime("dev.ryanhcode.sable:sable-neoforge-1.21.1:${project.sable_version}") { transitive = false }
-    compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-1.21.1:${project.sable_companion_version}") { transitive = false }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-    options.release = 21
+    options.release = 25
 }
 
 processResources {

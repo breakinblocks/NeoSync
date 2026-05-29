@@ -2,22 +2,22 @@ package com.breakinblocks.neosync.common.entity;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.chat.ChatAbilities;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import com.breakinblocks.neosync.NeoSync;
 
 import java.util.Objects;
 
-@OnlyIn(Dist.CLIENT)
 @EventBusSubscriber(modid = NeoSync.MOD_ID, value = Dist.CLIENT)
 public class PersistentCameraEntity extends LocalPlayer {
-    private static final long GOAL_IDLE_TIMEOUT_MS = 10_000;
+    public static final long GOAL_IDLE_TIMEOUT_MS = 10_000;
 
     private long lastMovementTime;
     private float initialYaw;
@@ -27,8 +27,9 @@ public class PersistentCameraEntity extends LocalPlayer {
     private long goalIdleSince = 0;
 
     private PersistentCameraEntity(Minecraft client, ClientLevel world, LocalPlayer player) {
-        super(client, world, player.connection, player.getStats(), player.getRecipeBook(), false, false);
-        this.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
+        super(client, world, player.connection, player.getStats(), player.getRecipeBook(),
+                Input.EMPTY, false, ChatAbilities.NO_RESTRICTIONS);
+        this.snapTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
         this.setYRot(player.getYRot());
         this.setXRot(player.getXRot());
         this.updateLastTickValues();
@@ -78,7 +79,7 @@ public class PersistentCameraEntity extends LocalPlayer {
         float factor = 1F - (float)(goal.pos.distanceTo(newPos) / this.initialDistance);
         float newYaw = this.initialYaw + (goal.yaw - this.initialYaw) * factor;
         float newPitch = this.initialPitch + (goal.pitch - this.initialPitch) * factor;
-        this.moveTo(newPos.x, newPos.y, newPos.z, newYaw, newPitch);
+        this.snapTo(newPos.x, newPos.y, newPos.z, newYaw, newPitch);
         this.setYRot(newYaw);
         this.setXRot(newPitch);
         this.setYHeadRot(newYaw);
@@ -149,7 +150,7 @@ public class PersistentCameraEntity extends LocalPlayer {
         }
 
         if (!(client.getCameraEntity() instanceof PersistentCameraEntity)) {
-            client.setCameraEntity(new PersistentCameraEntity(client, player.clientLevel, player));
+            client.setCameraEntity(new PersistentCameraEntity(client, (ClientLevel) player.level(), player));
         }
 
         PersistentCameraEntity camera = (PersistentCameraEntity) Objects.requireNonNull(client.getCameraEntity());

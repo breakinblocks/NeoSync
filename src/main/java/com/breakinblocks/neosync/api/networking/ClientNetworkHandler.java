@@ -1,18 +1,16 @@
 package com.breakinblocks.neosync.api.networking;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.breakinblocks.neosync.api.shell.ClientShell;
 import com.breakinblocks.neosync.api.shell.Shell;
 import com.breakinblocks.neosync.api.shell.ShellState;
 
-@OnlyIn(Dist.CLIENT)
 public final class ClientNetworkHandler {
     private ClientNetworkHandler() {}
 
@@ -58,7 +56,7 @@ public final class ClientNetworkHandler {
     public static void onPlayerIsAlive(PlayerIsAlivePacket payload) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
-        Player updated = player.clientLevel.getPlayerByUUID(payload.playerUuid());
+        Player updated = ((ClientLevel) player.level()).getPlayerByUUID(payload.playerUuid());
         if (updated == null) return;
         if (updated.getHealth() <= 0) {
             updated.setHealth(0.01F);
@@ -70,9 +68,9 @@ public final class ClientNetworkHandler {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
         for (int i = 0; i < 3; ++i) {
-            player.clientLevel.addDestroyBlockEffect(payload.pos(), Blocks.DEEPSLATE.defaultBlockState());
-            player.clientLevel.addDestroyBlockEffect(payload.pos().above(), Blocks.DEEPSLATE.defaultBlockState());
+            ((ClientLevel) player.level()).addDestroyBlockEffect(payload.pos(), Blocks.DEEPSLATE.defaultBlockState());
+            ((ClientLevel) player.level()).addDestroyBlockEffect(payload.pos().above(), Blocks.DEEPSLATE.defaultBlockState());
         }
-        player.clientLevel.playSound(player, payload.pos(), SoundEvents.DEEPSLATE_BREAK, SoundSource.BLOCKS, 1F, player.getVoicePitch());
+        ((ClientLevel) player.level()).playSound(player, payload.pos(), SoundEvents.DEEPSLATE_BREAK, SoundSource.BLOCKS, 1F, player.getVoicePitch());
     }
 }

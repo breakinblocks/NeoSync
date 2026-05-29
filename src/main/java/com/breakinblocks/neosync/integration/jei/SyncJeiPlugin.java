@@ -6,17 +6,17 @@ import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.common.item.SyncItems;
 
 @JeiPlugin
 public class SyncJeiPlugin implements IModPlugin {
-    private static final ResourceLocation ID = NeoSync.locate("jei_plugin");
+    private static final Identifier ID = NeoSync.locate("jei_plugin");
 
     @Override
-    public ResourceLocation getPluginUid() {
+    public Identifier getPluginUid() {
         return ID;
     }
 
@@ -27,8 +27,6 @@ public class SyncJeiPlugin implements IModPlugin {
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
-        // Info descriptions for the core items — gives players a hint about what each block does
-        // without needing to open the README.
         registration.addIngredientInfo(new ItemStack(SyncItems.SYNC_CORE.get()), VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.sync_core"));
 
@@ -41,7 +39,6 @@ public class SyncJeiPlugin implements IModPlugin {
         registration.addIngredientInfo(new ItemStack(SyncItems.TREADMILL.get()), VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.treadmill"));
 
-        // Treadmill energy sources: one entry per configured entity
         registration.addRecipes(TreadmillEnergyCategory.RECIPE_TYPE, TreadmillEnergyCategory.buildRecipes());
     }
 }

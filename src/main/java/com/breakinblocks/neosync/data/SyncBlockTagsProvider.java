@@ -4,15 +4,14 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.common.block.SyncBlocks;
 
 import java.util.concurrent.CompletableFuture;
 
 public final class SyncBlockTagsProvider extends BlockTagsProvider {
-    public SyncBlockTagsProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries, ExistingFileHelper existing) {
-        super(output, registries, NeoSync.MOD_ID, existing);
+    public SyncBlockTagsProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
+        super(output, registries, NeoSync.MOD_ID);
     }
 
     @Override

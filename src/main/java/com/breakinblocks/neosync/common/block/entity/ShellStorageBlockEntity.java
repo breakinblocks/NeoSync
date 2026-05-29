@@ -1,33 +1,26 @@
 package com.breakinblocks.neosync.common.block.entity;
 
-import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import com.breakinblocks.neosync.common.block.ShellStorageBlock;
-import com.breakinblocks.neosync.client.gui.ShellSelectorGUI;
 import com.breakinblocks.neosync.common.config.SyncConfig;
-import com.breakinblocks.neosync.compat.sable.SableCompat;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DyeItem;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.DyeItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.nbt.CompoundTag;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.neoforged.neoforge.transfer.energy.EnergyHandler;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 
-public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity implements IEnergyStorage {
+public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity implements EnergyHandler {
     private EntityState entityState;
     private int ticksWithoutPower;
     private int storedEnergy;
@@ -47,7 +40,6 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
         return DyeColor.RED;
     }
 
-    @OnlyIn(Dist.CLIENT)
     public float getConnectorProgress(float tickDelta) {
         return this.getBottomPart().map(x -> ((ShellStorageBlockEntity)x).connectorAnimator.getProgress(tickDelta)).orElse(0f);
     }
@@ -94,128 +86,73 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
-    public void onEntityCollisionClient(Entity entity, BlockState state) {
-        Minecraft client = Minecraft.getInstance();
-        if (!(entity instanceof Player player)) {
-            return;
-        }
-
-        Object sublevel = SableCompat.getContainingSublevel(this);
-        Vec3 effectivePos = sublevel != null ? SableCompat.worldToLocal(sublevel, entity.position()) : entity.position();
-
-        if (this.entityState == EntityState.NONE) {
-            boolean isInside = BlockPosUtil.isEntityInside(effectivePos, this.worldPosition);
-            PlayerSyncEvents.ShellSelectionFailureReason failureReason = !isInside && client.player == entity ? PlayerSyncEvents.ALLOW_SHELL_SELECTION.invoker().allowShellSelection(player, this) : null;
-            this.entityState = isInside || failureReason != null ? EntityState.CHILLING : EntityState.ENTERING;
-            if (failureReason != null) {
-                player.displayClientMessage(failureReason.toText(), true);
-            }
-        } else if (this.entityState != EntityState.CHILLING && client.screen == null) {
-            moveTowardBlock(entity, sublevel, state.getValue(ShellStorageBlock.FACING), this.entityState == EntityState.ENTERING);
-        }
-
-        if (this.entityState == EntityState.ENTERING && client.player == entity && client.screen == null && BlockPosUtil.isEntityInside(effectivePos, this.worldPosition)) {
-            client.setScreen(new ShellSelectorGUI(() -> this.entityState = EntityState.LEAVING, () -> this.entityState = EntityState.CHILLING));
-        }
+    public EntityState getEntityState() {
+        return this.entityState;
     }
 
-    @OnlyIn(Dist.CLIENT)
-    private void moveTowardBlock(Entity entity, Object sublevel, net.minecraft.core.Direction facing, boolean inside) {
-        if (sublevel == null) {
-            BlockPosUtil.moveEntity(entity, this.worldPosition, facing, inside);
-            return;
-        }
-        net.minecraft.core.Direction targetDirection = facing.getOpposite();
-        double tx = this.worldPosition.getX() + 0.5;
-        double tz = this.worldPosition.getZ() + 0.5;
-        if (!inside) {
-            tx += targetDirection.getStepX();
-            tz += targetDirection.getStepZ();
-        }
-        Vec3 targetWorld = SableCompat.localToWorld(sublevel, new Vec3(tx, this.worldPosition.getY(), tz));
-        float yaw = targetDirection.toYRot() + SableCompat.getSublevelYaw(sublevel);
-        BlockPosUtil.moveEntityToward(entity, targetWorld, yaw);
+    public void setEntityState(EntityState entityState) {
+        this.entityState = entityState;
     }
 
     @Override
     public InteractionResult onUse(Level world, BlockPos pos, Player player, InteractionHand hand) {
-        if (world.isClientSide) {
+        if (world.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
 
         ItemStack stack = player.getItemInHand(hand);
-        Item item = stack.getItem();
-        if (stack.getCount() > 0 && item instanceof DyeItem dye) {
-            stack.shrink(1);
-            this.color = dye.getDyeColor();
+        if (stack.getCount() > 0 && stack.getItem() instanceof DyeItem) {
+            DyeColor dyeColor = stack.get(DataComponents.DYE);
+            if (dyeColor != null) {
+                stack.shrink(1);
+                this.color = dyeColor;
+            }
         }
         return InteractionResult.SUCCESS;
     }
 
-    // IEnergyStorage implementation
     @Override
-    public int receiveEnergy(int maxReceive, boolean simulate) {
-        if (SyncConfig.getInstance().shellStorageConsumption() == 0) {
-            return 0;
-        }
+    public long getAmountAsLong() {
+        return this.getBottomPart().map(x -> (long) ((ShellStorageBlockEntity) x).storedEnergy).orElse(0L);
+    }
 
-        ShellStorageBlockEntity bottom = (ShellStorageBlockEntity)this.getBottomPart().orElse(null);
-        if (bottom == null) {
-            return 0;
-        }
+    @Override
+    public long getCapacityAsLong() {
+        return SyncConfig.getInstance().shellStorageConsumption() == 0 ? 0L : SyncConfig.getInstance().shellStorageCapacity();
+    }
 
-        int capacity = bottom.getMaxEnergyStored();
+    @Override
+    public int insert(int amount, TransactionContext transaction) {
+        if (SyncConfig.getInstance().shellStorageConsumption() == 0) return 0;
+        ShellStorageBlockEntity bottom = (ShellStorageBlockEntity) this.getBottomPart().orElse(null);
+        if (bottom == null) return 0;
+        int capacity = (int) this.getCapacityAsLong();
         int maxEnergy = Mth.clamp(capacity - bottom.storedEnergy, 0, capacity);
-        int inserted = Mth.clamp(maxReceive, 0, maxEnergy);
-
-        if (!simulate) {
-            bottom.storedEnergy += inserted;
-        }
-
+        int inserted = Mth.clamp(amount, 0, maxEnergy);
+        bottom.storedEnergy += inserted;
         return inserted;
     }
 
     @Override
-    public int extractEnergy(int maxExtract, boolean simulate) {
+    public int extract(int amount, TransactionContext transaction) {
         return 0;
     }
 
     @Override
-    public int getEnergyStored() {
-        return this.getBottomPart().map(x -> ((ShellStorageBlockEntity)x).storedEnergy).orElse(0);
+    protected void saveAdditional(ValueOutput out) {
+        super.saveAdditional(out);
+        out.putInt("storedEnergy", this.storedEnergy);
+        out.putInt("ticksWithoutPower", this.ticksWithoutPower);
     }
 
     @Override
-    public int getMaxEnergyStored() {
-        return Math.toIntExact(SyncConfig.getInstance().shellStorageConsumption() == 0 ? 0 : SyncConfig.getInstance().shellStorageCapacity());
+    protected void loadAdditional(ValueInput in) {
+        super.loadAdditional(in);
+        this.storedEnergy = in.getIntOr("storedEnergy", 0);
+        this.ticksWithoutPower = in.getIntOr("ticksWithoutPower", 0);
     }
 
-    @Override
-    public boolean canExtract() {
-        return false;
-    }
-
-    @Override
-    public boolean canReceive() {
-        return SyncConfig.getInstance().shellStorageConsumption() != 0;
-    }
-
-    @Override
-    protected void saveAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
-        super.saveAdditional(nbt, registries);
-        nbt.putInt("storedEnergy", this.storedEnergy);
-        nbt.putInt("ticksWithoutPower", this.ticksWithoutPower);
-    }
-
-    @Override
-    protected void loadAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
-        super.loadAdditional(nbt, registries);
-        this.storedEnergy = nbt.getInt("storedEnergy");
-        this.ticksWithoutPower = nbt.getInt("ticksWithoutPower");
-    }
-
-    private enum EntityState {
+    public enum EntityState {
         NONE,
         ENTERING,
         CHILLING,

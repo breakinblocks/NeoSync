@@ -2,16 +2,22 @@ package com.breakinblocks.neosync.mixins.client;
 
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import com.breakinblocks.neosync.api.networking.SynchronizationRequestPacket;
 import com.breakinblocks.neosync.api.shell.ClientShell;
@@ -26,14 +32,6 @@ import com.breakinblocks.neosync.common.entity.PersistentCameraEntity;
 import com.breakinblocks.neosync.common.entity.PersistentCameraEntityGoal;
 import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import com.breakinblocks.neosync.common.utils.WorldUtil;
-import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Comparator;
 import java.util.List;
@@ -44,9 +42,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@OnlyIn(Dist.CLIENT)
 @Mixin(LocalPlayer.class)
-public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer implements ClientShell, KillableEntity, LookingEntity {
+public abstract class ClientPlayerEntityMixin extends AbstractClientPlayer implements ClientShell, KillableEntity, LookingEntity {
     @Final
     @Shadow
     protected Minecraft minecraft;
@@ -57,13 +54,13 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
     @Unique
     private ConcurrentMap<UUID, ShellState> sync$shellsById = new ConcurrentHashMap<>();
 
-    private ClientPlayerEntityMixin(ClientLevel world, GameProfile profile) {
-        super(world, profile);
+    private ClientPlayerEntityMixin(ClientLevel level, GameProfile profile) {
+        super(level, profile);
     }
 
     @Override
     public @Nullable PlayerSyncEvents.SyncFailureReason beginSync(ShellState state) {
-        ClientLevel world = this.clientLevel;
+        ClientLevel world = (ClientLevel) this.level();
         if (world == null) {
             return PlayerSyncEvents.SyncFailureReason.OTHER_PROBLEM;
         }
@@ -80,7 +77,8 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
         PlayerSyncEvents.START_SYNCING.invoker().onStartSyncing(this, state);
 
         BlockPos pos = this.blockPosition();
-        Direction facing = BlockPosUtil.getHorizontalFacing(pos, world).orElse(this.getDirection().getOpposite());
+        Direction facing = BlockPosUtil.getHorizontalFacing(pos, world)
+                .orElse(this.getDirection().getOpposite());
         SynchronizationRequestPacket request = new SynchronizationRequestPacket(state);
         PersistentCameraEntityGoal cameraGoal = this.isDeadOrDying()
                 ? PersistentCameraEntityGoal.limbo(pos, facing, state.getPos(), __ -> request.send())
@@ -96,8 +94,7 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
     }
 
     @Override
-    public void endSync(ResourceLocation startWorld, BlockPos startPos, Direction startFacing, ResourceLocation targetWorld, BlockPos targetPos, Direction targetFacing, @Nullable ShellState storedState) {
-        LocalPlayer player = (LocalPlayer)(Object)this;
+    public void endSync(Identifier startWorld, BlockPos startPos, Direction startFacing, Identifier targetWorld, BlockPos targetPos, Direction targetFacing, @Nullable ShellState storedState) {
         boolean syncFailed = Objects.equals(startPos, targetPos);
 
         if (!syncFailed) {
@@ -127,7 +124,8 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
 
         boolean enableCamera = Objects.equals(startWorld, targetWorld);
         if (enableCamera) {
-            PersistentCameraEntityGoal cameraGoal = PersistentCameraEntityGoal.highwayToHell(startPos, startFacing, targetPos, targetFacing, __ -> restore.run());
+            PersistentCameraEntityGoal cameraGoal =
+                    PersistentCameraEntityGoal.highwayToHell(startPos, startFacing, targetPos, targetFacing, __ -> restore.run());
             PersistentCameraEntity.setup(this.minecraft, cameraGoal);
         } else {
             restore.run();
@@ -136,7 +134,7 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
 
     @Override
     public UUID getShellOwnerUuid() {
-        return this.getGameProfile().getId();
+        return this.getGameProfile().id();
     }
 
     @Override
@@ -187,7 +185,7 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
 
     @Override
     public boolean changeLookingEntityLookDirection(double cursorDeltaX, double cursorDeltaY) {
-        return this.minecraft.getCameraEntity() instanceof PersistentCameraEntity;
+        return false;
     }
 
     @Override
@@ -197,7 +195,7 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
         }
 
         BlockPos pos = this.blockPosition();
-        ResourceLocation world = WorldUtil.getId(this.level());
+        Identifier world = WorldUtil.getId(this.level());
         List<ShellPriority> priorities = SyncConfig.getInstance().syncPriority().stream()
                 .map(SyncConfig.ShellPriorityEntry::priority)
                 .collect(Collectors.toList());
@@ -217,13 +215,9 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
     @Inject(method = "aiStep", at = @At("HEAD"), cancellable = true)
     private void sync$updatePostDeath(CallbackInfo ci) {
         if (this.isDeadOrDying()) {
-            if (this.minecraft.screen instanceof DeathScreen) {
-                this.deathTime = Mth.clamp(this.deathTime, 0, 19);
-            } else {
-                this.deathTime = Mth.clamp(++this.deathTime, 0, 20);
-                if (this.updateKillableEntityPostDeath()) {
-                    ci.cancel();
-                }
+            this.deathTime = Mth.clamp(++this.deathTime, 0, 20);
+            if (this.updateKillableEntityPostDeath()) {
+                ci.cancel();
             }
         }
     }

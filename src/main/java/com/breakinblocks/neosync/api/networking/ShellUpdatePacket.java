@@ -4,7 +4,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -15,17 +15,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public record ShellUpdatePacket(ResourceLocation worldId, boolean isArtificial, List<ShellState> states) implements CustomPacketPayload {
+public record ShellUpdatePacket(Identifier worldId, boolean isArtificial, List<ShellState> states) implements CustomPacketPayload {
     public static final Type<ShellUpdatePacket> TYPE = new Type<>(NeoSync.locate("shell/update"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ShellUpdatePacket> STREAM_CODEC = StreamCodec.composite(
-            ResourceLocation.STREAM_CODEC, ShellUpdatePacket::worldId,
+            Identifier.STREAM_CODEC, ShellUpdatePacket::worldId,
             ByteBufCodecs.BOOL, ShellUpdatePacket::isArtificial,
             ShellState.STREAM_CODEC.apply(ByteBufCodecs.collection(ArrayList::new)), ShellUpdatePacket::states,
             ShellUpdatePacket::new
     );
 
-    public ShellUpdatePacket(ResourceLocation worldId, boolean isArtificial, Collection<ShellState> states) {
+    public ShellUpdatePacket(Identifier worldId, boolean isArtificial, Collection<ShellState> states) {
         this(worldId, isArtificial, states == null ? List.of() : List.copyOf(states));
     }
 

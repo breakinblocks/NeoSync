@@ -29,42 +29,37 @@ public final class BlockPosUtil {
     }
 
     public static boolean isEntityInside(Entity entity, BlockPos pos) {
-        return isEntityInside(entity.position(), pos);
-    }
-
-    public static boolean isEntityInside(Vec3 effectivePos, BlockPos pos) {
-        double dX = Math.abs((pos.getX() + 0.5) - effectivePos.x);
-        double dZ = Math.abs((pos.getZ() + 0.5) - effectivePos.z);
+        double dX = Math.abs((pos.getX() + 0.5) - entity.getX());
+        double dZ = Math.abs((pos.getZ() + 0.5) - entity.getZ());
         final double MAX_DELTA = 0.01;
         return dX < MAX_DELTA && dZ < MAX_DELTA;
     }
 
     public static void moveEntity(Entity entity, BlockPos target, Direction facing, boolean inside) {
         Direction targetDirection = facing.getOpposite();
+        Vec3 currentPos = entity.position();
         double targetX = target.getX() + 0.5;
         double targetZ = target.getZ() + 0.5;
         if (!inside) {
             targetX += targetDirection.getStepX();
             targetZ += targetDirection.getStepZ();
         }
-        moveEntityToward(entity, new Vec3(targetX, entity.getY(), targetZ), targetDirection.toYRot());
-    }
-
-    public static void moveEntityToward(Entity entity, Vec3 targetWorldPos, float facingYaw) {
-        Vec3 currentPos = entity.position();
+        double currentX = currentPos.x;
+        double currentZ = currentPos.z;
         final double MAX_SPEED = 0.33;
-        double velocityX = getMinVelocity(targetWorldPos.x - currentPos.x, MAX_SPEED);
-        double velocityZ = getMinVelocity(targetWorldPos.z - currentPos.z, MAX_SPEED);
+        double velocityX = getMinVelocity(targetX - currentX, MAX_SPEED);
+        double velocityZ = getMinVelocity(targetZ - currentZ, MAX_SPEED);
+        float yaw = targetDirection.toYRot();
 
         entity.setDeltaMovement(velocityX, 0, velocityZ);
         entity.setXRot(0);
-        entity.setYRot(facingYaw);
-        entity.setYHeadRot(facingYaw);
-        entity.setYBodyRot(facingYaw);
-        entity.yRotO = facingYaw;
+        entity.setYRot(yaw);
+        entity.setYHeadRot(yaw);
+        entity.setYBodyRot(yaw);
+        entity.yRotO = yaw;
         if (entity instanceof LivingEntity livingEntity) {
-            livingEntity.yBodyRotO = facingYaw;
-            livingEntity.yHeadRotO = facingYaw;
+            livingEntity.yBodyRotO = yaw;
+            livingEntity.yHeadRotO = yaw;
         }
     }
 

@@ -29,9 +29,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.util.Mth;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import com.breakinblocks.neosync.common.utils.ItemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -70,7 +73,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
             shell.setPos(this.worldPosition);
         }
 
-        if (this.level != null && !this.level.isClientSide && this.worldPosition != null && this.getBlockState() != null) {
+        if (this.level != null && !this.level.isClientSide() && this.worldPosition != null && this.getBlockState() != null) {
             this.checkShellState(this.level, this.worldPosition, this.getBlockState());
         }
     }
@@ -98,7 +101,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
         return (ShellStateManager)Objects.requireNonNull(this.level).getServer();
     }
 
-    protected Optional<AbstractShellContainerBlockEntity> getBottomPart() {
+    public Optional<AbstractShellContainerBlockEntity> getBottomPart() {
         if (this.bottomPart == null && this.level != null) {
             this.bottomPart = AbstractShellContainerBlock.isBottom(this.getBlockState()) ? this : (this.level.getBlockEntity(this.worldPosition.relative(Direction.DOWN)) instanceof AbstractShellContainerBlockEntity x ? x : null);
         }
@@ -211,7 +214,6 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
 
     public abstract InteractionResult onUse(Level world, BlockPos pos, Player player, InteractionHand hand);
 
-    @OnlyIn(Dist.CLIENT)
     public float getDoorOpenProgress(float tickDelta) {
         return this.getBottomPart().map(x -> x.doorAnimator.getProgress(tickDelta)).orElse(0f);
     }
@@ -223,9 +225,9 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        CompoundTag nbt = super.getUpdateTag(registries);
-        this.saveAdditional(nbt, registries);
-        return nbt;
+        TagValueOutput out = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
+        this.saveCustomOnly(out);
+        return out.buildResult();
     }
 
     @Override
@@ -234,35 +236,29 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
     }
 
     @Override
-    protected void saveAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
-        super.saveAdditional(nbt, registries);
-        SyncRegistries.push(registries);
-        try {
-            if (this.shell != null) {
-                nbt.put("shell", this.shell.writeNbt(new CompoundTag()));
-            }
-        } finally {
-            SyncRegistries.pop();
+    protected void saveAdditional(ValueOutput out) {
+        super.saveAdditional(out);
+        if (this.shell != null) {
+            out.store("shell", CompoundTag.CODEC, this.shell.writeNbt(new CompoundTag()));
         }
-        nbt.putInt("color", this.color == null ? -1 : this.color.getId());
+        out.putInt("color", this.color == null ? -1 : this.color.getId());
     }
 
     @Override
-    protected void loadAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
-        super.loadAdditional(nbt, registries);
-        SyncRegistries.push(registries);
+    protected void loadAdditional(ValueInput in) {
+        super.loadAdditional(in);
+        SyncRegistries.push(in.lookup());
         try {
-            this.shell = nbt.contains("shell") ? ShellState.fromNbt(nbt.getCompound("shell")) : null;
+            this.shell = in.read("shell", CompoundTag.CODEC).map(ShellState::fromNbt).orElse(null);
         } finally {
             SyncRegistries.pop();
         }
 
-        // Fix position for existing shells
         if (this.shell != null && this.worldPosition != null) {
             this.shell.setPos(this.worldPosition);
         }
 
-        int colorId = nbt.contains("color", Tag.TAG_INT) ? nbt.getInt("color") : -1;
+        int colorId = in.getIntOr("color", -1);
         this.color = colorId == -1 ? null : DyeColor.byId(colorId);
     }
 

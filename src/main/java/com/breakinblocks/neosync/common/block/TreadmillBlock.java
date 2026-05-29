@@ -26,8 +26,6 @@
     import net.minecraft.world.phys.shapes.CollisionContext;
     import net.minecraft.world.phys.shapes.Shapes;
     import net.minecraft.world.phys.shapes.VoxelShape;
-    import net.neoforged.api.distmarker.Dist;
-    import net.neoforged.api.distmarker.OnlyIn;
     import com.breakinblocks.neosync.common.block.entity.SyncBlockEntities;
     import com.breakinblocks.neosync.common.block.entity.TickableBlockEntity;
     import com.breakinblocks.neosync.common.block.entity.TreadmillBlockEntity;
@@ -76,11 +74,10 @@
 
         @Override
         public RenderShape getRenderShape(BlockState state) {
-            return RenderShape.ENTITYBLOCK_ANIMATED;
+            return RenderShape.MODEL;
         }
 
         @Override
-        @OnlyIn(Dist.CLIENT)
         public void animateTick(BlockState state, Level world, BlockPos pos, RandomSource random) {
             Part part = state.getValue(PART);
             Direction facing = state.getValue(FACING);
@@ -105,14 +102,6 @@
             builder.add(FACING, PART);
         }
 
-        @Override
-        public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor world, BlockPos pos, BlockPos neighborPos) {
-            if (direction == getDirectionTowardsOtherPart(state.getValue(PART), state.getValue(FACING))) {
-                return neighborState.is(this) && neighborState.getValue(PART) != state.getValue(PART) ? state : Blocks.AIR.defaultBlockState();
-            } else {
-                return super.updateShape(state, direction, neighborState, world, pos, neighborPos);
-            }
-        }
 
         @Override
         public BlockState getStateForPlacement(BlockPlaceContext ctx) {
@@ -125,7 +114,7 @@
         @Override
         public void setPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
             super.setPlacedBy(world, pos, state, placer, itemStack);
-            if (!world.isClientSide) {
+            if (!world.isClientSide()) {
                 BlockPos blockPos = pos.relative(state.getValue(FACING));
                 world.setBlock(blockPos, state.setValue(PART, Part.FRONT), 3);
                 world.updateNeighborsAt(pos, Blocks.AIR);
@@ -135,7 +124,7 @@
 
         @Override
         public BlockState playerWillDestroy(Level world, BlockPos pos, BlockState state, Player player) {
-            if (!world.isClientSide && player.isCreative()) {
+            if (!world.isClientSide() && player.isCreative()) {
                 Part part = state.getValue(PART);
                 if (part == Part.FRONT) {
                     BlockPos blockPos = pos.relative(getDirectionTowardsOtherPart(part, state.getValue(FACING)));
@@ -170,7 +159,7 @@
 
         @Override
         public void stepOn(Level world, BlockPos pos, BlockState state, Entity entity) {
-            if (!world.isClientSide && world.getBlockEntity(pos) instanceof TreadmillBlockEntity treadmillBlockEntity) {
+            if (!world.isClientSide() && world.getBlockEntity(pos) instanceof TreadmillBlockEntity treadmillBlockEntity) {
                 treadmillBlockEntity.onSteppedOn(pos, state, entity);
             }
         }

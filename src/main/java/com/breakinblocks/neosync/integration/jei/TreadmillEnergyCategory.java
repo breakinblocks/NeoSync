@@ -1,5 +1,6 @@
 package com.breakinblocks.neosync.integration.jei;
 
+import mezz.jei.api.gui.widgets.IRecipeExtrasBuilder;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -7,8 +8,6 @@ import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
@@ -65,15 +64,16 @@ public class TreadmillEnergyCategory implements IRecipeCategory<TreadmillEnergyC
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, TreadmillEnergyRecipe recipe, IFocusGroup focuses) {
-        SpawnEggItem eggItem = SpawnEggItem.byId(recipe.entity());
-        ItemStack display = eggItem != null ? new ItemStack(eggItem) : new ItemStack(Items.EGG);
+        ItemStack display = SpawnEggItem.byId(recipe.entity())
+                .map(holder -> new ItemStack(holder.value()))
+                .orElse(new ItemStack(Items.EGG));
         builder.addSlot(RecipeIngredientRole.INPUT, 6, 7).addItemStack(display);
     }
 
     @Override
-    public void draw(TreadmillEnergyRecipe recipe, mezz.jei.api.gui.ingredient.IRecipeSlotsView view, GuiGraphics graphics, double mouseX, double mouseY) {
+    public void createRecipeExtras(IRecipeExtrasBuilder builder, TreadmillEnergyRecipe recipe, IFocusGroup focuses) {
         Component text = Component.translatable("jei.neosync.energy_per_tick", recipe.energyPerTick());
-        graphics.drawString(Minecraft.getInstance().font, text, 30, 11, 0x404040, false);
+        builder.addText(text, 96, 16).setPosition(30, 7);
     }
 
     public record TreadmillEnergyRecipe(EntityType<?> entity, long energyPerTick) {}

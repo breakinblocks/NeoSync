@@ -1,11 +1,14 @@
 package com.breakinblocks.neosync.common.block.entity;
 
 import net.minecraft.core.registries.Registries;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.common.block.SyncBlocks;
+
+import java.util.Set;
 
 public class SyncBlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
@@ -13,16 +16,16 @@ public class SyncBlockEntities {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ShellStorageBlockEntity>> SHELL_STORAGE =
             BLOCK_ENTITIES.register("shell_storage",
-                    () -> BlockEntityType.Builder.of(ShellStorageBlockEntity::new,
-                            SyncBlocks.SHELL_STORAGE.get()).build(null));
+                    () -> new BlockEntityType<ShellStorageBlockEntity>(ShellStorageBlockEntity::new,
+                            Set.<Block>of(SyncBlocks.SHELL_STORAGE.get())));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ShellConstructorBlockEntity>> SHELL_CONSTRUCTOR =
             BLOCK_ENTITIES.register("shell_constructor",
-                    () -> BlockEntityType.Builder.of(ShellConstructorBlockEntity::new,
-                            SyncBlocks.SHELL_CONSTRUCTOR.get()).build(null));
+                    () -> new BlockEntityType<ShellConstructorBlockEntity>(ShellConstructorBlockEntity::new,
+                            Set.<Block>of(SyncBlocks.SHELL_CONSTRUCTOR.get())));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TreadmillBlockEntity>> TREADMILL =
             BLOCK_ENTITIES.register("treadmill",
-                    () -> BlockEntityType.Builder.of(TreadmillBlockEntity::new,
-                            SyncBlocks.TREADMILL.get()).build(null));
+                    () -> new BlockEntityType<TreadmillBlockEntity>(TreadmillBlockEntity::new,
+                            Set.<Block>of(SyncBlocks.TREADMILL.get())));
 }

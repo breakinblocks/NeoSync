@@ -5,7 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -16,13 +16,8 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.common.block.entity.ShellEntity;
 import com.breakinblocks.neosync.common.item.SimpleInventory;
 import com.breakinblocks.neosync.common.utils.WorldUtil;
-import com.breakinblocks.neosync.compat.sable.SableCompat;
-import org.jetbrains.annotations.Nullable;
 import com.breakinblocks.neosync.common.utils.math.Radians;
 import com.breakinblocks.neosync.common.utils.nbt.NbtSerializer;
 import com.breakinblocks.neosync.common.utils.nbt.NbtSerializerFactory;
@@ -87,9 +82,8 @@ public class ShellState {
     private float experienceProgress;
     private int totalExperience;
 
-    private ResourceLocation world;
+    private Identifier world;
     private BlockPos pos;
-    private UUID subLevelUuid;
 
     private final NbtSerializer<ShellState> serializer;
 
@@ -173,7 +167,7 @@ public class ShellState {
         return this.totalExperience;
     }
 
-    public ResourceLocation getWorld() {
+    public Identifier getWorld() {
         return this.world;
     }
 
@@ -183,11 +177,6 @@ public class ShellState {
 
     public void setPos(BlockPos pos) {
         this.pos = pos;
-    }
-
-    @Nullable
-    public UUID getSubLevelUuid() {
-        return this.subLevelUuid;
     }
 
     private ShellState() {
@@ -261,7 +250,8 @@ public class ShellState {
 
         shell.ownerUuid = player.getUUID();
         shell.ownerName = player.getName().getString();
-        Property textures = player.getGameProfile().getProperties().get("textures").stream().findFirst().orElse(null);
+        java.util.Collection<Property> texturesCol = player.getGameProfile().properties().get("textures");
+        Property textures = texturesCol != null ? texturesCol.stream().findFirst().orElse(null) : null;
         if (textures != null) {
             shell.textureValue = textures.value();
             shell.textureSignature = textures.signature();
@@ -277,7 +267,7 @@ public class ShellState {
 
             shell.foodLevel = player.getFoodData().getFoodLevel();
             shell.saturationLevel = player.getFoodData().getSaturationLevel();
-            shell.exhaustion = player.getFoodData().getExhaustionLevel();
+            shell.exhaustion = 0;
 
             shell.experienceLevel = player.experienceLevel;
             shell.experienceProgress = player.experienceProgress;
@@ -290,7 +280,6 @@ public class ShellState {
 
         shell.world = WorldUtil.getId(player.level());
         shell.pos = pos;
-        shell.subLevelUuid = SableCompat.getSublevelUuid(SableCompat.getTrackingSublevel(player));
 
         return shell;
     }
@@ -340,8 +329,8 @@ public class ShellState {
             }
         }
 
-        float h = world.random.nextFloat() * 0.5F;
-        float v = world.random.nextFloat() * 2 * Radians.R_PI;
+        float h = world.getRandom().nextFloat() * 0.5F;
+        float v = world.getRandom().nextFloat() * 2 * Radians.R_PI;
         item.setDeltaMovement(-Mth.sin(v) * h, 0.2, Mth.cos(v) * h);
         world.addFreshEntity(item);
     }
@@ -367,17 +356,6 @@ public class ShellState {
     }
 
 
-    @OnlyIn(Dist.CLIENT)
-    private ShellEntity entityInstance;
-
-    @OnlyIn(Dist.CLIENT)
-    public ShellEntity asEntity() {
-        if (this.entityInstance == null) {
-            this.entityInstance = new ShellEntity(this);
-        }
-        return this.entityInstance;
-    }
-
     static {
         NBT_SERIALIZER_FACTORY = new NbtSerializerFactoryBuilder<ShellState>()
                 .add(UUID.class, "uuid", x -> x.uuid, (x, uuid) -> x.uuid = uuid)
@@ -402,9 +380,8 @@ public class ShellState {
                 .add(Float.class, "experienceProgress", x -> x.experienceProgress, (x, experienceProgress) -> x.experienceProgress = experienceProgress)
                 .add(Integer.class, "totalExperience", x -> x.totalExperience, (x, totalExperience) -> x.totalExperience = totalExperience)
 
-                .add(ResourceLocation.class, "world", x -> x.world, (x, world) -> x.world = world)
+                .add(Identifier.class, "world", x -> x.world, (x, world) -> x.world = world)
                 .add(BlockPos.class, "pos", x -> x.pos, (x, pos) -> x.pos = pos)
-                .add(UUID.class, "subLevelUuid", x -> x.subLevelUuid, (x, id) -> x.subLevelUuid = id)
                 .build();
     }
 }

@@ -1,58 +1,75 @@
 package com.breakinblocks.neosync.client.render.block.entity;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.NeoSync;
+import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Quaternionf;
 import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.client.model.AbstractShellContainerModel;
-import com.breakinblocks.neosync.client.model.ShellStorageModel;
 import com.breakinblocks.neosync.common.block.AbstractShellContainerBlock;
-import com.breakinblocks.neosync.common.block.SyncBlocks;
-import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
 import com.breakinblocks.neosync.common.block.entity.ShellEntity;
+import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
 
-@OnlyIn(Dist.CLIENT)
-public class ShellStorageBlockEntityRenderer extends AbstractShellContainerBlockEntityRenderer<ShellStorageBlockEntity> {
-    private static final ResourceLocation SHELL_STORAGE_TEXTURE_ID = ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "textures/block/shell_storage.png");
-    private static final BlockState DEFAULT_STATE = SyncBlocks.SHELL_STORAGE.get().defaultBlockState()
-            .setValue(AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER)
-            .setValue(AbstractShellContainerBlock.FACING, Direction.SOUTH)
-            .setValue(AbstractShellContainerBlock.OPEN, false);
-
-    private final ShellStorageModel model;
-
+public class ShellStorageBlockEntityRenderer extends AbstractShellContainerBlockEntityRenderer<ShellStorageBlockEntity, ShellContainerRenderState> {
     public ShellStorageBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
         super(context);
-        this.model = new ShellStorageModel();
     }
 
     @Override
-    protected AbstractShellContainerModel getShellContainerModel(ShellStorageBlockEntity blockEntity, BlockState blockState, float tickDelta) {
-        this.model.ledColor = blockEntity.getIndicatorColor();
-        this.model.connectorProgress = blockEntity.getConnectorProgress(tickDelta);
-        return this.model;
+    public ShellContainerRenderState createRenderState() {
+        return new ShellContainerRenderState();
     }
 
     @Override
-    protected ShellEntity createEntity(ShellState shellState, ShellStorageBlockEntity blockEntity, float tickDelta) {
-        ShellEntity entity = shellState.asEntity();
-        entity.isActive = shellState.getProgress() >= ShellState.PROGRESS_DONE;
-        entity.pitchProgress = entity.isActive ? blockEntity.getConnectorProgress(tickDelta) : 0;
-        return entity;
+    public void extractRenderState(ShellStorageBlockEntity blockEntity, ShellContainerRenderState renderState, float partialTick, Vec3 cameraPosition, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
+        super.extractRenderState(blockEntity, renderState, partialTick, cameraPosition, breakProgress);
+        renderState.facing = blockEntity.getBlockState().getValue(AbstractShellContainerBlock.FACING);
+        renderState.isLowerHalf = blockEntity.getBlockState().getValue(AbstractShellContainerBlock.HALF) == DoubleBlockHalf.LOWER;
+        renderState.doorOpenProgress = blockEntity.getDoorOpenProgress(partialTick);
+
+        ShellState shell = blockEntity.getShellState();
+        renderState.shellProgress = shell == null ? 0F : shell.getProgress();
+
+        if (renderState.isLowerHalf && shell != null && shell.getProgress() >= ShellState.PROGRESS_DONE) {
+            ShellEntity shellEntity = this.getOrCreateClientShellEntity(blockEntity);
+            if (shellEntity != null) {
+                EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+                renderState.shellEntityState = dispatcher.extractEntity(shellEntity, partialTick);
+            } else {
+                renderState.shellEntityState = null;
+            }
+        } else {
+            renderState.shellEntityState = null;
+        }
     }
 
     @Override
-    protected BlockState getDefaultState() {
-        return DEFAULT_STATE;
+    public void submit(ShellContainerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
+        if (state.shellEntityState == null || !state.isLowerHalf) {
+            return;
+        }
+        EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        poseStack.pushPose();
+        poseStack.translate(0.5, 0.0, 0.5);
+        float yaw = facingYaw(state.facing);
+        poseStack.mulPose(new Quaternionf().rotationY((float)Math.toRadians(yaw)));
+        dispatcher.submit(state.shellEntityState, camera, 0.0, 0.0, 0.0, poseStack, submitNodeCollector);
+        poseStack.popPose();
     }
 
-    @Override
-    protected ResourceLocation getTextureId() {
-        return SHELL_STORAGE_TEXTURE_ID;
+    private static float facingYaw(Direction facing) {
+        return switch (facing) {
+            case NORTH -> 180F;
+            case EAST -> 270F;
+            case WEST -> 90F;
+            default -> 0F;
+        };
     }
 }

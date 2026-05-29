@@ -8,9 +8,10 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import com.breakinblocks.neosync.NeoSync;
@@ -41,7 +42,7 @@ public record SynchronizationRequestPacket(Optional<UUID> shellUuid) implements 
     }
 
     public void send() {
-        PacketDistributor.sendToServer(this);
+        ClientPacketDistributor.sendToServer(this);
     }
 
     public static void handle(SynchronizationRequestPacket payload, IPayloadContext context) {
@@ -53,7 +54,7 @@ public record SynchronizationRequestPacket(Optional<UUID> shellUuid) implements 
 
             BlockPos currentPos = player.blockPosition();
             Level currentWorld = player.level();
-            ResourceLocation currentWorldId = WorldUtil.getId(currentWorld);
+            Identifier currentWorldId = WorldUtil.getId(currentWorld);
             Direction currentFacing = BlockPosUtil.getHorizontalFacing(currentPos, currentWorld)
                     .orElse(player.getDirection().getOpposite());
 
@@ -62,7 +63,7 @@ public record SynchronizationRequestPacket(Optional<UUID> shellUuid) implements 
                 if (state == null) {
                     return;
                 }
-                ResourceLocation targetWorldId = state.getWorld();
+                Identifier targetWorldId = state.getWorld();
                 BlockPos targetPos = state.getPos();
                 Direction targetFacing = player.getDirection().getOpposite();
                 PacketDistributor.sendToPlayer(player, new SynchronizationResponsePacket(

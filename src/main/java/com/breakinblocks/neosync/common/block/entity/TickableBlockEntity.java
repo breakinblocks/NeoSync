@@ -20,7 +20,7 @@ public interface TickableBlockEntity {
     }
 
     static <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world) {
-        return world.isClientSide ? TickableBlockEntity::clientTicker : TickableBlockEntity::serverTicker;
+        return world.isClientSide() ? TickableBlockEntity::clientTicker : TickableBlockEntity::serverTicker;
     }
 
     default void onClientTick(Level world, BlockPos pos, BlockState state) {

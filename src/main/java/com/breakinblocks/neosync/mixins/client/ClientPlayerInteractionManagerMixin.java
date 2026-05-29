@@ -3,14 +3,11 @@ package com.breakinblocks.neosync.mixins.client;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@OnlyIn(Dist.CLIENT)
 @Mixin(MultiPlayerGameMode.class)
 public abstract class ClientPlayerInteractionManagerMixin {
     /**

@@ -46,7 +46,7 @@ public abstract class ShellStateComponent {
      */
     @ApiStatus.NonExtendable
     public void readNbt(CompoundTag nbt) {
-        this.readComponentNbt(nbt.getCompound(this.getId()));
+        this.readComponentNbt(nbt.getCompound(this.getId()).orElse(new CompoundTag()));
     }
 
     /**

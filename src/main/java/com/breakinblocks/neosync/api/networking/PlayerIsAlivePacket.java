@@ -1,6 +1,6 @@
 package com.breakinblocks.neosync.api.networking;
 
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;

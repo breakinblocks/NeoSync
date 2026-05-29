@@ -1,6 +1,8 @@
 package com.breakinblocks.neosync.common.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
@@ -17,7 +19,8 @@ public class SyncBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(NeoSync.MOD_ID);
 
     public static final DeferredBlock<ShellStorageBlock> SHELL_STORAGE = BLOCKS.register("shell_storage",
-            () -> new ShellStorageBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS)
+            name -> new ShellStorageBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS)
+                    .setId(ResourceKey.create(Registries.BLOCK, name))
                     .mapColor(MapColor.COLOR_GRAY)
                     .requiresCorrectToolForDrops()
                     .strength(1.8F)
@@ -29,7 +32,8 @@ public class SyncBlocks {
                     .isViewBlocking(SyncBlocks::never)));
 
     public static final DeferredBlock<ShellConstructorBlock> SHELL_CONSTRUCTOR = BLOCKS.register("shell_constructor",
-            () -> new ShellConstructorBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS)
+            name -> new ShellConstructorBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS)
+                    .setId(ResourceKey.create(Registries.BLOCK, name))
                     .mapColor(MapColor.COLOR_GRAY)
                     .requiresCorrectToolForDrops()
                     .strength(1.8F)
@@ -41,7 +45,8 @@ public class SyncBlocks {
                     .isViewBlocking(SyncBlocks::never)));
 
     public static final DeferredBlock<TreadmillBlock> TREADMILL = BLOCKS.register("treadmill",
-            () -> new TreadmillBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE)
+            name -> new TreadmillBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE)
+                    .setId(ResourceKey.create(Registries.BLOCK, name))
                     .mapColor(MapColor.COLOR_GRAY)
                     .requiresCorrectToolForDrops()
                     .strength(1.8F)
