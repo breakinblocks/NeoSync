@@ -4,7 +4,9 @@ import com.breakinblocks.neosync.compat.sable.SableCompat;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +22,7 @@ public interface ShellStateContainer {
      */
     @Nullable
     static ShellStateContainer find(Level world, BlockPos pos) {
-        BlockEntity blockEntity = world.getBlockEntity(pos);
+        BlockEntity blockEntity = blockEntityIfLoaded(world, pos);
         return blockEntity instanceof ShellStateContainer container ? container : null;
     }
 
@@ -28,10 +30,10 @@ public interface ShellStateContainer {
     static ShellStateContainer findNear(Entity entity) {
         Object sublevel = SableCompat.getTrackingSublevel(entity);
         if (sublevel != null) {
-            net.minecraft.world.level.BlockGetter plot = SableCompat.getSublevelBlockGetter(sublevel);
+            BlockGetter plot = SableCompat.getSublevelBlockGetter(sublevel);
             if (plot != null) {
                 Vec3 local = SableCompat.worldToLocal(sublevel, entity.position());
-                BlockEntity be = plot.getBlockEntity(BlockPos.containing(local));
+                BlockEntity be = blockEntityIfLoaded(plot, BlockPos.containing(local));
                 if (be instanceof ShellStateContainer container) return container;
             }
         }
@@ -61,10 +63,18 @@ public interface ShellStateContainer {
     @Nullable
     private static ShellStateContainer lookupInSublevel(@Nullable Object sublevel, BlockPos pos) {
         if (sublevel == null) return null;
-        net.minecraft.world.level.BlockGetter plot = SableCompat.getSublevelBlockGetter(sublevel);
+        BlockGetter plot = SableCompat.getSublevelBlockGetter(sublevel);
         if (plot == null) return null;
-        BlockEntity be = plot.getBlockEntity(pos);
+        BlockEntity be = blockEntityIfLoaded(plot, pos);
         return be instanceof ShellStateContainer container ? container : null;
+    }
+
+    @Nullable
+    private static BlockEntity blockEntityIfLoaded(BlockGetter getter, BlockPos pos) {
+        if (getter instanceof LevelReader reader && !reader.hasChunkAt(pos)) {
+            return null;
+        }
+        return getter.getBlockEntity(pos);
     }
 
     /**
