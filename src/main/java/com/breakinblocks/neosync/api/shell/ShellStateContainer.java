@@ -15,6 +15,9 @@ public interface ShellStateContainer {
      */
     @Nullable
     static ShellStateContainer find(Level world, BlockPos pos) {
+        if (!world.hasChunkAt(pos)) {
+            return null;
+        }
         BlockEntity blockEntity = world.getBlockEntity(pos);
         return blockEntity instanceof ShellStateContainer container ? container : null;
     }
