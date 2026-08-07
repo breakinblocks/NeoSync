@@ -7,6 +7,7 @@ import com.breakinblocks.neosync.common.config.SyncConfig;
 import com.breakinblocks.neosync.compat.sable.SableCompat;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -34,9 +35,21 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
     private final BooleanAnimator connectorAnimator;
 
     public ShellStorageBlockEntity(BlockPos pos, BlockState state) {
-        super(SyncBlockEntities.SHELL_STORAGE.get(), pos, state);
+        this(SyncBlockEntities.SHELL_STORAGE.get(), pos, state);
+    }
+
+    protected ShellStorageBlockEntity(BlockEntityType<? extends ShellStorageBlockEntity> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
         this.entityState = EntityState.NONE;
         this.connectorAnimator = new BooleanAnimator(false);
+    }
+
+    protected boolean requiresPower() {
+        return true;
+    }
+
+    protected boolean shouldOpenDoors(Level world, BlockPos pos, boolean isPowered) {
+        return isPowered;
     }
 
     public DyeColor getIndicatorColor() {
@@ -57,13 +70,13 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
         super.onServerTick(world, pos, state);
 
         SyncConfig config = SyncConfig.getInstance();
-        boolean infinitePower = config.shellStorageConsumption() == 0;
+        boolean infinitePower = !this.requiresPower() || config.shellStorageConsumption() == 0;
         boolean isReceivingRedstonePower = !infinitePower
                 && config.shellStorageAcceptsRedstone()
                 && ShellStorageBlock.isEnabled(state);
         boolean hasEnergy = infinitePower ? true : this.storedEnergy > 0;
         boolean isPowered = infinitePower || isReceivingRedstonePower || hasEnergy;
-        boolean shouldBeOpen = isPowered && this.getBottomPart().map(x -> x.shell == null).orElse(true);
+        boolean shouldBeOpen = this.shouldOpenDoors(world, pos, isPowered) && this.getBottomPart().map(x -> x.shell == null).orElse(true);
 
         ShellStorageBlock.setPowered(state, world, pos, isPowered);
         ShellStorageBlock.setOpen(state, world, pos, shouldBeOpen);
@@ -156,7 +169,7 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
     // IEnergyStorage implementation
     @Override
     public int receiveEnergy(int maxReceive, boolean simulate) {
-        if (SyncConfig.getInstance().shellStorageConsumption() == 0) {
+        if (!this.requiresPower() || SyncConfig.getInstance().shellStorageConsumption() == 0) {
             return 0;
         }
 
@@ -188,7 +201,7 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
 
     @Override
     public int getMaxEnergyStored() {
-        return Math.toIntExact(SyncConfig.getInstance().shellStorageConsumption() == 0 ? 0 : SyncConfig.getInstance().shellStorageCapacity());
+        return Math.toIntExact(!this.requiresPower() || SyncConfig.getInstance().shellStorageConsumption() == 0 ? 0 : SyncConfig.getInstance().shellStorageCapacity());
     }
 
     @Override
@@ -198,7 +211,7 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
 
     @Override
     public boolean canReceive() {
-        return SyncConfig.getInstance().shellStorageConsumption() != 0;
+        return this.requiresPower() && SyncConfig.getInstance().shellStorageConsumption() != 0;
     }
 
     @Override

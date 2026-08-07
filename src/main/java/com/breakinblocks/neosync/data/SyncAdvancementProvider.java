@@ -5,6 +5,7 @@ import com.breakinblocks.neosync.common.block.SyncBlocks;
 import com.breakinblocks.neosync.common.item.SyncItems;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.AdvancementRequirements;
 import net.minecraft.advancements.AdvancementType;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.advancements.critereon.ImpossibleTrigger;
@@ -43,6 +44,8 @@ public final class SyncAdvancementProvider implements AdvancementGenerator {
                         AdvancementType.TASK,
                         true, true, false)
                 .addCriterion("placed_constructor", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.SHELL_CONSTRUCTOR.get()))
+                .addCriterion("placed_zero_point_constructor", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get()))
+                .requirements(AdvancementRequirements.Strategy.OR)
                 .save(saver, NeoSync.locate("main/place_constructor"), existingFileHelper);
 
         Advancement.Builder.advancement()
@@ -55,6 +58,8 @@ public final class SyncAdvancementProvider implements AdvancementGenerator {
                         AdvancementType.TASK,
                         true, true, false)
                 .addCriterion("placed_storage", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.SHELL_STORAGE.get()))
+                .addCriterion("placed_zero_point_storage", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get()))
+                .requirements(AdvancementRequirements.Strategy.OR)
                 .save(saver, NeoSync.locate("main/place_storage"), existingFileHelper);
 
         Advancement.Builder.advancement()

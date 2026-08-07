@@ -27,6 +27,14 @@ public final class SyncClientExtensions {
                 SyncItems.SHELL_STORAGE.get());
 
         event.registerItem(
+                SyncRenderers.createItemRenderer(SyncBlockEntities.ZERO_POINT_SHELL_CONSTRUCTOR.get(), SyncItems.ZERO_POINT_SHELL_CONSTRUCTOR.get().getBlock()),
+                SyncItems.ZERO_POINT_SHELL_CONSTRUCTOR.get());
+
+        event.registerItem(
+                SyncRenderers.createItemRenderer(SyncBlockEntities.ZERO_POINT_SHELL_STORAGE.get(), SyncItems.ZERO_POINT_SHELL_STORAGE.get().getBlock()),
+                SyncItems.ZERO_POINT_SHELL_STORAGE.get());
+
+        event.registerItem(
                 SyncRenderers.createItemRenderer(SyncBlockEntities.TREADMILL.get(), SyncItems.TREADMILL.get().getBlock()),
                 SyncItems.TREADMILL.get());
     }

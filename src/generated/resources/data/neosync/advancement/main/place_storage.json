@@ -11,6 +11,17 @@
         ]
       },
       "trigger": "minecraft:placed_block"
+    },
+    "placed_zero_point_storage": {
+      "conditions": {
+        "location": [
+          {
+            "block": "neosync:zero_point_shell_storage",
+            "condition": "minecraft:block_state_property"
+          }
+        ]
+      },
+      "trigger": "minecraft:placed_block"
     }
   },
   "display": {
@@ -27,7 +38,8 @@
   },
   "requirements": [
     [
-      "placed_storage"
+      "placed_storage",
+      "placed_zero_point_storage"
     ]
   ],
   "sends_telemetry_event": true

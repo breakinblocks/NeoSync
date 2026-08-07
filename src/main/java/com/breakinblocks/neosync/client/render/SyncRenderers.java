@@ -17,6 +17,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import com.breakinblocks.neosync.client.render.block.entity.ShellConstructorBlockEntityRenderer;
 import com.breakinblocks.neosync.client.render.block.entity.ShellStorageBlockEntityRenderer;
+import com.breakinblocks.neosync.client.render.block.entity.ZeroPointShellStorageBlockEntityRenderer;
 import com.breakinblocks.neosync.client.render.block.entity.TreadmillBlockEntityRenderer;
 import com.breakinblocks.neosync.common.block.entity.SyncBlockEntities;
 
@@ -25,10 +26,12 @@ public final class SyncRenderers {
     public static void initClient() {
         register(ShellStorageBlockEntityRenderer::new, SyncBlockEntities.SHELL_STORAGE.get());
         register(ShellConstructorBlockEntityRenderer::new, SyncBlockEntities.SHELL_CONSTRUCTOR.get());
+        register(ZeroPointShellStorageBlockEntityRenderer::new, SyncBlockEntities.ZERO_POINT_SHELL_STORAGE.get());
+        register(ShellConstructorBlockEntityRenderer::new, SyncBlockEntities.ZERO_POINT_SHELL_CONSTRUCTOR.get());
         register(TreadmillBlockEntityRenderer::new, SyncBlockEntities.TREADMILL.get());
     }
 
-    private static <E extends BlockEntity> void register(BlockEntityRendererProvider<E> rendererFactory, BlockEntityType<E> blockEntityType) {
+    private static <E extends BlockEntity> void register(BlockEntityRendererProvider<E> rendererFactory, BlockEntityType<? extends E> blockEntityType) {
         BlockEntityRenderers.register(blockEntityType, rendererFactory);
     }
 
