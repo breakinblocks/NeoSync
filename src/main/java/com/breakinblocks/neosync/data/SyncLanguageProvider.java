@@ -31,6 +31,11 @@ public final class SyncLanguageProvider extends LanguageProvider {
         add("command.neosync.ghostshells.failed", "%s's shell cannot be repaired at %s. There's no shell container at the given coords");
         add("command.neosync.ghostshells.removed", "Successfully removed shell (%2$s) from %1$s's radial menu");
 
+        add("command.neosync.anchor.set", "Set a respawn anchor for %s at %s in %s");
+        add("command.neosync.anchor.removed", "Removed %s respawn anchor(s) from %s");
+        add("command.neosync.anchor.list.empty", "%s has no respawn anchors");
+        add("command.neosync.anchor.list.entry", "%s has a respawn anchor at %s in %s");
+
         add("event.neosync.request.fail.invalid.shell", "The selected shell is not owned by the current player");
         add("event.neosync.request.fail.invalid.location.current", "The sync process cannot be started at the current location");
         add("event.neosync.request.fail.invalid.location.target", "The selected shell cannot be found");

@@ -20,6 +20,7 @@ public class SyncCommands {
 
     static {
         register(GhostShellsCommand.class);
+        register(AnchorCommand.class);
     }
 
     public static void init() {

@@ -1,0 +1,109 @@
+package com.breakinblocks.neosync.common.command;
+
+import com.mojang.brigadier.builder.ArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.DimensionArgument;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import com.breakinblocks.neosync.api.shell.Shell;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.common.utils.WorldUtil;
+
+import java.util.Collection;
+import java.util.List;
+
+public class AnchorCommand implements Command {
+    @Override
+    public String getName() {
+        return "anchor";
+    }
+
+    @Override
+    public boolean hasPermissions(CommandSourceStack commandSource) {
+        final int OP_LEVEL = 2;
+        return commandSource.hasPermission(OP_LEVEL) || commandSource.getServer().isSingleplayer();
+    }
+
+    @Override
+    public void build(ArgumentBuilder<CommandSourceStack, ?> builder) {
+        builder.then(Commands.literal("set")
+                .then(Commands.argument("target", EntityArgument.players())
+                        .then(Commands.argument("dimension", DimensionArgument.dimension())
+                                .then(Commands.argument("pos", BlockPosArgument.blockPos())
+                                        .executes(AnchorCommand::executeSet)))));
+        builder.then(Commands.literal("remove")
+                .then(Commands.argument("target", EntityArgument.players())
+                        .executes(context -> executeRemove(context, false))
+                        .then(Commands.argument("dimension", DimensionArgument.dimension())
+                                .then(Commands.argument("pos", BlockPosArgument.blockPos())
+                                        .executes(context -> executeRemove(context, true))))));
+        builder.then(Commands.literal("list")
+                .then(Commands.argument("target", EntityArgument.players())
+                        .executes(AnchorCommand::executeList)));
+    }
+
+    private static int executeSet(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        Collection<ServerPlayer> players = EntityArgument.getPlayers(context, "target");
+        ServerLevel world = DimensionArgument.getDimension(context, "dimension");
+        BlockPos pos = BlockPosArgument.getBlockPos(context, "pos");
+        ResourceLocation worldId = WorldUtil.getId(world);
+
+        for (ServerPlayer player : players) {
+            Shell shell = (Shell)player;
+            List<ShellState> existing = shell.getAvailableShellStates()
+                    .filter(ShellState::isVirtual)
+                    .filter(x -> worldId.equals(x.getWorld()) && pos.equals(x.getPos()))
+                    .toList();
+            existing.forEach(shell::remove);
+            shell.add(ShellState.anchor(player, worldId, pos));
+            context.getSource().sendSuccess(() -> Component.translatable("command.neosync.anchor.set",
+                    player.getName().getString(), pos.toShortString(), worldId.toString()), false);
+        }
+        return 1;
+    }
+
+    private static int executeRemove(CommandContext<CommandSourceStack> context, boolean hasPos) throws CommandSyntaxException {
+        Collection<ServerPlayer> players = EntityArgument.getPlayers(context, "target");
+        ResourceLocation worldId = hasPos ? WorldUtil.getId(DimensionArgument.getDimension(context, "dimension")) : null;
+        BlockPos pos = hasPos ? BlockPosArgument.getBlockPos(context, "pos") : null;
+
+        for (ServerPlayer player : players) {
+            Shell shell = (Shell)player;
+            List<ShellState> anchors = shell.getAvailableShellStates()
+                    .filter(ShellState::isVirtual)
+                    .filter(x -> pos == null || worldId.equals(x.getWorld()) && pos.equals(x.getPos()))
+                    .toList();
+            anchors.forEach(shell::remove);
+            context.getSource().sendSuccess(() -> Component.translatable("command.neosync.anchor.removed",
+                    anchors.size(), player.getName().getString()), false);
+        }
+        return 1;
+    }
+
+    private static int executeList(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        Collection<ServerPlayer> players = EntityArgument.getPlayers(context, "target");
+        for (ServerPlayer player : players) {
+            List<ShellState> anchors = ((Shell)player).getAvailableShellStates()
+                    .filter(ShellState::isVirtual)
+                    .toList();
+            if (anchors.isEmpty()) {
+                context.getSource().sendSuccess(() -> Component.translatable("command.neosync.anchor.list.empty",
+                        player.getName().getString()), false);
+            } else {
+                for (ShellState anchor : anchors) {
+                    context.getSource().sendSuccess(() -> Component.translatable("command.neosync.anchor.list.entry",
+                            player.getName().getString(), anchor.getPos().toShortString(), anchor.getWorld().toString()), false);
+                }
+            }
+        }
+        return 1;
+    }
+}

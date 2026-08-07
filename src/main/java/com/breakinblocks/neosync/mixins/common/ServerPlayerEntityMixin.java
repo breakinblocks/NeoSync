@@ -133,13 +133,17 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         }
 
         BlockPos targetPos = state.getPos();
-        LevelChunk targetChunk = targetWorld.getChunk(targetPos.getX() >> 4, targetPos.getZ() >> 4);
-        ShellStateContainer targetShellContainer = targetChunk == null ? null : ShellStateContainer.findAt(targetWorld, targetPos, player, state.getSubLevelUuid());
-        if (targetShellContainer == null) {
-            return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
+        ShellStateContainer targetShellContainer;
+        if (state.isVirtual()) {
+            targetShellContainer = null;
+        } else {
+            LevelChunk targetChunk = targetWorld.getChunk(targetPos.getX() >> 4, targetPos.getZ() >> 4);
+            targetShellContainer = targetChunk == null ? null : ShellStateContainer.findAt(targetWorld, targetPos, player, state.getSubLevelUuid());
+            if (targetShellContainer == null) {
+                return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
+            }
+            state = targetShellContainer.getShellState();
         }
-
-        state = targetShellContainer.getShellState();
         PlayerSyncEvents.SyncFailureReason finalFailureReason = this.canBeApplied(state) ? PlayerSyncEvents.ALLOW_SYNCING.invoker().allowSync(this, state) : PlayerSyncEvents.SyncFailureReason.INVALID_SHELL;
         if (finalFailureReason != null) {
             return Either.right(finalFailureReason);
@@ -156,9 +160,13 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             }
         }
 
-        targetShellContainer.setShellState(null);
-        this.remove(state);
-        this.apply(state);
+        if (targetShellContainer == null) {
+            this.apply(ShellState.anchor(player, state.getWorld(), state.getPos()));
+        } else {
+            targetShellContainer.setShellState(null);
+            this.remove(state);
+            this.apply(state);
+        }
 
         PlayerSyncEvents.STOP_SYNCING.invoker().onStopSyncing(player, currentPos, storedState);
         return Either.left(storedState);
