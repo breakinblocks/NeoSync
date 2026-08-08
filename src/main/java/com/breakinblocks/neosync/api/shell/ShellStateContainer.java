@@ -6,7 +6,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -71,7 +70,7 @@ public interface ShellStateContainer {
 
     @Nullable
     private static BlockEntity blockEntityIfLoaded(BlockGetter getter, BlockPos pos) {
-        if (getter instanceof LevelReader reader && !reader.hasChunkAt(pos)) {
+        if (getter instanceof Level level && !level.isLoaded(pos)) {
             return null;
         }
         return getter.getBlockEntity(pos);
