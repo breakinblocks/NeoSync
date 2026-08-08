@@ -2,6 +2,7 @@ package com.breakinblocks.neosync.compat.sable;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -74,6 +75,10 @@ public final class SableCompat {
     public static Object findSublevelByUuid(Level parentLevel, @Nullable UUID uuid) {
         if (uuid == null) return null;
         return BRIDGE.findSublevelByUuid(parentLevel, uuid);
+    }
+
+    public static void forceClientSync(ServerLevel parentLevel, @Nullable Object sublevel) {
+        BRIDGE.forceClientSync(parentLevel, sublevel);
     }
 
     @Nullable

@@ -1,8 +1,12 @@
 package com.breakinblocks.neosync.compat.sable;
 
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.companion.math.Pose3dc;
+import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -75,5 +79,14 @@ final class SableCompatBridgeImpl implements SableCompatBridge {
         SubLevelContainer container = SubLevelContainer.getContainer(parentLevel);
         if (container == null) return null;
         return container.getSubLevel(uuid);
+    }
+
+    @Override
+    public void forceClientSync(ServerLevel parentLevel, @Nullable Object sublevel) {
+        if (!(sublevel instanceof ServerSubLevel sub)) return;
+        ServerSubLevelContainer container = SubLevelContainer.getContainer(parentLevel);
+        if (container == null) return;
+        Pose3dc pose = sub.logicalPose();
+        container.physicsSystem().getPipeline().teleport(sub, pose.position(), pose.orientation());
     }
 }

@@ -41,30 +41,31 @@ public interface ShellStateContainer {
 
     @Nullable
     static ShellStateContainer findAt(Level world, BlockPos pos, Entity sublevelContext) {
-        return findAt(world, pos, sublevelContext, null);
+        return findAt(world, pos, null, sublevelContext, null);
     }
 
     @Nullable
-    static ShellStateContainer findAt(Level world, BlockPos pos, @Nullable Entity sublevelContext, @Nullable UUID sublevelHint) {
+    static ShellStateContainer findAt(Level world, BlockPos pos, @Nullable Vec3 localPos, @Nullable Entity sublevelContext, @Nullable UUID sublevelHint) {
         if (sublevelHint != null) {
             Object sublevel = SableCompat.findSublevelByUuid(world, sublevelHint);
-            ShellStateContainer hit = lookupInSublevel(sublevel, pos);
+            ShellStateContainer hit = lookupInSublevel(sublevel, pos, localPos);
             if (hit != null) return hit;
         }
         if (sublevelContext != null) {
             Object sublevel = SableCompat.getTrackingSublevel(sublevelContext);
-            ShellStateContainer hit = lookupInSublevel(sublevel, pos);
+            ShellStateContainer hit = lookupInSublevel(sublevel, pos, localPos);
             if (hit != null) return hit;
         }
         return find(world, pos);
     }
 
     @Nullable
-    private static ShellStateContainer lookupInSublevel(@Nullable Object sublevel, BlockPos pos) {
+    private static ShellStateContainer lookupInSublevel(@Nullable Object sublevel, BlockPos worldPos, @Nullable Vec3 localPos) {
         if (sublevel == null) return null;
         BlockGetter plot = SableCompat.getSublevelBlockGetter(sublevel);
         if (plot == null) return null;
-        BlockEntity be = blockEntityIfLoaded(plot, pos);
+        Vec3 local = localPos != null ? localPos : SableCompat.worldToLocal(sublevel, Vec3.atCenterOf(worldPos));
+        BlockEntity be = blockEntityIfLoaded(plot, BlockPos.containing(local));
         return be instanceof ShellStateContainer container ? container : null;
     }
 

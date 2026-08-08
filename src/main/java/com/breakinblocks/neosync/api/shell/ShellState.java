@@ -91,6 +91,8 @@ public class ShellState {
     private ResourceLocation world;
     private BlockPos pos;
     private UUID subLevelUuid;
+    private Vec3 localOffset;
+    private float yawDelta;
 
     private final NbtSerializer<ShellState> serializer;
 
@@ -195,6 +197,41 @@ public class ShellState {
         return this.subLevelUuid;
     }
 
+    @Nullable
+    public Vec3 getLocalOffset() {
+        return this.localOffset;
+    }
+
+    public float getYawDelta() {
+        return this.yawDelta;
+    }
+
+    @Nullable
+    public Object findSubLevel(Level world) {
+        return this.subLevelUuid == null ? null : SableCompat.findSublevelByUuid(world, this.subLevelUuid);
+    }
+
+    private Vec3 blockCenter() {
+        return new Vec3(this.pos.getX() + 0.5, this.pos.getY(), this.pos.getZ() + 0.5);
+    }
+
+    /**
+     * Resolves the world position this shell currently occupies. Shells stored on a Sable sublevel keep a
+     * sublevel-local offset, so their world position has to be recomputed against the sublevel's current pose.
+     */
+    public Vec3 resolveWorldPos(Level world) {
+        Object sublevel = this.findSubLevel(world);
+        if (sublevel != null && this.localOffset != null) {
+            return SableCompat.localToWorld(sublevel, this.localOffset);
+        }
+        return this.blockCenter();
+    }
+
+    public float resolveYaw(Level world, float fallback) {
+        Object sublevel = this.findSubLevel(world);
+        return sublevel == null ? fallback : this.yawDelta + SableCompat.getSublevelYaw(sublevel);
+    }
+
     private ShellState() {
         this.serializer = NBT_SERIALIZER_FACTORY.create(this);
     }
@@ -249,6 +286,8 @@ public class ShellState {
         ShellState shell = create(player, pos, null, PROGRESS_DONE, true, false);
         shell.world = worldId;
         shell.subLevelUuid = null;
+        shell.localOffset = null;
+        shell.yawDelta = 0;
         shell.isVirtual = true;
         return shell;
     }
@@ -303,7 +342,13 @@ public class ShellState {
 
         shell.world = WorldUtil.getId(player.level());
         shell.pos = pos;
-        shell.subLevelUuid = SableCompat.getSublevelUuid(SableCompat.getTrackingSublevel(player));
+
+        Object sublevel = SableCompat.getTrackingSublevel(player);
+        shell.subLevelUuid = SableCompat.getSublevelUuid(sublevel);
+        if (sublevel != null) {
+            shell.localOffset = SableCompat.worldToLocal(sublevel, shell.blockCenter());
+            shell.yawDelta = Mth.wrapDegrees(player.getYRot() - SableCompat.getSublevelYaw(sublevel));
+        }
 
         return shell;
     }
@@ -391,6 +436,26 @@ public class ShellState {
         return this.entityInstance;
     }
 
+    @Nullable
+    private static CompoundTag writeVec3(@Nullable Vec3 vec) {
+        if (vec == null) {
+            return null;
+        }
+        CompoundTag tag = new CompoundTag();
+        tag.putDouble("x", vec.x);
+        tag.putDouble("y", vec.y);
+        tag.putDouble("z", vec.z);
+        return tag;
+    }
+
+    @Nullable
+    private static Vec3 readVec3(@Nullable CompoundTag tag) {
+        if (tag == null || !tag.contains("x")) {
+            return null;
+        }
+        return new Vec3(tag.getDouble("x"), tag.getDouble("y"), tag.getDouble("z"));
+    }
+
     static {
         NBT_SERIALIZER_FACTORY = new NbtSerializerFactoryBuilder<ShellState>()
                 .add(UUID.class, "uuid", x -> x.uuid, (x, uuid) -> x.uuid = uuid)
@@ -419,6 +484,8 @@ public class ShellState {
                 .add(ResourceLocation.class, "world", x -> x.world, (x, world) -> x.world = world)
                 .add(BlockPos.class, "pos", x -> x.pos, (x, pos) -> x.pos = pos)
                 .add(UUID.class, "subLevelUuid", x -> x.subLevelUuid, (x, id) -> x.subLevelUuid = id)
+                .add(CompoundTag.class, "localOffset", x -> writeVec3(x.localOffset), (x, tag) -> x.localOffset = readVec3(tag))
+                .add(Float.class, "yawDelta", x -> x.yawDelta, (x, yawDelta) -> x.yawDelta = yawDelta)
                 .build();
     }
 }

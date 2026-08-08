@@ -1,5 +1,6 @@
 package com.breakinblocks.neosync.compat.sable;
 
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -32,4 +33,6 @@ interface SableCompatBridge {
 
     @Nullable
     default Object findSublevelByUuid(Level parentLevel, UUID uuid) { return null; }
+
+    default void forceClientSync(ServerLevel parentLevel, @Nullable Object sublevel) {}
 }
