@@ -454,7 +454,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
                 this.getLastDeathLocation(),
                 3
         );
-        serverPlayer.connection.send(new ClientboundRespawnPacket(spawnInfo, (byte) 1));
+        serverPlayer.connection.send(new ClientboundRespawnPacket(spawnInfo, ClientboundRespawnPacket.KEEP_ALL_DATA));
         serverPlayer.connection.send(new ClientboundChangeDifficultyPacket(targetWorld.getDifficulty(), targetWorld.getLevelData().isDifficultyLocked()));
         PlayerList playerManager = Objects.requireNonNull(this.level().getServer()).getPlayerList();
         playerManager.sendPlayerPermissionLevel(serverPlayer);
