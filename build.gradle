@@ -159,14 +159,14 @@ publishMods {
         projectSlug = project.mod_id
         accessToken = providers.environmentVariable('CURSEFORGE_TOKEN')
         minecraftVersions.add(project.minecraft_version)
-        optional('jei', 'jade')
+        optional('jei', 'jade', 'curios')
     }
 
     modrinth {
         projectId = project.modrinth_project_id
         accessToken = providers.environmentVariable('MODRINTH_TOKEN')
         minecraftVersions.add(project.minecraft_version)
-        optional('jei', 'jade')
+        optional('jei', 'jade', 'curios')
     }
 }
 
