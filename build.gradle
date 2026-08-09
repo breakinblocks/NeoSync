@@ -43,6 +43,11 @@ repositories {
         content { includeGroup 'maven.modrinth' }
     }
     maven {
+        name = 'Curios'
+        url = 'https://maven.theillusivec4.top/'
+        content { includeGroup 'top.theillusivec4.curios' }
+    }
+    maven {
         url = 'https://maven.ryanhcode.dev/releases'
         content {
             includeGroup 'dev.ryanhcode.sable'
@@ -102,6 +107,9 @@ dependencies {
     // Jade — single jar contains both API and impl
     compileOnly "maven.modrinth:jade:${project.jade_version}"
     localRuntime "maven.modrinth:jade:${project.jade_version}"
+
+    compileOnly "top.theillusivec4.curios:curios-neoforge:${project.curios_version}:api"
+    localRuntime "top.theillusivec4.curios:curios-neoforge:${project.curios_version}"
 
     compileOnly("dev.ryanhcode.sable:sable-neoforge-1.21.1:${project.sable_version}") { transitive = false }
     localRuntime("dev.ryanhcode.sable:sable-neoforge-1.21.1:${project.sable_version}") { transitive = false }
@@ -171,14 +179,14 @@ publishMods {
         projectSlug = project.mod_id
         accessToken = providers.environmentVariable('CURSEFORGE_TOKEN')
         minecraftVersions.add(project.minecraft_version)
-        optional('jei', 'jade')
+        optional('jei', 'jade', 'curios')
     }
 
     modrinth {
         projectId = project.modrinth_project_id
         accessToken = providers.environmentVariable('MODRINTH_TOKEN')
         minecraftVersions.add(project.minecraft_version)
-        optional('jei', 'jade')
+        optional('jei', 'jade', 'curios')
     }
 }
 

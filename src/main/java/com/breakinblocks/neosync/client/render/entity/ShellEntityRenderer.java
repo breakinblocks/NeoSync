@@ -17,6 +17,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.client.model.ShellModel;
 import com.breakinblocks.neosync.common.block.entity.ShellEntity;
+import com.breakinblocks.neosync.compat.curios.CuriosClientCompat;
 
 @OnlyIn(Dist.CLIENT)
 public class ShellEntityRenderer extends PlayerRenderer {
@@ -27,6 +28,11 @@ public class ShellEntityRenderer extends PlayerRenderer {
         this.shellModel = new ShellModel<>(this.getModel());
         this.shadowRadius = 0;
         this.shadowStrength = 0;
+
+        RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> curiosLayer = CuriosClientCompat.createShellLayer(this);
+        if (curiosLayer != null) {
+            this.addLayer(curiosLayer);
+        }
     }
 
     @Override
