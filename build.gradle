@@ -151,7 +151,7 @@ publishMods {
     file = jar.archiveFile
     def changelogFile = file("metadata/changelogs/${project.mod_version}.md")
     changelog = changelogFile.exists() ? changelogFile.text : "Release ${version}"
-    type = isSnapshot ? BETA : STABLE
+    type = BETA
     modLoaders.add('neoforge')
 
     curseforge {
