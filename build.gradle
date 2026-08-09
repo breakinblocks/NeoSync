@@ -179,6 +179,8 @@ publishMods {
         projectSlug = project.mod_id
         accessToken = providers.environmentVariable('CURSEFORGE_TOKEN')
         minecraftVersions.add(project.minecraft_version)
+        clientRequired = true
+        serverRequired = true
         optional('jei', 'jade', 'curios')
     }
 
