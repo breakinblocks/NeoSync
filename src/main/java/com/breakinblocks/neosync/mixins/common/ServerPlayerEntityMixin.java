@@ -2,6 +2,7 @@ package com.breakinblocks.neosync.mixins.common;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
+import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -24,6 +25,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Team;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,6 +34,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.slf4j.Logger;
 
 import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import com.breakinblocks.neosync.api.networking.PlayerIsAlivePacket;
@@ -45,12 +48,14 @@ import com.breakinblocks.neosync.api.shell.ShellStateContainer;
 import com.breakinblocks.neosync.api.shell.ShellStateManager;
 import com.breakinblocks.neosync.api.shell.ShellStateUpdateType;
 import com.breakinblocks.neosync.common.entity.KillableEntity;
+import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import com.breakinblocks.neosync.common.utils.WorldUtil;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -80,6 +85,9 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     private ServerPlayerEntityMixin(Level level, GameProfile profile) {
         super(level, profile);
     }
+
+    @Unique
+    private static final Logger SYNC_LOGGER = LogUtils.getLogger();
 
     @Unique
     private boolean isArtificial = false;
@@ -148,13 +156,17 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         }
 
         BlockPos targetPos = state.getPos();
-        LevelChunk targetChunk = targetWorld.getChunk(targetPos.getX() >> 4, targetPos.getZ() >> 4);
-        ShellStateContainer targetShellContainer = targetChunk == null ? null : ShellStateContainer.find(targetWorld, targetPos);
-        if (targetShellContainer == null) {
-            return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
+        ShellStateContainer targetShellContainer;
+        if (state.isVirtual()) {
+            targetShellContainer = null;
+        } else {
+            LevelChunk targetChunk = targetWorld.getChunk(targetPos.getX() >> 4, targetPos.getZ() >> 4);
+            targetShellContainer = targetChunk == null ? null : ShellStateContainer.find(targetWorld, targetPos);
+            if (targetShellContainer == null) {
+                return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
+            }
+            state = targetShellContainer.getShellState();
         }
-
-        state = targetShellContainer.getShellState();
         PlayerSyncEvents.SyncFailureReason finalFailureReason = this.canBeApplied(state) ? PlayerSyncEvents.ALLOW_SYNCING.invoker().allowSync(this, state) : PlayerSyncEvents.SyncFailureReason.INVALID_SHELL;
         if (finalFailureReason != null) {
             return Either.right(finalFailureReason);
@@ -171,9 +183,13 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             }
         }
 
-        targetShellContainer.setShellState(null);
-        this.remove(state);
-        this.apply(state);
+        if (targetShellContainer == null) {
+            this.apply(ShellState.anchor(player, state.getWorld(), state.getPos()));
+        } else {
+            targetShellContainer.setShellState(null);
+            this.remove(state);
+            this.apply(state);
+        }
 
         PlayerSyncEvents.STOP_SYNCING.invoker().onStopSyncing(player, currentPos, storedState);
         return Either.left(storedState);
@@ -198,6 +214,10 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         this.removeAllEffects();
 
         new PlayerIsAlivePacket(serverPlayer).sendToAll(server);
+        if (!this.teleport(targetWorld, state)) {
+            SYNC_LOGGER.warn("Sync teleport to {} was refused; leaving {} untouched", state.getWorld(), serverPlayer.getName().getString());
+            return;
+        }
         this.isArtificial = state.isArtificial();
 
         Inventory inventory = serverPlayer.getInventory();
@@ -396,5 +416,23 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         if (world != ((ServerPlayer)(Object)this).level()) {
             this.shellDirty = true;
         }
+    }
+
+    @Unique
+    private boolean teleport(ServerLevel targetWorld, ShellState state) {
+        ServerPlayer serverPlayer = (ServerPlayer)(Object)this;
+        BlockPos pos = state.getPos();
+        LevelChunk chunk = targetWorld.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
+        float yaw = BlockPosUtil.getHorizontalFacing(pos, chunk).map(d -> d.getOpposite().toYRot()).orElse(0F);
+
+        boolean moved = serverPlayer.teleportTo(targetWorld, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Set.of(), yaw, 0F, true);
+        if (!moved || serverPlayer.level() != targetWorld) {
+            return false;
+        }
+
+        serverPlayer.setDeltaMovement(Vec3.ZERO);
+        serverPlayer.hurtMarked = true;
+        serverPlayer.fallDistance = 0F;
+        return true;
     }
 }

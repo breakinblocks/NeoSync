@@ -20,6 +20,8 @@ public class SyncCreativeTabs {
                         output.accept(SyncItems.SYNC_CORE.get());
                         output.accept(SyncItems.SHELL_STORAGE.get());
                         output.accept(SyncItems.SHELL_CONSTRUCTOR.get());
+                        output.accept(SyncItems.ZERO_POINT_SHELL_STORAGE.get());
+                        output.accept(SyncItems.ZERO_POINT_SHELL_CONSTRUCTOR.get());
                         output.accept(SyncItems.TREADMILL.get());
                     }).build()
     );

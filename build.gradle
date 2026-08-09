@@ -34,6 +34,11 @@ repositories {
         url = 'https://maven.blamejared.com/'
     }
     maven {
+        name = 'Curios'
+        url = 'https://maven.theillusivec4.top/'
+        content { includeGroup 'top.theillusivec4.curios' }
+    }
+    maven {
         name = 'Modrinth'
         url = 'https://api.modrinth.com/maven'
         content { includeGroup 'maven.modrinth' }
@@ -86,6 +91,9 @@ dependencies {
     // Jade — single jar contains both API and impl
     compileOnly "maven.modrinth:jade:${project.jade_version}"
     localRuntime "maven.modrinth:jade:${project.jade_version}"
+
+    compileOnly "top.theillusivec4.curios:curios-neoforge:${project.curios_version}:api"
+    localRuntime "top.theillusivec4.curios:curios-neoforge:${project.curios_version}"
 }
 
 tasks.withType(JavaCompile).configureEach {

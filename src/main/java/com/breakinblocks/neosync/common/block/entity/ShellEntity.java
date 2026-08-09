@@ -11,6 +11,7 @@ import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.compat.curios.CuriosClientCompat;
 
 public class ShellEntity extends RemotePlayer {
     public boolean isActive;
@@ -27,6 +28,8 @@ public class ShellEntity extends RemotePlayer {
         this.isActive = false;
         this.pitchProgress = 0;
         this.state = state;
+        state.getInventory().copyTo(this.getInventory());
+        CuriosClientCompat.dressShell(this, state);
         this.snapTo(state.getPos().getX() + 0.5, state.getPos().getY(), state.getPos().getZ() + 0.5, 0F, 0F);
 
         if (this.onInitialized != null) {

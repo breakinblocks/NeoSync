@@ -36,6 +36,12 @@ public class SyncJeiPlugin implements IModPlugin {
         registration.addIngredientInfo(new ItemStack(SyncItems.SHELL_STORAGE.get()), VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.shell_storage"));
 
+        registration.addIngredientInfo(new ItemStack(SyncItems.ZERO_POINT_SHELL_CONSTRUCTOR.get()), VanillaTypes.ITEM_STACK,
+                Component.translatable("jei.neosync.info.zero_point_shell_constructor"));
+
+        registration.addIngredientInfo(new ItemStack(SyncItems.ZERO_POINT_SHELL_STORAGE.get()), VanillaTypes.ITEM_STACK,
+                Component.translatable("jei.neosync.info.zero_point_shell_storage"));
+
         registration.addIngredientInfo(new ItemStack(SyncItems.TREADMILL.get()), VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.treadmill"));
 

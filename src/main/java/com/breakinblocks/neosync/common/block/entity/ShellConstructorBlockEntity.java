@@ -9,6 +9,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.transfer.energy.EnergyHandler;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
@@ -23,7 +24,11 @@ import org.jetbrains.annotations.Nullable;
 
 public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEntity implements EnergyHandler {
     public ShellConstructorBlockEntity(BlockPos pos, BlockState state) {
-        super(SyncBlockEntities.SHELL_CONSTRUCTOR.get(), pos, state);
+        this(SyncBlockEntities.SHELL_CONSTRUCTOR.get(), pos, state);
+    }
+
+    protected ShellConstructorBlockEntity(BlockEntityType<? extends ShellConstructorBlockEntity> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
     }
 
     @Override

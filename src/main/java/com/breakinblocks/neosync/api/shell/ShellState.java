@@ -64,6 +64,7 @@ public class ShellState {
     private float progress;
     private DyeColor color;
     private boolean isArtificial;
+    private boolean isVirtual;
 
     private UUID ownerUuid;
     private String ownerName;
@@ -109,6 +110,10 @@ public class ShellState {
 
     public boolean isArtificial() {
         return this.isArtificial;
+    }
+
+    public boolean isVirtual() {
+        return this.isVirtual;
     }
 
     public UUID getOwnerUuid() {
@@ -227,6 +232,13 @@ public class ShellState {
      */
     public static ShellState of(ServerPlayer player, BlockPos pos, DyeColor color) {
         return create(player, pos, color, 1, ((Shell)player).isArtificial(), true);
+    }
+
+    public static ShellState anchor(ServerPlayer player, Identifier worldId, BlockPos pos) {
+        ShellState shell = create(player, pos, null, PROGRESS_DONE, true, false);
+        shell.world = worldId;
+        shell.isVirtual = true;
+        return shell;
     }
 
     /**
@@ -362,6 +374,7 @@ public class ShellState {
                 .add(Integer.class, "color", x -> x.color == null ? -1 : x.color.getId(), (x, color) -> x.color = color == -1 ? null : DyeColor.byId(color))
                 .add(Float.class, "progress", x -> x.progress, (x, progress) -> x.progress = progress)
                 .add(Boolean.class, "isArtificial", x -> x.isArtificial, (x, isArtificial) -> x.isArtificial = isArtificial)
+                .add(Boolean.class, "isVirtual", x -> x.isVirtual, (x, isVirtual) -> x.isVirtual = isVirtual)
 
                 .add(UUID.class, "ownerUuid", x -> x.ownerUuid, (x, ownerUuid) -> x.ownerUuid = ownerUuid)
                 .add(String.class, "ownerName", x -> x.ownerName, (x, ownerName) -> x.ownerName = ownerName)

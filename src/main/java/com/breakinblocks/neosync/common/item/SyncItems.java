@@ -26,6 +26,16 @@ public class SyncItems {
                     .setId(ResourceKey.create(Registries.ITEM, name))
                     .stacksTo(1)));
 
+    public static final DeferredItem<ShellConstructorItem> ZERO_POINT_SHELL_CONSTRUCTOR = ITEMS.register("zero_point_shell_constructor",
+            name -> new ShellConstructorItem(SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get(), new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, name))
+                    .stacksTo(1)));
+
+    public static final DeferredItem<ShellStorageItem> ZERO_POINT_SHELL_STORAGE = ITEMS.register("zero_point_shell_storage",
+            name -> new ShellStorageItem(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get(), new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, name))
+                    .stacksTo(1)));
+
     public static final DeferredItem<TreadmillItem> TREADMILL = ITEMS.register("treadmill",
             name -> new TreadmillItem(SyncBlocks.TREADMILL.get(), new Item.Properties()
                     .setId(ResourceKey.create(Registries.ITEM, name))

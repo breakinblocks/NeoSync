@@ -27,6 +27,8 @@ public final class SyncBlockLootSubProvider extends BlockLootSubProvider {
     protected void generate() {
         this.dropSelf(SyncBlocks.SHELL_STORAGE.get());
         this.dropSelf(SyncBlocks.SHELL_CONSTRUCTOR.get());
+        this.dropSelf(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get());
+        this.dropSelf(SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get());
         this.add(SyncBlocks.TREADMILL.get(), block -> LootTable.lootTable().withPool(
                 LootPool.lootPool()
                         .setRolls(ConstantValue.exactly(1))
@@ -40,7 +42,7 @@ public final class SyncBlockLootSubProvider extends BlockLootSubProvider {
 
     @Override
     protected Iterable<Block> getKnownBlocks() {
-        return Stream.of(SyncBlocks.SHELL_STORAGE, SyncBlocks.SHELL_CONSTRUCTOR, SyncBlocks.TREADMILL)
+        return Stream.of(SyncBlocks.SHELL_STORAGE, SyncBlocks.SHELL_CONSTRUCTOR, SyncBlocks.ZERO_POINT_SHELL_STORAGE, SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR, SyncBlocks.TREADMILL)
                 .map(DeferredBlock::get)
                 .map(b -> (Block) b)
                 .toList();

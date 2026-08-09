@@ -7,6 +7,7 @@ import com.breakinblocks.neosync.common.command.SyncCommands;
 import com.breakinblocks.neosync.common.config.SyncConfig;
 import com.breakinblocks.neosync.common.item.SyncCreativeTabs;
 import com.breakinblocks.neosync.common.item.SyncItems;
+import com.breakinblocks.neosync.compat.curios.CuriosCompat;
 import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -29,6 +30,7 @@ public class NeoSync {
         SyncItems.ITEMS.register(modEventBus);
 
         SyncCommands.init();
+        CuriosCompat.init();
 
         if (dist.isClient()) {
             modEventBus.addListener(this::onClientSetup);

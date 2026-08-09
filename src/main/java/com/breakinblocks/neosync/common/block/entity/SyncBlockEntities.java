@@ -24,6 +24,16 @@ public class SyncBlockEntities {
                     () -> new BlockEntityType<ShellConstructorBlockEntity>(ShellConstructorBlockEntity::new,
                             Set.<Block>of(SyncBlocks.SHELL_CONSTRUCTOR.get())));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ZeroPointShellStorageBlockEntity>> ZERO_POINT_SHELL_STORAGE =
+            BLOCK_ENTITIES.register("zero_point_shell_storage",
+                    () -> new BlockEntityType<ZeroPointShellStorageBlockEntity>(ZeroPointShellStorageBlockEntity::new,
+                            Set.<Block>of(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get())));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ZeroPointShellConstructorBlockEntity>> ZERO_POINT_SHELL_CONSTRUCTOR =
+            BLOCK_ENTITIES.register("zero_point_shell_constructor",
+                    () -> new BlockEntityType<ZeroPointShellConstructorBlockEntity>(ZeroPointShellConstructorBlockEntity::new,
+                            Set.<Block>of(SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get())));
+
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TreadmillBlockEntity>> TREADMILL =
             BLOCK_ENTITIES.register("treadmill",
                     () -> new BlockEntityType<TreadmillBlockEntity>(TreadmillBlockEntity::new,

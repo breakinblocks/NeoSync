@@ -19,6 +19,8 @@ public final class SyncBlockTagsProvider extends BlockTagsProvider {
         this.tag(BlockTags.MINEABLE_WITH_PICKAXE)
                 .add(SyncBlocks.SHELL_STORAGE.get())
                 .add(SyncBlocks.SHELL_CONSTRUCTOR.get())
+                .add(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get())
+                .add(SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get())
                 .add(SyncBlocks.TREADMILL.get());
     }
 }

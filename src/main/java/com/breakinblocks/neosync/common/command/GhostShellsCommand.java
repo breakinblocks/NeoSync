@@ -116,7 +116,7 @@ public class GhostShellsCommand implements Command {
 
     private static void updateShell(ServerPlayer player, ShellState shellState, boolean shouldRepair,
                                     boolean skipOnFailure, Consumer<Component> logger) {
-        if (shellExists(player.level().getServer(), shellState)) {
+        if (shellState.isVirtual() || shellExists(player.level().getServer(), shellState)) {
             return;
         }
 

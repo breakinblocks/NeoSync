@@ -8,6 +8,7 @@ import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
+import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import com.breakinblocks.neosync.common.item.SyncItems;
@@ -58,6 +59,18 @@ public final class SyncRecipeProvider extends RecipeProvider {
                 .define('I', Items.IRON_BLOCK)
                 .define('P', Items.HEAVY_WEIGHTED_PRESSURE_PLATE)
                 .unlockedBy("has_sync_core", has(SyncItems.SYNC_CORE.get()))
+                .save(this.output);
+
+        ShapelessRecipeBuilder.shapeless(items, RecipeCategory.REDSTONE, SyncItems.ZERO_POINT_SHELL_CONSTRUCTOR.get())
+                .requires(SyncItems.SHELL_CONSTRUCTOR.get())
+                .requires(Items.NETHER_STAR)
+                .unlockedBy("has_nether_star", has(Items.NETHER_STAR))
+                .save(this.output);
+
+        ShapelessRecipeBuilder.shapeless(items, RecipeCategory.REDSTONE, SyncItems.ZERO_POINT_SHELL_STORAGE.get())
+                .requires(SyncItems.SHELL_STORAGE.get())
+                .requires(Items.NETHER_STAR)
+                .unlockedBy("has_nether_star", has(Items.NETHER_STAR))
                 .save(this.output);
 
         ShapedRecipeBuilder.shaped(items, RecipeCategory.REDSTONE, SyncItems.TREADMILL.get())
