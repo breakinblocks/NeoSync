@@ -34,6 +34,7 @@ public class SyncConfig {
 
     // Energy settings
     private static final ModConfigSpec.LongValue SHELL_CONSTRUCTOR_CAPACITY;
+    private static final ModConfigSpec.DoubleValue SHELL_CONSTRUCTION_SPEED;
     private static final ModConfigSpec.LongValue SHELL_STORAGE_CAPACITY;
     private static final ModConfigSpec.LongValue SHELL_STORAGE_CONSUMPTION;
 
@@ -97,6 +98,10 @@ public class SyncConfig {
         SHELL_CONSTRUCTOR_CAPACITY = BUILDER
                 .comment("Energy capacity/requirement for shell constructor")
                 .defineInRange("shellConstructorCapacity", 256000L, 1000L, Long.MAX_VALUE);
+
+        SHELL_CONSTRUCTION_SPEED = BUILDER
+                .comment("How fast shells are built. The constructor needs shellConstructorCapacity divided by this many FE to finish a shell, so 2.0 builds twice as fast as 1.0")
+                .defineInRange("shellConstructionSpeed", 2.5D, 0.01D, 1000D);
 
         SHELL_STORAGE_CAPACITY = BUILDER
                 .comment("Energy capacity of shell storage")
@@ -261,6 +266,14 @@ public class SyncConfig {
 
     public long shellConstructorCapacity() {
         return SHELL_CONSTRUCTOR_CAPACITY.get();
+    }
+
+    public double shellConstructionSpeed() {
+        return SHELL_CONSTRUCTION_SPEED.get();
+    }
+
+    public long shellConstructorEnergyRequirement() {
+        return Math.max(1L, Math.round(shellConstructorCapacity() / Math.max(shellConstructionSpeed(), 0.01D)));
     }
 
     public long shellStorageCapacity() {

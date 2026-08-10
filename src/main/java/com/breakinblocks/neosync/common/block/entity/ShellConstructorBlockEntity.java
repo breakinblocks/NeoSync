@@ -85,7 +85,7 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
             return 0;
         }
 
-        int capacity = (int) SyncConfig.getInstance().shellConstructorCapacity();
+        int capacity = (int) SyncConfig.getInstance().shellConstructorEnergyRequirement();
         int missingFE = (int) Math.ceil((ShellState.PROGRESS_DONE - bottom.shell.getProgress()) * capacity);
         int accepted = Math.min(maxReceive, missingFE);
 
@@ -109,7 +109,7 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
         if (bottom == null || bottom.shell == null) {
             return 0;
         }
-        int cap = (int) SyncConfig.getInstance().shellConstructorCapacity();
+        int cap = (int) SyncConfig.getInstance().shellConstructorEnergyRequirement();
         return (int) (bottom.shell.getProgress() * cap);
     }
 
@@ -117,7 +117,7 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
     public int getMaxEnergyStored() {
         ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
         return bottom != null && bottom.shell != null
-                ? (int) SyncConfig.getInstance().shellConstructorCapacity()
+                ? (int) SyncConfig.getInstance().shellConstructorEnergyRequirement()
                 : 0;
     }
 

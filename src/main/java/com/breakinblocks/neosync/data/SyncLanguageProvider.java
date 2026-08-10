@@ -25,6 +25,8 @@ public final class SyncLanguageProvider extends LanguageProvider {
 
         add("death.attack.neosync.fingerstick", "%s died in the name of science");
 
+        add("command.neosync.select.opened", "Opened the shell selector for %s player(s)");
+        add("command.neosync.select.no_shells", "%s has no shells ready to sync into");
         add("command.neosync.ghostshells.invalid_action", "Available actions are: sync, remove and repair");
         add("command.neosync.ghostshells.not_found", "%s has no information about the shell that should be located at %s");
         add("command.neosync.ghostshells.repaired", "Successfully repaired %s's shell at %s");

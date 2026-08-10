@@ -5,6 +5,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.api.networking.OpenShellSelectorPacket;
 import com.breakinblocks.neosync.api.networking.PlayerIsAlivePacket;
 import com.breakinblocks.neosync.api.networking.ShellDestroyedPacket;
 import com.breakinblocks.neosync.api.networking.ShellStateUpdatePacket;
@@ -46,6 +47,11 @@ public final class SyncPackets {
                 PlayerIsAlivePacket.TYPE,
                 PlayerIsAlivePacket.STREAM_CODEC,
                 PlayerIsAlivePacket::handle);
+
+        registrar.playToClient(
+                OpenShellSelectorPacket.TYPE,
+                OpenShellSelectorPacket.STREAM_CODEC,
+                OpenShellSelectorPacket::handle);
 
         registrar.playToClient(
                 ShellDestroyedPacket.TYPE,
