@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "neosync:block/zero_point_shell_storage",
-    "particle": "neosync:block/zero_point_shell_storage"
-  }
-}

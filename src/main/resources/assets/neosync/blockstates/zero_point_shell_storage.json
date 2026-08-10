@@ -1,17 +1,7 @@
 {
   "variants": {
-    "half=lower,facing=north": { "model": "neosync:block/zero_point_shell_storage_lower", "y": 180 },
-    "half=lower,facing=south": { "model": "neosync:block/zero_point_shell_storage_lower" },
-    "half=lower,facing=east": { "model": "neosync:block/zero_point_shell_storage_lower", "y": 270 },
-    "half=lower,facing=west": { "model": "neosync:block/zero_point_shell_storage_lower", "y": 90 },
-    "half=upper,open=false,facing=north": { "model": "neosync:block/zero_point_shell_storage_upper_closed", "y": 180 },
-    "half=upper,open=false,facing=south": { "model": "neosync:block/zero_point_shell_storage_upper_closed" },
-    "half=upper,open=false,facing=east": { "model": "neosync:block/zero_point_shell_storage_upper_closed", "y": 270 },
-    "half=upper,open=false,facing=west": { "model": "neosync:block/zero_point_shell_storage_upper_closed", "y": 90 },
-    "half=upper,open=true,facing=north": { "model": "neosync:block/zero_point_shell_storage_upper_open", "y": 180 },
-    "half=upper,open=true,facing=south": { "model": "neosync:block/zero_point_shell_storage_upper_open" },
-    "half=upper,open=true,facing=east": { "model": "neosync:block/zero_point_shell_storage_upper_open", "y": 270 },
-    "half=upper,open=true,facing=west": { "model": "neosync:block/zero_point_shell_storage_upper_open", "y": 90 }
+    "": {
+      "model": "neosync:block/zero_point_shell_storage"
+    }
   }
 }
-

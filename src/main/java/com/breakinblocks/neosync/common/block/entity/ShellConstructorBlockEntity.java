@@ -101,21 +101,21 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
     public long getAmountAsLong() {
         ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
         if (bottom == null || bottom.shell == null) return 0L;
-        long cap = SyncConfig.getInstance().shellConstructorCapacity();
+        long cap = SyncConfig.getInstance().shellConstructorEnergyRequirement();
         return (long) (bottom.shell.getProgress() * cap);
     }
 
     @Override
     public long getCapacityAsLong() {
         ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
-        return bottom != null && bottom.shell != null ? SyncConfig.getInstance().shellConstructorCapacity() : 0L;
+        return bottom != null && bottom.shell != null ? SyncConfig.getInstance().shellConstructorEnergyRequirement() : 0L;
     }
 
     @Override
     public int insert(int amount, TransactionContext transaction) {
         ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
         if (bottom == null || bottom.shell == null || bottom.shell.getProgress() >= ShellState.PROGRESS_DONE) return 0;
-        int capacity = (int) SyncConfig.getInstance().shellConstructorCapacity();
+        int capacity = (int) SyncConfig.getInstance().shellConstructorEnergyRequirement();
         int missingFE = (int) Math.ceil((ShellState.PROGRESS_DONE - bottom.shell.getProgress()) * capacity);
         int accepted = Math.min(amount, missingFE);
         if (accepted > 0) {

@@ -8,6 +8,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import com.breakinblocks.neosync.api.shell.ClientShell;
+import com.breakinblocks.neosync.client.gui.ShellSelectorGUI;
 import com.breakinblocks.neosync.api.shell.Shell;
 import com.breakinblocks.neosync.api.shell.ShellState;
 
@@ -62,6 +63,14 @@ public final class ClientNetworkHandler {
             updated.setHealth(0.01F);
         }
         updated.deathTime = 0;
+    }
+
+    public static void onOpenShellSelector() {
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null) {
+            return;
+        }
+        client.setScreen(new ShellSelectorGUI(null, null));
     }
 
     public static void onShellDestroyed(ShellDestroyedPacket payload) {

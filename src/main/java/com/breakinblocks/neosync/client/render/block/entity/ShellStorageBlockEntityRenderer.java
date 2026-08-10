@@ -1,75 +1,69 @@
 package com.breakinblocks.neosync.client.render.block.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Unit;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Quaternionf;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.common.block.AbstractShellContainerBlock;
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.client.model.ShellContainerModel;
+import com.breakinblocks.neosync.client.model.ShellStorageModel;
+import com.breakinblocks.neosync.client.model.SyncModelLayers;
+import com.breakinblocks.neosync.common.block.ZeroPointShellStorageBlock;
 import com.breakinblocks.neosync.common.block.entity.ShellEntity;
 import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
 
-public class ShellStorageBlockEntityRenderer extends AbstractShellContainerBlockEntityRenderer<ShellStorageBlockEntity, ShellContainerRenderState> {
+public class ShellStorageBlockEntityRenderer extends AbstractShellContainerBlockEntityRenderer<ShellStorageBlockEntity> {
+    public static final Identifier TEXTURE = NeoSync.locate("textures/block/shell_storage.png");
+    public static final Identifier ZERO_POINT_TEXTURE = NeoSync.locate("textures/block/zero_point_shell_storage.png");
+
+    private final ShellStorageModel model;
+    private final Model.Simple ledModel;
+
     public ShellStorageBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
         super(context);
+        this.model = new ShellStorageModel(context.bakeLayer(SyncModelLayers.SHELL_STORAGE));
+        this.ledModel = new Model.Simple(context.bakeLayer(SyncModelLayers.SHELL_STORAGE_LED), RenderTypes::entityCutoutCull);
     }
 
     @Override
-    public ShellContainerRenderState createRenderState() {
-        return new ShellContainerRenderState();
+    protected ShellContainerModel getModel() {
+        return this.model;
+    }
+
+    @Override
+    protected Identifier getTexture(BlockState blockState) {
+        return blockState.getBlock() instanceof ZeroPointShellStorageBlock ? ZERO_POINT_TEXTURE : TEXTURE;
     }
 
     @Override
     public void extractRenderState(ShellStorageBlockEntity blockEntity, ShellContainerRenderState renderState, float partialTick, Vec3 cameraPosition, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
         super.extractRenderState(blockEntity, renderState, partialTick, cameraPosition, breakProgress);
-        renderState.facing = blockEntity.getBlockState().getValue(AbstractShellContainerBlock.FACING);
-        renderState.isLowerHalf = blockEntity.getBlockState().getValue(AbstractShellContainerBlock.HALF) == DoubleBlockHalf.LOWER;
-        renderState.doorOpenProgress = blockEntity.getDoorOpenProgress(partialTick);
-
-        ShellState shell = blockEntity.getShellState();
-        renderState.shellProgress = shell == null ? 0F : shell.getProgress();
-
-        if (renderState.isLowerHalf && shell != null && shell.getProgress() >= ShellState.PROGRESS_DONE) {
-            ShellEntity shellEntity = this.getOrCreateClientShellEntity(blockEntity);
-            if (shellEntity != null) {
-                EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-                renderState.shellEntityState = dispatcher.extractEntity(shellEntity, partialTick);
-            } else {
-                renderState.shellEntityState = null;
-            }
-        } else {
-            renderState.shellEntityState = null;
-        }
+        renderState.ledColor = blockEntity.getIndicatorColor();
+        renderState.connectorProgress = blockEntity.getConnectorProgress(partialTick);
     }
 
     @Override
-    public void submit(ShellContainerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
-        if (state.shellEntityState == null || !state.isLowerHalf) {
-            return;
-        }
-        EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-        poseStack.pushPose();
-        poseStack.translate(0.5, 0.0, 0.5);
-        float yaw = facingYaw(state.facing);
-        poseStack.mulPose(new Quaternionf().rotationY((float)Math.toRadians(yaw)));
-        dispatcher.submit(state.shellEntityState, camera, 0.0, 0.0, 0.0, poseStack, submitNodeCollector);
-        poseStack.popPose();
+    protected void poseShell(ShellEntity shell, ShellStorageBlockEntity blockEntity, float partialTick) {
+        shell.isActive = true;
+        shell.pitchProgress = blockEntity.getConnectorProgress(partialTick);
+        holdPose(shell, maxHeadPitch(shell) * shell.pitchProgress);
     }
 
-    private static float facingYaw(Direction facing) {
-        return switch (facing) {
-            case NORTH -> 180F;
-            case EAST -> 270F;
-            case WEST -> 90F;
-            default -> 0F;
-        };
+    @Override
+    protected void submitExtras(ShellContainerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector) {
+        if (!state.isLowerHalf && !state.renderBothHalves) {
+            return;
+        }
+        int color = 0xFF000000 | (state.ledColor.getTextureDiffuseColor() & 0x00FFFFFF);
+        submitNodeCollector.submitModel(this.ledModel, Unit.INSTANCE, poseStack, this.ledModel.renderType(state.texture),
+                state.lightCoords, OverlayTexture.NO_OVERLAY, color, null, 0, state.breakProgress);
     }
 }
