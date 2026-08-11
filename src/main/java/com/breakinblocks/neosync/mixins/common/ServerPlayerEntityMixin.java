@@ -37,6 +37,7 @@ import com.breakinblocks.neosync.common.entity.KillableEntity;
 import com.breakinblocks.neosync.common.entity.ShellArrival;
 import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import com.breakinblocks.neosync.common.utils.WorldUtil;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -383,6 +384,11 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             new ShellStateUpdatePacket(upd.getA(), upd.getB()).send(player);
         }
         this.shellStateChanges.clear();
+    }
+
+    @ModifyExpressionValue(method = "die", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/GameRules;getBoolean(Lnet/minecraft/world/level/GameRules$Key;)Z", ordinal = 0))
+    private boolean hidePendingSyncDeathMessage(boolean showDeathMessages) {
+        return showDeathMessages && this.pendingSyncTarget == null;
     }
 
     @Inject(method = "die", at = @At("HEAD"), cancellable = true)
