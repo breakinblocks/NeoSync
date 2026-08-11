@@ -70,6 +70,7 @@ public class ShellState {
     private DyeColor color;
     private boolean isArtificial;
     private boolean isVirtual;
+    private boolean isTemporary;
 
     private UUID ownerUuid;
     private String ownerName;
@@ -122,6 +123,10 @@ public class ShellState {
 
     public boolean isVirtual() {
         return this.isVirtual;
+    }
+
+    public boolean isTemporary() {
+        return this.isTemporary;
     }
 
     public UUID getOwnerUuid() {
@@ -283,12 +288,17 @@ public class ShellState {
     }
 
     public static ShellState anchor(ServerPlayer player, ResourceLocation worldId, BlockPos pos) {
+        return anchor(player, worldId, pos, false);
+    }
+
+    public static ShellState anchor(ServerPlayer player, ResourceLocation worldId, BlockPos pos, boolean temporary) {
         ShellState shell = create(player, pos, null, PROGRESS_DONE, true, false);
         shell.world = worldId;
         shell.subLevelUuid = null;
         shell.localOffset = null;
         shell.yawDelta = 0;
         shell.isVirtual = true;
+        shell.isTemporary = temporary;
         return shell;
     }
 
@@ -463,6 +473,7 @@ public class ShellState {
                 .add(Float.class, "progress", x -> x.progress, (x, progress) -> x.progress = progress)
                 .add(Boolean.class, "isArtificial", x -> x.isArtificial, (x, isArtificial) -> x.isArtificial = isArtificial)
                 .add(Boolean.class, "isVirtual", x -> x.isVirtual, (x, isVirtual) -> x.isVirtual = isVirtual)
+                .add(Boolean.class, "isTemporary", x -> x.isTemporary, (x, isTemporary) -> x.isTemporary = isTemporary != null && isTemporary)
 
                 .add(UUID.class, "ownerUuid", x -> x.ownerUuid, (x, ownerUuid) -> x.ownerUuid = ownerUuid)
                 .add(String.class, "ownerName", x -> x.ownerName, (x, ownerName) -> x.ownerName = ownerName)

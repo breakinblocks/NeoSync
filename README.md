@@ -14,12 +14,12 @@ NeoSync provides *shells*; clones of the player, each with their own inventory, 
 
 1. Craft a **shell constructor** and place it.
 2. Right-click it with an empty hand to provide a genetic sample.
-   > ⚠️ With default config this will **kill you** — 20 HP (40 in hardcore). Eat a golden apple for more health, hold a totem of undying, or enable `warnPlayerInsteadOfKilling` in the config.
+   > ⚠️ With default config this will **kill you**. 20 HP (40 in hardcore). Eat a golden apple for more health, hold a totem of undying, or enable `warnPlayerInsteadOfKilling` in the config.
 3. Power the constructor: place a **treadmill** touching any side of it, lure a **pig** or **wolf** onto the front block, and piggawatts flow.
 
    ![Working shell constructor](media/shell_constructor-showcase.png)
 
-   > A comparator on the constructor tracks build progress.
+   > A comparator on the constructor tracks build progress, which is also displayed in Jade.
 
 4. Once the shell is built, craft a **shell storage**, place it, and supply redstone power (or FE from any tech mod).
 5. When the storage doors open, walk in. A radial menu appears with your shells:
@@ -55,10 +55,46 @@ Config file: `config/neosync-common.toml`. Key options:
 | `syncPriority` | `NATURAL` | Which shell to pick on death. Values: `NATURAL`, `NEAREST`, or any dye color |
 | `wrench` | `minecraft:stick` | Item that cycles a container's comparator output type |
 
+## Commands
+
+All commands are listed under `/neosync`. All of it needs permission level 2; `anchor` and `ghostshells` are also available to the host in single player.
+
+### `/neosync select [<targets>]`
+
+Opens the shell radial menu wherever the player is standing, with no shell storage needed, and lets them sync straight into any finished shell. With no argument it targets the sender. Players with no finished shell are skipped with a message. Returns the number of menus opened.
+
+### `/neosync anchor set <targets> <dimension> <x y z> [<temporary>]`
+
+Gives each target a respawn anchor at the given spot. An anchor behaves like a shell in the radial menu, but there is no block involved: syncing to it creates a fresh clone with full health and an empty inventory at those coordinates. Setting a second anchor at the same spot in the same dimension replaces the first.
+
+Pass `true` for `temporary` to make it single use. The anchor is removed the instant the player syncs into it, so it covers exactly one death. Omit the argument (or pass `false`) for a permanent anchor. Returns the number of players given an anchor.
+
+### `/neosync anchor ensure <targets> <dimension> <x y z>`
+
+Same as `set ... true`, but only acts on players who currently have nothing to sync into, meaning no finished shell and no existing anchor. Players who still have somewhere to go are left alone. It is safe to run repeatedly, so it works well on a login hook or a timer to keep players from being stranded. Returns the number of players actually given an anchor, which is `0` when everyone already had a shell.
+
+### `/neosync anchor list <targets>`
+
+Lists each target's anchors, marking the single-use ones. Returns the total anchor count across all targets.
+
+### `/neosync anchor remove <targets> [<dimension> <x y z>]`
+
+Removes anchors from the targets. With coordinates, only the anchor at that spot goes; without them, all of the target's anchors go. Returns the number removed.
+
+### `/neosync ghostshells <sync|remove|repair> <targets> [<x y z>]`
+
+Cleans up shells that show in a player's menu but no longer exist in the world, usually after a shell storage was destroyed or a chunk was rolled back. Anchors are never touched. Give coordinates to act on one shell, or leave them off to sweep every shell the player has.
+
+- `sync` repairs what it can and deletes the rest.
+- `repair` repairs what it can and reports the rest without deleting anything.
+- `remove` deletes ghost shells without attempting a repair.
+
+Note that the sweep without coordinates also marks every one of that player's shells as fully built, so any shell still under construction finishes immediately.
+
 ## Mod integration
 
-- **[JEI](https://www.curseforge.com/minecraft/mc-mods/jei)** — info descriptions on each sync block explaining the flow, plus a *Treadmill Energy Sources* category listing every entity the treadmill accepts and its FE/tick output (driven by `energyMap`).
-- **[Jade](https://www.curseforge.com/minecraft/mc-mods/jade)** — crosshair tooltip for shell constructor / storage / treadmill showing owner, build progress, color, powered state, and energy level.
+- **[JEI](https://www.curseforge.com/minecraft/mc-mods/jei)**. info descriptions on each sync block explaining the flow, plus a *Treadmill Energy Sources* category listing every entity the treadmill accepts and its FE/tick output (driven by `energyMap`).
+- **[Jade](https://www.curseforge.com/minecraft/mc-mods/jade)**. crosshair tooltip for shell constructor / storage / treadmill showing owner, build progress, color, powered state, and energy level.
 
 Both are optional; NeoSync runs fine without them.
 
@@ -66,33 +102,27 @@ Both are optional; NeoSync runs fine without them.
 
 NeoSync detects when a shell storage is placed on a [Sable](https://www.curseforge.com/minecraft/mc-mods/sable) airship sublevel and converts between world and sublevel-local coordinate frames so the radial menu and sync flow work correctly while the airship is moving or rotated.
 
-- **Shell storage** — fully supported. Walking into a storage on an airship triggers the radial menu, the entity-centering animation runs in the airship's frame (so it doesn't yank you off the deck), and server-side sync validation queries the sublevel's plot instead of the parent world. Coordinate transforms handle both translation and rotation via Sable's `Pose3dc` API.
-- **Shell constructor** — right-clicking to construct a shell works on airships through Sable's standard interaction hooks. The "doors open as you approach" cosmetic animation may not trigger on sublevels in this release.
-- **Treadmill** — runner detection, positioning, and treadmill-drift motion are all transformed into the sublevel's frame. Animals (or players) on a treadmill mounted on a moving/rotated airship are detected, locked to the treadmill pivot in world space, and pushed along the airship's local forward direction so they run "in place" relative to the airship. Energy generation, transfer to neighboring blocks in the plot, and overheat timing are unchanged.
-- **Syncing into shells stored on sublevels** — fully supported, including cross-airship sync. Each shell records the UUID of the sublevel it was stored on (if any). On sync, the target lookup resolves that sublevel by UUID and queries its plot directly; falls back to the player's tracking sublevel, then the parent world. Shells saved before 1.2.0 don't have the UUID field and use the fallback chain.
+- **Shell storage**. fully supported. Walking into a storage on an airship triggers the radial menu, the entity-centering animation runs in the airship's frame (so it doesn't yank you off the deck), and server-side sync validation queries the sublevel's plot instead of the parent world. Coordinate transforms handle both translation and rotation via Sable's `Pose3dc` API.
+- **Shell constructor**. right-clicking to construct a shell works on airships through Sable's standard interaction hooks. The "doors open as you approach" cosmetic animation may not trigger on sublevels in this release.
+- **Treadmill**. runner detection, positioning, and treadmill-drift motion are all transformed into the sublevel's frame. Animals (or players) on a treadmill mounted on a moving/rotated airship are detected, locked to the treadmill pivot in world space, and pushed along the airship's local forward direction so they run "in place" relative to the airship. Energy generation, transfer to neighboring blocks in the plot, and overheat timing are unchanged.
+- **Syncing into shells stored on sublevels**. fully supported, including cross-airship sync. Each shell records the UUID of the sublevel it was stored on (if any). On sync, the target lookup resolves that sublevel by UUID and queries its plot directly; falls back to the player's tracking sublevel, then the parent world. Shells saved before 1.2.0 don't have the UUID field and use the fallback chain.
 
-Sable is an optional dependency — NeoSync runs normally without it, and there is no overhead when it is absent.
+Sable is an optional dependency. NeoSync runs normally without it, and there is no overhead when it is absent.
 
 ### Grave / death-handling mods (Simple Tombs, etc.)
 
 NeoSync coexists with grave mods, but only the parts that hook `LivingDropsEvent` work in the cross-shell death path:
 
-- **Original-body death** uses the vanilla death flow — `LivingDeathEvent`, `LivingDropsEvent`, and `PlayerRespawnEvent` all fire normally, so grave mods behave exactly as they would without NeoSync.
+- **Original-body death** uses the vanilla death flow. `LivingDeathEvent`, `LivingDropsEvent`, and `PlayerRespawnEvent` all fire normally, so grave mods behave exactly as they would without NeoSync.
 - **Shell death with another shell available** is intercepted by NeoSync: vanilla `die()` is cancelled and the player auto-syncs into the next shell. `LivingDropsEvent` still fires (so the grave is placed at the dead shell's position with its full inventory), but `LivingDeathEvent` and `PlayerRespawnEvent` do **not** fire.
 
 For Simple Tombs specifically:
 
-- Graves are placed correctly at the dead shell's location and hold its full inventory — walk to the grave to retrieve.
+- Graves are placed correctly at the dead shell's location and hold its full inventory. walk to the grave to retrieve.
 - The `KEEPPARTS` option (hotbar/armor soulbinding) does **not** carry across a cross-shell auto-sync; those items go into the grave with everything else. If you want consistent behavior across both death paths, set `KEEPPARTS=NONE` in the Simple Tombs config and rely on the grave for everything.
 - The grave key (if `KEYGIVEN=true`) lands in the grave alongside the rest of the loot.
 
-## Installation
-
-Requirements:
-- Minecraft `1.21.1`
-- NeoForge `21.1.x`
-
-Grab the jar from a local `./gradlew build` (`build/libs/NeoSync-*.jar`) or a published release when available.
+If you need to request specific integration with other mods or graves feel free to reach out.
 
 ## License
 

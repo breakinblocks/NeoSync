@@ -167,6 +167,9 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         }
 
         if (targetShellContainer == null) {
+            if (state.isTemporary()) {
+                this.remove(state);
+            }
             this.apply(ShellState.anchor(player, state.getWorld(), state.getPos()));
         } else {
             targetShellContainer.setShellState(null);
