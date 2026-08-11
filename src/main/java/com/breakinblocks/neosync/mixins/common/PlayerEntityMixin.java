@@ -7,9 +7,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.Level;
 import com.breakinblocks.neosync.api.shell.Shell;
+import com.breakinblocks.neosync.api.shell.ServerShell;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -34,9 +36,14 @@ abstract class PlayerEntityMixin extends LivingEntity {
     @Shadow
     public abstract boolean isSpectator();
 
+    @Unique
+    private static boolean isAwaitingSync(Object player) {
+        return player instanceof ServerShell serverShell && serverShell.getPendingSyncTarget() != null;
+    }
+
     @Inject(method = "die", at = @At("RETURN"))
     private void forceDropInventory(CallbackInfo ci) {
-        if (this instanceof Shell shell && shell.isArtificial() && !this.isSpectator()) {
+        if (this instanceof Shell shell && (shell.isArtificial() || isAwaitingSync(this)) && !this.isSpectator()) {
             this.destroyVanishingCursedItems();
             this.inventory.dropAll();
         }

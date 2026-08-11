@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -99,6 +100,9 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     private boolean undead = false;
 
     @Unique
+    private UUID pendingSyncTarget = null;
+
+    @Unique
     private ConcurrentMap<UUID, ShellState> shellsById = new ConcurrentHashMap<>();
 
     @Unique
@@ -131,16 +135,18 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         BlockPos currentPos = player.blockPosition();
         Level currentWorld = player.level();
 
+        if (this.pendingSyncTarget != null) {
+            return Either.right(PlayerSyncEvents.SyncFailureReason.OTHER_PROBLEM);
+        }
+
         if (!this.canBeApplied(state) || state.getProgress() < ShellState.PROGRESS_DONE) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_SHELL);
         }
 
+        UUID requestedUuid = state.getUuid();
         boolean isDead = player.isDeadOrDying();
-        if (isDead && !this.undead) {
-            return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_CURRENT_LOCATION);
-        }
         ShellStateContainer currentShellContainer = isDead ? null : ShellStateContainer.find(currentWorld, currentPos);
-        if (!isDead && (currentShellContainer == null || currentShellContainer.getShellState() != null)) {
+        if (currentShellContainer != null && currentShellContainer.getShellState() != null) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_CURRENT_LOCATION);
         }
 
@@ -155,13 +161,8 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
         }
 
-        BlockPos targetPos = state.getPos();
-        ShellStateContainer targetShellContainer;
-        if (state.isVirtual()) {
-            targetShellContainer = null;
-        } else {
-            LevelChunk targetChunk = targetWorld.getChunk(targetPos.getX() >> 4, targetPos.getZ() >> 4);
-            targetShellContainer = targetChunk == null ? null : ShellStateContainer.find(targetWorld, targetPos);
+        ShellStateContainer targetShellContainer = this.findTargetContainer(targetWorld, state);
+        if (!state.isVirtual()) {
             if (targetShellContainer == null) {
                 return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
             }
@@ -174,6 +175,22 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         PlayerSyncEvents.START_SYNCING.invoker().onStartSyncing(this, state);
 
+        if (isDead && !this.undead) {
+            this.pendingSyncTarget = requestedUuid;
+            player.connection.send(new ClientboundPlayerCombatKillPacket(player.getId(), Component.empty()));
+            return Either.right(PlayerSyncEvents.SyncFailureReason.OTHER_PROBLEM);
+        }
+
+        if (!isDead && currentShellContainer == null) {
+            this.pendingSyncTarget = requestedUuid;
+            player.hurtServer(player.level(), player.damageSources().genericKill(), Float.MAX_VALUE);
+            if (!player.isDeadOrDying()) {
+                this.pendingSyncTarget = null;
+                return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_CURRENT_LOCATION);
+            }
+            return Either.right(PlayerSyncEvents.SyncFailureReason.OTHER_PROBLEM);
+        }
+
         ShellState storedState = null;
         if (currentShellContainer != null) {
             storedState = ShellState.of(player, currentPos, currentShellContainer.getColor());
@@ -183,6 +200,31 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             }
         }
 
+        this.moveInto(state, targetShellContainer);
+
+        PlayerSyncEvents.STOP_SYNCING.invoker().onStopSyncing(player, currentPos, storedState);
+        return Either.left(storedState);
+    }
+
+    @Override
+    public UUID getPendingSyncTarget() {
+        return this.pendingSyncTarget;
+    }
+
+    @Unique
+    private ShellStateContainer findTargetContainer(ServerLevel targetWorld, ShellState state) {
+        if (state.isVirtual()) {
+            return null;
+        }
+
+        BlockPos targetPos = state.getPos();
+        LevelChunk targetChunk = targetWorld.getChunk(targetPos.getX() >> 4, targetPos.getZ() >> 4);
+        return targetChunk == null ? null : ShellStateContainer.find(targetWorld, targetPos);
+    }
+
+    @Unique
+    private void moveInto(ShellState state, ShellStateContainer targetShellContainer) {
+        ServerPlayer player = (ServerPlayer)(Object)this;
         if (targetShellContainer == null) {
             if (state.isTemporary()) {
                 this.remove(state);
@@ -193,9 +235,32 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             this.remove(state);
             this.apply(state);
         }
+    }
 
-        PlayerSyncEvents.STOP_SYNCING.invoker().onStopSyncing(player, currentPos, storedState);
-        return Either.left(storedState);
+    @Unique
+    private void completePendingSync() {
+        ServerPlayer player = (ServerPlayer)(Object)this;
+        ShellState state = this.shellsById.get(this.pendingSyncTarget);
+        this.pendingSyncTarget = null;
+
+        ServerLevel targetWorld = state == null ? null : WorldUtil.findWorld(this.server.getAllLevels(), state.getWorld()).orElse(null);
+        if (targetWorld == null) {
+            player.sendSystemMessage(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION.toText());
+            return;
+        }
+
+        ShellStateContainer targetShellContainer = this.findTargetContainer(targetWorld, state);
+        if (!state.isVirtual()) {
+            if (targetShellContainer == null || !this.canBeApplied(targetShellContainer.getShellState())) {
+                player.sendSystemMessage(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION.toText());
+                return;
+            }
+            state = targetShellContainer.getShellState();
+        }
+
+        BlockPos previousPos = player.blockPosition();
+        this.moveInto(state, targetShellContainer);
+        PlayerSyncEvents.STOP_SYNCING.invoker().onStopSyncing(player, previousPos, null);
     }
 
     @Override
@@ -298,6 +363,10 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     private void playerTick(CallbackInfo ci) {
         ServerPlayer player = (ServerPlayer)(Object)this;
 
+        if (this.pendingSyncTarget != null && !player.isDeadOrDying()) {
+            this.completePendingSync();
+        }
+
         if (this.shellDirty) {
             this.shellDirty = false;
             this.shellStateChanges.clear();
@@ -312,7 +381,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
     @Inject(method = "die", at = @At("HEAD"), cancellable = true)
     private void onDeath(DamageSource source, CallbackInfo ci) {
-        if (!this.isArtificial) {
+        if (!this.isArtificial || this.pendingSyncTarget != null) {
             return;
         }
 
@@ -331,6 +400,8 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         if (!this.isSpectator()) {
             this.dropAllDeathLoot(player.level(), source);
+            this.destroyVanishingCursedItems();
+            player.getInventory().dropAll();
         }
 
         this.undead = true;
@@ -378,11 +449,15 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         out.putBoolean("IsArtificial", this.isArtificial);
         ValueOutput.TypedOutputList<CompoundTag> list = out.list("Shells", CompoundTag.CODEC);
         this.shellsById.values().forEach(s -> list.add(s.writeNbt(new CompoundTag())));
+        if (this.pendingSyncTarget != null) {
+            out.store("PendingSyncTarget", UUIDUtil.CODEC, this.pendingSyncTarget);
+        }
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
     private void readCustomDataFromNbt(ValueInput in, CallbackInfo ci) {
         this.isArtificial = in.getBooleanOr("IsArtificial", false);
+        this.pendingSyncTarget = in.read("PendingSyncTarget", UUIDUtil.CODEC).orElse(null);
         ValueInput.TypedInputList<CompoundTag> list = in.listOrEmpty("Shells", CompoundTag.CODEC);
         this.shellsById = list.stream()
                 .map(ShellState::fromNbt)
@@ -409,6 +484,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     private void copyFrom(ServerPlayer oldPlayer, boolean alive, CallbackInfo ci) {
         Shell shell = (Shell)oldPlayer;
         this.isArtificial = alive && shell.isArtificial();
+        this.pendingSyncTarget = ((ServerShell)oldPlayer).getPendingSyncTarget();
         this.shellsById = shell.getAvailableShellStates().collect(Collectors.toConcurrentMap(ShellState::getUuid, x -> x));
         this.shellStateChanges = new HashMap<>();
         this.shellDirty = true;

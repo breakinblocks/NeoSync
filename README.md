@@ -63,6 +63,10 @@ All commands are listed under `/neosync`. All of it needs gamemaster permission;
 
 Opens the shell radial menu wherever the player is standing, with no shell storage needed, and lets them sync straight into any finished shell. With no argument it targets the sender. Players with no finished shell are skipped with a message. Returns the number of menus opened.
 
+Standing in an empty shell storage still works the normal way: the body stays in the storage with everything it was carrying, and the player wakes up in the shell they picked.
+
+Away from a shell storage there is no container to leave the body in, so the player is killed and moved into the shell they picked once they respawn. The death is an ordinary one, which means grave mods keep the items and xp, and a normal death drop happens when there is no grave mod. A player who is already dead can pick a shell too, from the death screen: nothing happens until they respawn, and then they arrive in that shell instead of at their spawn point. This is what makes a single use anchor cover exactly one death.
+
 ### `/neosync anchor set <targets> <dimension> <x y z> [<temporary>]`
 
 Gives each target a respawn anchor at the given spot. An anchor behaves like a shell in the radial menu, but there is no block involved: syncing to it creates a fresh clone with full health and an empty inventory at those coordinates. Setting a second anchor at the same spot in the same dimension replaces the first.
@@ -104,6 +108,7 @@ NeoSync coexists with grave mods, but only the parts that hook `LivingDropsEvent
 
 - **Original-body death** uses the vanilla death flow. `LivingDeathEvent`, `LivingDropsEvent`, and `PlayerRespawnEvent` all fire normally, so grave mods behave exactly as they would without NeoSync.
 - **Shell death with another shell available** is intercepted by NeoSync: vanilla `die()` is cancelled and the player auto-syncs into the next shell. `LivingDropsEvent` still fires (so the grave is placed at the dead shell's position with its full inventory), but `LivingDeathEvent` and `PlayerRespawnEvent` do **not** fire.
+- **Syncing away from a shell storage** is a plain vanilla death followed by a move on respawn, so all three events fire and grave mods behave exactly as they would on any other death.
 
 For Simple Tombs specifically:
 
