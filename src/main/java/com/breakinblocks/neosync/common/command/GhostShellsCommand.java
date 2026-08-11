@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.level.chunk.LevelChunk;
 import com.breakinblocks.neosync.api.shell.Shell;
 import com.breakinblocks.neosync.api.shell.ShellState;
@@ -38,7 +39,7 @@ public class GhostShellsCommand implements Command {
 
     @Override
     public boolean hasPermissions(CommandSourceStack commandSource) {
-        return commandSource.getServer().isSingleplayer() || commandSource.source instanceof MinecraftServer;
+        return commandSource.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) || commandSource.getServer().isSingleplayer();
     }
 
     @Override

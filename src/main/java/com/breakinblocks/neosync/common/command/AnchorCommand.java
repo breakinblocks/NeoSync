@@ -1,5 +1,6 @@
 package com.breakinblocks.neosync.common.command;
 
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -38,7 +39,14 @@ public class AnchorCommand implements Command {
                 .then(Commands.argument("target", EntityArgument.players())
                         .then(Commands.argument("dimension", DimensionArgument.dimension())
                                 .then(Commands.argument("pos", BlockPosArgument.blockPos())
-                                        .executes(AnchorCommand::executeSet)))));
+                                        .executes(context -> executeSet(context, false, false))
+                                        .then(Commands.argument("temporary", BoolArgumentType.bool())
+                                                .executes(context -> executeSet(context, BoolArgumentType.getBool(context, "temporary"), false)))))));
+        builder.then(Commands.literal("ensure")
+                .then(Commands.argument("target", EntityArgument.players())
+                        .then(Commands.argument("dimension", DimensionArgument.dimension())
+                                .then(Commands.argument("pos", BlockPosArgument.blockPos())
+                                        .executes(context -> executeSet(context, true, true))))));
         builder.then(Commands.literal("remove")
                 .then(Commands.argument("target", EntityArgument.players())
                         .executes(context -> executeRemove(context, false))
@@ -50,24 +58,32 @@ public class AnchorCommand implements Command {
                         .executes(AnchorCommand::executeList)));
     }
 
-    private static int executeSet(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+    private static int executeSet(CommandContext<CommandSourceStack> context, boolean temporary, boolean onlyIfStranded) throws CommandSyntaxException {
         Collection<ServerPlayer> players = EntityArgument.getPlayers(context, "target");
         ServerLevel world = DimensionArgument.getDimension(context, "dimension");
         BlockPos pos = BlockPosArgument.getBlockPos(context, "pos");
         Identifier worldId = WorldUtil.getId(world);
 
+        int count = 0;
         for (ServerPlayer player : players) {
             Shell shell = (Shell)player;
+            if (onlyIfStranded && shell.getAvailableShellStates().anyMatch(x -> x.getProgress() >= ShellState.PROGRESS_DONE)) {
+                context.getSource().sendSuccess(() -> Component.translatable("command.neosync.anchor.ensure.skipped",
+                        player.getName().getString()), false);
+                continue;
+            }
+
             List<ShellState> existing = shell.getAvailableShellStates()
                     .filter(ShellState::isVirtual)
                     .filter(x -> worldId.equals(x.getWorld()) && pos.equals(x.getPos()))
                     .toList();
             existing.forEach(shell::remove);
-            shell.add(ShellState.anchor(player, worldId, pos));
-            context.getSource().sendSuccess(() -> Component.translatable("command.neosync.anchor.set",
+            shell.add(ShellState.anchor(player, worldId, pos, temporary));
+            context.getSource().sendSuccess(() -> Component.translatable(temporary ? "command.neosync.anchor.set.temporary" : "command.neosync.anchor.set",
                     player.getName().getString(), pos.toShortString(), worldId.toString()), false);
+            ++count;
         }
-        return 1;
+        return count;
     }
 
     private static int executeRemove(CommandContext<CommandSourceStack> context, boolean hasPos) throws CommandSyntaxException {
@@ -75,6 +91,7 @@ public class AnchorCommand implements Command {
         Identifier worldId = hasPos ? WorldUtil.getId(DimensionArgument.getDimension(context, "dimension")) : null;
         BlockPos pos = hasPos ? BlockPosArgument.getBlockPos(context, "pos") : null;
 
+        int count = 0;
         for (ServerPlayer player : players) {
             Shell shell = (Shell)player;
             List<ShellState> anchors = shell.getAvailableShellStates()
@@ -84,12 +101,14 @@ public class AnchorCommand implements Command {
             anchors.forEach(shell::remove);
             context.getSource().sendSuccess(() -> Component.translatable("command.neosync.anchor.removed",
                     anchors.size(), player.getName().getString()), false);
+            count += anchors.size();
         }
-        return 1;
+        return count;
     }
 
     private static int executeList(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         Collection<ServerPlayer> players = EntityArgument.getPlayers(context, "target");
+        int count = 0;
         for (ServerPlayer player : players) {
             List<ShellState> anchors = ((Shell)player).getAvailableShellStates()
                     .filter(ShellState::isVirtual)
@@ -99,11 +118,12 @@ public class AnchorCommand implements Command {
                         player.getName().getString()), false);
             } else {
                 for (ShellState anchor : anchors) {
-                    context.getSource().sendSuccess(() -> Component.translatable("command.neosync.anchor.list.entry",
+                    context.getSource().sendSuccess(() -> Component.translatable(anchor.isTemporary() ? "command.neosync.anchor.list.entry.temporary" : "command.neosync.anchor.list.entry",
                             player.getName().getString(), anchor.getPos().toShortString(), anchor.getWorld().toString()), false);
                 }
             }
+            count += anchors.size();
         }
-        return 1;
+        return count;
     }
 }
