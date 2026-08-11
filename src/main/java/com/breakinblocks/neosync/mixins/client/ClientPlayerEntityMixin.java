@@ -87,9 +87,7 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
                 : PersistentCameraEntityGoal.stairwayToHeaven(pos, facing, state.getPos(), __ -> request.send());
 
         HudController.hide();
-        if (this.isDeadOrDying()) {
-            DeathScreenController.suspend();
-        }
+        DeathScreenController.suspend();
         this.minecraft.setScreen(null);
         PersistentCameraEntity.setup(this.minecraft, cameraGoal);
         return null;
@@ -120,7 +118,11 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
             PersistentCameraEntity.unset(this.minecraft);
             HudController.restore();
             DeathScreenController.restore();
-            if (!syncFailed) {
+            if (syncFailed) {
+                if (this.isDeadOrDying()) {
+                    this.minecraft.setScreen(null);
+                }
+            } else {
                 PlayerSyncEvents.STOP_SYNCING.invoker().onStopSyncing(this, startPos, storedState);
             }
         };

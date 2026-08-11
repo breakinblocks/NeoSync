@@ -1,5 +1,6 @@
 package com.breakinblocks.neosync.api.event;
 
+import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -9,6 +10,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.api.shell.ShellStateContainer;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 /**
  * Events about the synchronization of {@linkplain Player players} with their shells.
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
  * <p><b>Note:</b> Sync events are fired on both client side and server side.</li>
  */
 public final class PlayerSyncEvents {
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     /**
      * Event invoker interface to maintain compatibility with Fabric-style event calls
@@ -68,12 +71,20 @@ public final class PlayerSyncEvents {
 
         @Override
         public void onStartSyncing(Player player, ShellState targetState) {
-            NeoForge.EVENT_BUS.post(new StartSyncing(player, targetState));
+            postSafely(new StartSyncing(player, targetState));
         }
 
         @Override
         public void onStopSyncing(Player player, BlockPos previousPos, @Nullable ShellState storedState) {
-            NeoForge.EVENT_BUS.post(new StopSyncing(player, previousPos, storedState));
+            postSafely(new StopSyncing(player, previousPos, storedState));
+        }
+
+        private static void postSafely(PlayerSyncEvent event) {
+            try {
+                NeoForge.EVENT_BUS.post(event);
+            } catch (Throwable t) {
+                LOGGER.error("A listener of {} threw an exception", event.getClass().getSimpleName(), t);
+            }
         }
     }
 

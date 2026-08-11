@@ -11,6 +11,8 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.client.gui.controller.DeathScreenController;
+import com.breakinblocks.neosync.client.gui.hud.HudController;
 
 import java.util.Objects;
 
@@ -172,6 +174,11 @@ public class PersistentCameraEntity extends LocalPlayer {
         if (camera.goal == null) {
             if (camera.goalIdleSince > 0 && System.currentTimeMillis() - camera.goalIdleSince > GOAL_IDLE_TIMEOUT_MS) {
                 unset(client);
+                HudController.restore();
+                DeathScreenController.restore();
+                if (client.player != null && client.player.isDeadOrDying()) {
+                    client.setScreen(null);
+                }
             }
             return;
         }

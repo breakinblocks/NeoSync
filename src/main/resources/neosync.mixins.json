@@ -10,6 +10,7 @@
     "common.ServerPlayerEntityMixin"
   ],
   "client": [
+    "client.ClientPlayNetworkHandlerMixin",
     "client.ClientPlayerEntityMixin",
     "client.ClientPlayerInteractionManagerMixin",
     "client.EntityMixin",

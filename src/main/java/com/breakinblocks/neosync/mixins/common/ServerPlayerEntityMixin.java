@@ -5,6 +5,7 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -30,6 +31,7 @@ import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import com.breakinblocks.neosync.api.networking.PlayerIsAlivePacket;
 import com.breakinblocks.neosync.api.networking.ShellStateUpdatePacket;
 import com.breakinblocks.neosync.api.networking.ShellUpdatePacket;
+import com.breakinblocks.neosync.api.networking.SynchronizationResponsePacket;
 import com.breakinblocks.neosync.api.shell.*;
 import com.breakinblocks.neosync.common.entity.KillableEntity;
 import com.breakinblocks.neosync.common.entity.ShellArrival;
@@ -223,24 +225,40 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         ShellState state = this.shellsById.get(this.pendingSyncTarget);
         this.pendingSyncTarget = null;
 
+        BlockPos previousPos = this.blockPosition();
+        ResourceLocation previousWorldId = WorldUtil.getId(this.level());
+        Direction previousFacing = BlockPosUtil.getHorizontalFacing(previousPos, this.level()).orElse(player.getDirection().getOpposite());
+
         ServerLevel targetWorld = state == null ? null : WorldUtil.findWorld(this.server.getAllLevels(), state.getWorld()).orElse(null);
         if (targetWorld == null) {
-            player.sendSystemMessage(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION.toText());
+            this.failPendingSync(previousWorldId, previousPos, previousFacing);
             return;
         }
 
         ShellStateContainer targetShellContainer = this.findTargetContainer(targetWorld, state);
         if (!state.isVirtual()) {
             if (targetShellContainer == null || !this.canBeApplied(targetShellContainer.getShellState())) {
-                player.sendSystemMessage(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION.toText());
+                this.failPendingSync(previousWorldId, previousPos, previousFacing);
                 return;
             }
             state = targetShellContainer.getShellState();
         }
 
-        BlockPos previousPos = this.blockPosition();
         this.moveInto(state, targetShellContainer);
+
+        new SynchronizationResponsePacket(
+                previousWorldId, previousPos, previousFacing,
+                WorldUtil.getId(this.level()), this.blockPosition(), player.getDirection().getOpposite(),
+                Optional.empty()).send(player);
+
         PlayerSyncEvents.STOP_SYNCING.invoker().onStopSyncing(player, previousPos, null);
+    }
+
+    @Unique
+    private void failPendingSync(ResourceLocation worldId, BlockPos pos, Direction facing) {
+        ServerPlayer player = (ServerPlayer)(Object)this;
+        player.sendSystemMessage(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION.toText());
+        new SynchronizationResponsePacket(worldId, pos, facing, worldId, pos, facing, Optional.empty()).send(player);
     }
 
     @Override
@@ -351,7 +369,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     private void playerTick(CallbackInfo ci) {
         ServerPlayer player = (ServerPlayer)(Object)this;
 
-        if (this.pendingSyncTarget != null && !this.isDeadOrDying()) {
+        if (this.pendingSyncTarget != null && !this.isRemoved()) {
             this.completePendingSync();
         }
 
@@ -404,6 +422,10 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     @Override
     public boolean updateKillableEntityPostDeath() {
         this.deathTime = Mth.clamp(++this.deathTime, 0, 20);
+        if (this.pendingSyncTarget != null) {
+            return true;
+        }
+
         if (this.isArtificial && this.shellsById.values().stream().anyMatch(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE)) {
             return true;
         }

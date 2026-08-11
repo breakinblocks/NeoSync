@@ -60,10 +60,6 @@ public record SynchronizationRequestPacket(Optional<UUID> shellUuid) implements 
 
             Either<ShellState, PlayerSyncEvents.SyncFailureReason> result = shell.sync(state);
             if (shell.getPendingSyncTarget() != null) {
-                PacketDistributor.sendToPlayer(player, new SynchronizationResponsePacket(
-                        currentWorldId, currentPos, currentFacing,
-                        currentWorldId, currentPos, currentFacing,
-                        Optional.empty()));
                 return;
             }
 
