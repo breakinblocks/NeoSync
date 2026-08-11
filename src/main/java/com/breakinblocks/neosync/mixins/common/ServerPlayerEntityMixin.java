@@ -79,6 +79,9 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     private boolean undead = false;
 
     @Unique
+    private UUID pendingSyncTarget = null;
+
+    @Unique
     private ConcurrentMap<UUID, ShellState> shellsById = new ConcurrentHashMap<>();
 
     @Unique
@@ -110,18 +113,19 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     public Either<ShellState, PlayerSyncEvents.SyncFailureReason> sync(ShellState state) {
         ServerPlayer player = (ServerPlayer)(Object)this;
         BlockPos currentPos = this.blockPosition();
-        Level currentWorld = player.level();
+
+        if (this.pendingSyncTarget != null) {
+            return Either.right(PlayerSyncEvents.SyncFailureReason.OTHER_PROBLEM);
+        }
 
         if (!this.canBeApplied(state) || state.getProgress() < ShellState.PROGRESS_DONE) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_SHELL);
         }
 
+        UUID requestedUuid = state.getUuid();
         boolean isDead = this.isDeadOrDying();
-        if (isDead && !this.undead) {
-            return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_CURRENT_LOCATION);
-        }
         ShellStateContainer currentShellContainer = isDead ? null : ShellStateContainer.findNear(player);
-        if (!isDead && (currentShellContainer == null || currentShellContainer.getShellState() != null)) {
+        if (currentShellContainer != null && currentShellContainer.getShellState() != null) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_CURRENT_LOCATION);
         }
 
@@ -130,21 +134,13 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             return Either.right(selectionFailureReason::toText);
         }
 
-        ResourceLocation targetWorldId = state.getWorld();
-        ServerLevel targetWorld = WorldUtil.findWorld(this.server.getAllLevels(), targetWorldId).orElse(null);
+        ServerLevel targetWorld = WorldUtil.findWorld(this.server.getAllLevels(), state.getWorld()).orElse(null);
         if (targetWorld == null) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
         }
 
-        BlockPos targetPos = state.getPos();
-        ShellStateContainer targetShellContainer;
-        if (state.isVirtual()) {
-            targetShellContainer = null;
-        } else {
-            if (state.getSubLevelUuid() == null) {
-                targetWorld.getChunk(targetPos.getX() >> 4, targetPos.getZ() >> 4);
-            }
-            targetShellContainer = ShellStateContainer.findAt(targetWorld, targetPos, state.getLocalOffset(), player, state.getSubLevelUuid());
+        ShellStateContainer targetShellContainer = this.findTargetContainer(targetWorld, state);
+        if (!state.isVirtual()) {
             if (targetShellContainer == null) {
                 return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
             }
@@ -157,6 +153,22 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         PlayerSyncEvents.START_SYNCING.invoker().onStartSyncing(this, state);
 
+        if (isDead && !this.undead) {
+            this.pendingSyncTarget = requestedUuid;
+            this.sendEmptyDeathMessageInChat();
+            return Either.right(PlayerSyncEvents.SyncFailureReason.OTHER_PROBLEM);
+        }
+
+        if (!isDead && currentShellContainer == null) {
+            this.pendingSyncTarget = requestedUuid;
+            this.hurt(this.damageSources().genericKill(), Float.MAX_VALUE);
+            if (!this.isDeadOrDying()) {
+                this.pendingSyncTarget = null;
+                return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_CURRENT_LOCATION);
+            }
+            return Either.right(PlayerSyncEvents.SyncFailureReason.OTHER_PROBLEM);
+        }
+
         ShellState storedState = null;
         if (currentShellContainer != null) {
             storedState = ShellState.of(player, currentPos, currentShellContainer.getColor());
@@ -166,6 +178,33 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             }
         }
 
+        this.moveInto(state, targetShellContainer);
+
+        PlayerSyncEvents.STOP_SYNCING.invoker().onStopSyncing(player, currentPos, storedState);
+        return Either.left(storedState);
+    }
+
+    @Override
+    public UUID getPendingSyncTarget() {
+        return this.pendingSyncTarget;
+    }
+
+    @Unique
+    private ShellStateContainer findTargetContainer(ServerLevel targetWorld, ShellState state) {
+        if (state.isVirtual()) {
+            return null;
+        }
+
+        BlockPos targetPos = state.getPos();
+        if (state.getSubLevelUuid() == null) {
+            targetWorld.getChunk(targetPos.getX() >> 4, targetPos.getZ() >> 4);
+        }
+        return ShellStateContainer.findAt(targetWorld, targetPos, state.getLocalOffset(), (ServerPlayer)(Object)this, state.getSubLevelUuid());
+    }
+
+    @Unique
+    private void moveInto(ShellState state, ShellStateContainer targetShellContainer) {
+        ServerPlayer player = (ServerPlayer)(Object)this;
         if (targetShellContainer == null) {
             if (state.isTemporary()) {
                 this.remove(state);
@@ -176,9 +215,32 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             this.remove(state);
             this.apply(state);
         }
+    }
 
-        PlayerSyncEvents.STOP_SYNCING.invoker().onStopSyncing(player, currentPos, storedState);
-        return Either.left(storedState);
+    @Unique
+    private void completePendingSync() {
+        ServerPlayer player = (ServerPlayer)(Object)this;
+        ShellState state = this.shellsById.get(this.pendingSyncTarget);
+        this.pendingSyncTarget = null;
+
+        ServerLevel targetWorld = state == null ? null : WorldUtil.findWorld(this.server.getAllLevels(), state.getWorld()).orElse(null);
+        if (targetWorld == null) {
+            player.sendSystemMessage(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION.toText());
+            return;
+        }
+
+        ShellStateContainer targetShellContainer = this.findTargetContainer(targetWorld, state);
+        if (!state.isVirtual()) {
+            if (targetShellContainer == null || !this.canBeApplied(targetShellContainer.getShellState())) {
+                player.sendSystemMessage(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION.toText());
+                return;
+            }
+            state = targetShellContainer.getShellState();
+        }
+
+        BlockPos previousPos = this.blockPosition();
+        this.moveInto(state, targetShellContainer);
+        PlayerSyncEvents.STOP_SYNCING.invoker().onStopSyncing(player, previousPos, null);
     }
 
     @Override
@@ -289,6 +351,10 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     private void playerTick(CallbackInfo ci) {
         ServerPlayer player = (ServerPlayer)(Object)this;
 
+        if (this.pendingSyncTarget != null && !this.isDeadOrDying()) {
+            this.completePendingSync();
+        }
+
         if (this.shellDirty) {
             this.shellDirty = false;
             this.shellStateChanges.clear();
@@ -303,7 +369,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
     @Inject(method = "die", at = @At("HEAD"), cancellable = true)
     private void onDeath(DamageSource source, CallbackInfo ci) {
-        if (!this.isArtificial) {
+        if (!this.isArtificial || this.pendingSyncTarget != null) {
             return;
         }
 
@@ -325,6 +391,10 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         if (!this.isSpectator() && this.level() instanceof ServerLevel serverLevel) {
             this.dropAllDeathLoot(serverLevel, source);
+            if (this.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
+                this.destroyVanishingCursedItems();
+                this.getInventory().dropAll();
+            }
         }
 
         this.undead = true;
@@ -385,11 +455,15 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         nbt.putBoolean("IsArtificial", this.isArtificial);
         nbt.put("Shells", shellList);
+        if (this.pendingSyncTarget != null) {
+            nbt.putUUID("PendingSyncTarget", this.pendingSyncTarget);
+        }
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
     private void readCustomDataFromNbt(CompoundTag nbt, CallbackInfo ci) {
         this.isArtificial = nbt.getBoolean("IsArtificial");
+        this.pendingSyncTarget = nbt.hasUUID("PendingSyncTarget") ? nbt.getUUID("PendingSyncTarget") : null;
         this.shellsById = nbt.getList("Shells", Tag.TAG_COMPOUND)
                 .stream()
                 .map(x -> ShellState.fromNbt((CompoundTag)x))
@@ -416,6 +490,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     private void copyFrom(ServerPlayer oldPlayer, boolean alive, CallbackInfo ci) {
         Shell shell = (Shell)oldPlayer;
         this.isArtificial = alive && shell.isArtificial();
+        this.pendingSyncTarget = ((ServerShell)oldPlayer).getPendingSyncTarget();
         this.shellsById = shell.getAvailableShellStates().collect(Collectors.toConcurrentMap(ShellState::getUuid, x -> x));
         this.shellStateChanges = new HashMap<>();
         this.shellDirty = true;

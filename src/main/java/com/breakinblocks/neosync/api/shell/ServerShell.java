@@ -3,6 +3,8 @@ package com.breakinblocks.neosync.api.shell;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.server.MinecraftServer;
 import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -30,6 +32,17 @@ public interface ServerShell extends Shell {
      * @param state Target state.
      */
     void apply(ShellState state);
+
+    /**
+     * A sync requested from a spot with no shell storage is finished once the player respawns.
+     *
+     * @return UUID of the state this player is waiting to be moved into, if any; otherwise, null.
+     */
+    @ApiStatus.Internal
+    @Nullable
+    default UUID getPendingSyncTarget() {
+        return null;
+    }
 
 
     /**

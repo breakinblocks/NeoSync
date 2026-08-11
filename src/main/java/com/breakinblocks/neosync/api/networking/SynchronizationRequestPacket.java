@@ -6,6 +6,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -58,6 +59,14 @@ public record SynchronizationRequestPacket(Optional<UUID> shellUuid) implements 
                     .orElse(player.getDirection().getOpposite());
 
             Either<ShellState, PlayerSyncEvents.SyncFailureReason> result = shell.sync(state);
+            if (shell.getPendingSyncTarget() != null) {
+                PacketDistributor.sendToPlayer(player, new SynchronizationResponsePacket(
+                        currentWorldId, currentPos, currentFacing,
+                        currentWorldId, currentPos, currentFacing,
+                        Optional.empty()));
+                return;
+            }
+
             result.ifLeft(storedState -> {
                 if (state == null) {
                     return;
@@ -70,7 +79,10 @@ public record SynchronizationRequestPacket(Optional<UUID> shellUuid) implements 
                         targetWorldId, targetPos, targetFacing,
                         Optional.of(storedState)));
             }).ifRight(failureReason -> {
-                player.sendSystemMessage(failureReason.toText());
+                Component failureText = failureReason.toText();
+                if (failureText != null) {
+                    player.sendSystemMessage(failureText);
+                }
                 PacketDistributor.sendToPlayer(player, new SynchronizationResponsePacket(
                         currentWorldId, currentPos, currentFacing,
                         currentWorldId, currentPos, currentFacing,
