@@ -59,13 +59,13 @@ public class NbtSerializerFactoryBuilder<TTarget> {
 
     static {
         NBT_GETTERS = new HashMap<>();
-        NBT_GETTERS.put(Boolean.class, (nbt, key) -> nbt.getBoolean(key).orElse(null));
-        NBT_GETTERS.put(Byte.class, (nbt, key) -> nbt.getByte(key).orElse(null));
-        NBT_GETTERS.put(Double.class, (nbt, key) -> nbt.getDouble(key).orElse(null));
-        NBT_GETTERS.put(Float.class, (nbt, key) -> nbt.getFloat(key).orElse(null));
-        NBT_GETTERS.put(Integer.class, (nbt, key) -> nbt.getInt(key).orElse(null));
-        NBT_GETTERS.put(Long.class, (nbt, key) -> nbt.getLong(key).orElse(null));
-        NBT_GETTERS.put(Short.class, (nbt, key) -> nbt.getShort(key).orElse(null));
+        NBT_GETTERS.put(Boolean.class, (nbt, key) -> nbt.getBoolean(key).orElse(false));
+        NBT_GETTERS.put(Byte.class, (nbt, key) -> nbt.getByte(key).orElse((byte)0));
+        NBT_GETTERS.put(Double.class, (nbt, key) -> nbt.getDouble(key).orElse(0D));
+        NBT_GETTERS.put(Float.class, (nbt, key) -> nbt.getFloat(key).orElse(0F));
+        NBT_GETTERS.put(Integer.class, (nbt, key) -> nbt.getInt(key).orElse(0));
+        NBT_GETTERS.put(Long.class, (nbt, key) -> nbt.getLong(key).orElse(0L));
+        NBT_GETTERS.put(Short.class, (nbt, key) -> nbt.getShort(key).orElse((short)0));
         NBT_GETTERS.put(String.class, (nbt, key) -> nbt.getString(key).orElse(null));
         NBT_GETTERS.put(Identifier.class, (nbt, key) -> nbt.getString(key).map(Identifier::parse).orElse(null));
         NBT_GETTERS.put(UUID.class, (nbt, key) -> nbt.read(key, UUIDUtil.CODEC).orElse(null));
