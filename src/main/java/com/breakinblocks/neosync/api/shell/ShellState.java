@@ -481,7 +481,7 @@ public class ShellState {
                 .add(String.class, "textureSignature", x -> x.textureSignature, (x, v) -> x.textureSignature = v)
                 .add(Float.class, "health", x -> x.health, (x, health) -> x.health = health)
                 .add(Integer.class, "gameMode", x -> x.gameMode, (x, gameMode) -> x.gameMode = gameMode)
-                .add(ListTag.class, "inventory", x -> x.inventory.writeNbt(new ListTag()), (x, inventory) -> { x.inventory = new SimpleInventory(); x.inventory.readNbt(inventory); })
+                .add(ListTag.class, "inventory", x -> x.inventory.writeNbt(new ListTag()), (x, inventory) -> { x.inventory = new SimpleInventory(); if (inventory != null) { x.inventory.readNbt(inventory); } })
                 .add(CompoundTag.class, "components", x -> x.component.writeNbt(new CompoundTag()), (x, component) -> { x.component = ShellStateComponent.empty(); if (component != null) { x.component.readNbt(component); } })
 
                 .add(Integer.class, "foodLevel", x -> x.foodLevel, (x, foodLevel) -> x.foodLevel = foodLevel)

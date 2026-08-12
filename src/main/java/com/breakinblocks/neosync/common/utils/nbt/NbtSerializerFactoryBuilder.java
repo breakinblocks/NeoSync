@@ -47,7 +47,11 @@ public class NbtSerializerFactoryBuilder<TTarget> {
         return new NbtSerializerFactory<>(this.readers, this.writers);
     }
 
-    private static BiFunction<CompoundTag, String, ?> getOrDefault(BiFunction<CompoundTag, String, ?> f) {
+    private static <TProperty> BiFunction<CompoundTag, String, ?> getOrDefault(BiFunction<CompoundTag, String, TProperty> f, TProperty fallback) {
+        return (nbt, key) -> nbt.contains(key) ? f.apply(nbt, key) : fallback;
+    }
+
+    private static BiFunction<CompoundTag, String, ?> getOrNull(BiFunction<CompoundTag, String, ?> f) {
         return (nbt, key) -> nbt.contains(key) ? f.apply(nbt, key) : null;
     }
 
@@ -61,19 +65,19 @@ public class NbtSerializerFactoryBuilder<TTarget> {
 
     static {
         NBT_GETTERS = new HashMap<>();
-        NBT_GETTERS.put(Boolean.class, getOrDefault(CompoundTag::getBoolean));
-        NBT_GETTERS.put(Byte.class, getOrDefault(CompoundTag::getByte));
-        NBT_GETTERS.put(Double.class, getOrDefault(CompoundTag::getDouble));
-        NBT_GETTERS.put(Float.class, getOrDefault(CompoundTag::getFloat));
-        NBT_GETTERS.put(Integer.class, getOrDefault(CompoundTag::getInt));
-        NBT_GETTERS.put(Long.class, getOrDefault(CompoundTag::getLong));
-        NBT_GETTERS.put(Short.class, getOrDefault(CompoundTag::getShort));
-        NBT_GETTERS.put(String.class, getOrDefault(CompoundTag::getString));
-        NBT_GETTERS.put(ResourceLocation.class, getOrDefault((x, key) -> ResourceLocation.parse(x.getString(key))));
-        NBT_GETTERS.put(UUID.class, getOrDefault(CompoundTag::getUUID));
-        NBT_GETTERS.put(CompoundTag.class, getOrDefault(CompoundTag::getCompound));
-        NBT_GETTERS.put(ListTag.class, getOrDefault(CompoundTag::get));
-        NBT_GETTERS.put(BlockPos.class, getOrDefault((nbt, key) -> {
+        NBT_GETTERS.put(Boolean.class, getOrDefault(CompoundTag::getBoolean, false));
+        NBT_GETTERS.put(Byte.class, getOrDefault(CompoundTag::getByte, (byte)0));
+        NBT_GETTERS.put(Double.class, getOrDefault(CompoundTag::getDouble, 0D));
+        NBT_GETTERS.put(Float.class, getOrDefault(CompoundTag::getFloat, 0F));
+        NBT_GETTERS.put(Integer.class, getOrDefault(CompoundTag::getInt, 0));
+        NBT_GETTERS.put(Long.class, getOrDefault(CompoundTag::getLong, 0L));
+        NBT_GETTERS.put(Short.class, getOrDefault(CompoundTag::getShort, (short)0));
+        NBT_GETTERS.put(String.class, getOrNull(CompoundTag::getString));
+        NBT_GETTERS.put(ResourceLocation.class, getOrNull((x, key) -> ResourceLocation.parse(x.getString(key))));
+        NBT_GETTERS.put(UUID.class, getOrNull(CompoundTag::getUUID));
+        NBT_GETTERS.put(CompoundTag.class, getOrNull(CompoundTag::getCompound));
+        NBT_GETTERS.put(ListTag.class, getOrNull(CompoundTag::get));
+        NBT_GETTERS.put(BlockPos.class, getOrNull((nbt, key) -> {
             CompoundTag compound = nbt.getCompound(key);
             return new BlockPos(compound.getInt("x"), compound.getInt("y"), compound.getInt("z"));
         }));
