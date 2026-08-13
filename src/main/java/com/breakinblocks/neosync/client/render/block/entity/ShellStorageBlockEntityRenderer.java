@@ -11,6 +11,7 @@ import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.client.model.AbstractShellContainerModel;
 import com.breakinblocks.neosync.client.model.ShellStorageModel;
+import com.breakinblocks.neosync.client.texture.TrimTextureGenerator;
 import com.breakinblocks.neosync.common.block.AbstractShellContainerBlock;
 import com.breakinblocks.neosync.common.block.SyncBlocks;
 import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
@@ -19,6 +20,9 @@ import com.breakinblocks.neosync.common.block.entity.ShellEntity;
 @OnlyIn(Dist.CLIENT)
 public class ShellStorageBlockEntityRenderer extends AbstractShellContainerBlockEntityRenderer<ShellStorageBlockEntity> {
     private static final ResourceLocation SHELL_STORAGE_TEXTURE_ID = ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "textures/block/shell_storage.png");
+    protected static final TrimTextureGenerator STORAGE_TRIM_TEXTURES = new TrimTextureGenerator(
+            SHELL_STORAGE_TEXTURE_ID,
+            ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "textures/block/zero_point_shell_storage.png"));
     private static final BlockState DEFAULT_STATE = SyncBlocks.SHELL_STORAGE.get().defaultBlockState()
             .setValue(AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER)
             .setValue(AbstractShellContainerBlock.FACING, Direction.SOUTH)
@@ -52,7 +56,7 @@ public class ShellStorageBlockEntityRenderer extends AbstractShellContainerBlock
     }
 
     @Override
-    protected ResourceLocation getTextureId() {
-        return SHELL_STORAGE_TEXTURE_ID;
+    protected ResourceLocation getTextureId(ShellStorageBlockEntity blockEntity) {
+        return STORAGE_TRIM_TEXTURES.getTexture(blockEntity.getColor(), SHELL_STORAGE_TEXTURE_ID);
     }
 }
