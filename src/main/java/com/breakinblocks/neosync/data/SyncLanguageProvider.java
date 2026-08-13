@@ -56,6 +56,10 @@ public final class SyncLanguageProvider extends LanguageProvider {
         add("gui.neosync.shell_selector.right.title", "Next page");
         add("gui.neosync.shell_selector.progress_percent", "%s%%");
         add("gui.neosync.shell_selector.position", "%s, %s, %s");
+        add("gui.neosync.shell_selector.rename.title", "Rename shell");
+        add("gui.neosync.shell_selector.rename.hint", "Enter to save, Esc to cancel");
+        add("gui.neosync.shell_selector.rename.prompt", "Right-click to rename");
+        add("gui.neosync.shell_selector.rename.placeholder", "Shell name");
         add("gui.neosync.page_display.pagination", "%s / %s");
 
         add("jade.neosync.owner", "Owner: %s");

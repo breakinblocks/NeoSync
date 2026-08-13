@@ -1,7 +1,10 @@
 package com.breakinblocks.neosync.client.gui.widget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.network.chat.CommonComponents;
 import com.breakinblocks.neosync.client.gl.MSAAFramebuffer;
 import com.breakinblocks.neosync.client.render.MatrixStackStorage;
 import com.breakinblocks.neosync.api.shell.ClientShell;
@@ -18,7 +21,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.util.Mth;
-import net.minecraft.core.BlockPos;
 import com.mojang.math.Axis;
 import com.breakinblocks.neosync.common.block.entity.ShellEntity;
 import com.breakinblocks.neosync.client.utils.render.ColorUtil;
@@ -30,6 +32,7 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 
 @OnlyIn(Dist.CLIENT)
 public class ShellSelectorButtonWidget extends AbstractWidget {
@@ -55,6 +58,7 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
     private final BiPredicate<Double, Double> belongsToSectorPredicate;
 
     public ShellState shell;
+    public Consumer<ShellState> onRename;
 
     public ShellSelectorButtonWidget(double cX, double cY, double majorR, double minorR, double borderWidth, double from, double to) {
         this(cX, cY, majorR, minorR, borderWidth, from, to, DEFAULT_STEP, DEFAULT_COLOR, DEFAULT_ALPHA, DEFAULT_HOVERED_ALPHA, DEFAULT_PRESSED_ALPHA);
@@ -145,7 +149,18 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
     @Override
     protected void onMouseClick(double mouseX, double mouseY, int button) {
         Minecraft client = Minecraft.getInstance();
-        if (client.player == null || this.shell == null || this.shell.getProgress() < ShellState.PROGRESS_DONE) {
+        if (client.player == null || this.shell == null) {
+            return;
+        }
+
+        if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
+            if (this.onRename != null) {
+                this.onRename.accept(this.shell);
+            }
+            return;
+        }
+
+        if (this.shell.getProgress() < ShellState.PROGRESS_DONE) {
             return;
         }
 
@@ -176,6 +191,39 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
         if (this.shell.getProgress() < ShellState.PROGRESS_DONE) {
             this.renderProgress(guiGraphics);
         }
+        this.renderName(guiGraphics);
+    }
+
+    private void renderName(GuiGraphics guiGraphics) {
+        final float FONT_SCALE = 0.13F;
+
+        Font font = RenderSystemUtil.getTextRenderer();
+        float fontHeight = (float)this.diffR * FONT_SCALE;
+        float fontScale = fontHeight / font.lineHeight;
+        double r = this.majorR - fontHeight;
+        double tAngle = (this.to + this.from) / 2;
+        float labelX = (float)(r * Math.cos(tAngle) + this.cX);
+        float labelY = (float)(r * Math.sin(tAngle) + this.cY);
+        double chord = 2 * r * Math.sin(Math.min(this.to - this.from, Radians.R_PI) / 2);
+        int maxWidth = (int)(Math.min(chord, this.majorR) / fontScale);
+
+        PoseStack matrices = guiGraphics.pose();
+
+        matrices.pushPose();
+        try {
+            matrices.translate(0, 0, this.majorR * 2);
+            RenderSystemUtil.drawCenteredText(guiGraphics, truncate(font, this.shell.getDisplayName().getString(), maxWidth),
+                    labelX, labelY, fontScale, ColorUtil.fromDyeColor(DyeColor.WHITE), true);
+        } finally {
+            matrices.popPose();
+        }
+    }
+
+    private static Component truncate(Font font, String text, int maxWidth) {
+        if (font.width(text) <= maxWidth) {
+            return Component.literal(text);
+        }
+        return Component.literal(font.plainSubstrByWidth(text, Math.max(0, maxWidth - font.width("..."))) + "...");
     }
 
     private void renderShell(GuiGraphics guiGraphics) {
@@ -258,8 +306,9 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
             return null;
         }
 
-        BlockPos pos = this.shell.getPos();
-        return Component.translatable("gui.neosync.shell_selector.position", pos.getX(), pos.getY(), pos.getZ());
+        return this.shell.getDisplayName().copy()
+                .append(CommonComponents.SPACE)
+                .append(Component.translatable("gui.neosync.shell_selector.rename.prompt").withStyle(ChatFormatting.DARK_GRAY));
     }
 
     private static boolean liesOnCircle(double x, double y, double cX, double cY, double r) {

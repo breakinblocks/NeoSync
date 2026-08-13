@@ -1,7 +1,9 @@
 package com.breakinblocks.neosync.client.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import com.breakinblocks.neosync.api.networking.ShellRenamePacket;
 import com.breakinblocks.neosync.api.shell.ShellStateContainer;
 import com.breakinblocks.neosync.client.gl.MSAAFramebuffer;
 import com.breakinblocks.neosync.client.gui.hud.HudController;
@@ -15,6 +17,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -39,6 +42,9 @@ public class ShellSelectorGUI extends Screen {
     private static final double MENU_RADIUS = 0.3F;
     private static final int BACKGROUND_COLOR = ColorUtil.fromDyeColor(DyeColor.BLACK, 0.3F);
     private static final Component TITLE = Component.translatable("gui.neosync.default.cross_button.title");
+    private static final Component RENAME_TITLE = Component.translatable("gui.neosync.shell_selector.rename.title");
+    private static final Component RENAME_HINT = Component.translatable("gui.neosync.shell_selector.rename.hint");
+    private static final Component RENAME_PLACEHOLDER = Component.translatable("gui.neosync.shell_selector.rename.placeholder");
     private static final Collection<Component> ARROW_TITLES = List.of(Component.translatable("gui.neosync.shell_selector.up.title"), Component.translatable("gui.neosync.shell_selector.right.title"), Component.translatable("gui.neosync.shell_selector.down.title"), Component.translatable("gui.neosync.shell_selector.left.title"));
 
     private final Runnable onCloseCallback;
@@ -48,6 +54,8 @@ public class ShellSelectorGUI extends Screen {
     private List<ArrowButtonWidget> arrowButtons;
     private CrossButtonWidget crossButton;
     private PageDisplayWidget<ResourceLocation, ShellState> pageDisplay;
+    private EditBox nameField;
+    private ShellState renaming;
 
     public ShellSelectorGUI(Runnable onCloseCallback, Runnable onRemovedCallback) {
         super(TITLE);
@@ -168,6 +176,14 @@ public class ShellSelectorGUI extends Screen {
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         this.renderBackground(guiGraphics, mouseX, mouseY, delta);
         MSAAFramebuffer.use(MSAAFramebuffer.MAX_SAMPLES, () -> super.render(guiGraphics, mouseX, mouseY, delta));
+
+        if (this.nameField != null) {
+            guiGraphics.drawCenteredString(this.font, RENAME_TITLE, this.width / 2,
+                    this.nameField.getY() - this.font.lineHeight - 4, 0xFFFFFFFF);
+            guiGraphics.drawCenteredString(this.font, RENAME_HINT, this.width / 2,
+                    this.nameField.getY() + this.nameField.getHeight() + 4, 0xFFAAAAAA);
+        }
+
         this.renderTooltips(guiGraphics, mouseX, mouseY);
     }
 
@@ -184,7 +200,33 @@ public class ShellSelectorGUI extends Screen {
     }
 
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.nameField != null) {
+            if (this.nameField.isMouseOver(mouseX, mouseY)) {
+                return super.mouseClicked(mouseX, mouseY, button);
+            }
+            this.commitRename();
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.nameField != null) {
+            if (keyCode == InputConstants.KEY_ESCAPE) {
+                this.endRename();
+                return true;
+            }
+            if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
+                this.commitRename();
+                return true;
+            }
+            if (this.nameField.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+        }
+
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
@@ -222,8 +264,53 @@ public class ShellSelectorGUI extends Screen {
         this.shellButtons.forEach(this::addRenderableWidget);
 
         for (int i = 0; i < content.size(); ++i) {
-            this.shellButtons.get(i).shell = content.get(i);
+            ShellSelectorButtonWidget button = this.shellButtons.get(i);
+            button.shell = content.get(i);
+            button.onRename = this::beginRename;
         }
+    }
+
+    private void beginRename(ShellState shell) {
+        if (this.nameField != null) {
+            this.endRename();
+        }
+
+        int fieldWidth = (int)(this.height * MENU_RADIUS * 1.1);
+        int fieldHeight = this.font.lineHeight + 8;
+        this.renaming = shell;
+        this.nameField = new EditBox(this.font, (this.width - fieldWidth) / 2, (this.height - fieldHeight) / 2,
+                fieldWidth, fieldHeight, RENAME_TITLE);
+        this.nameField.setMaxLength(ShellState.MAX_NAME_LENGTH);
+        this.nameField.setHint(RENAME_PLACEHOLDER);
+        this.nameField.setValue(shell.getName() == null ? "" : shell.getName());
+        this.nameField.moveCursorToEnd(false);
+
+        this.pageDisplay.visible = false;
+        this.addRenderableWidget(this.nameField);
+        this.setFocused(this.nameField);
+        this.nameField.setFocused(true);
+    }
+
+    private void commitRename() {
+        ShellState shell = this.renaming;
+        String name = this.nameField == null ? "" : this.nameField.getValue().trim();
+        this.endRename();
+
+        if (shell == null) {
+            return;
+        }
+        shell.setName(name);
+        new ShellRenamePacket(shell, name).send();
+    }
+
+    private void endRename() {
+        if (this.nameField != null) {
+            this.removeWidget(this.nameField);
+            this.nameField = null;
+        }
+        this.renaming = null;
+        this.pageDisplay.visible = true;
+        this.setFocused(null);
     }
 
     private void nextSection() {
