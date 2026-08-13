@@ -3,12 +3,14 @@ package com.breakinblocks.neosync.api.shell;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.util.StringUtil;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -24,6 +26,7 @@ import com.breakinblocks.neosync.common.utils.nbt.NbtSerializerFactory;
 import com.breakinblocks.neosync.common.utils.nbt.NbtSerializerFactoryBuilder;
 import com.breakinblocks.neosync.common.utils.nbt.SyncRegistries;
 import com.mojang.authlib.properties.Property;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -38,6 +41,7 @@ public class ShellState {
     public static final float PROGRESS_DONE = 1F;
     public static final float PROGRESS_PRINTING = 0.75F;
     public static final float PROGRESS_PAINTING = PROGRESS_DONE - PROGRESS_PRINTING;
+    public static final int MAX_NAME_LENGTH = 32;
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ShellState> STREAM_CODEC = StreamCodec.of(
             (buf, state) -> {
@@ -61,6 +65,7 @@ public class ShellState {
     private static final NbtSerializerFactory<ShellState> NBT_SERIALIZER_FACTORY;
 
     private UUID uuid;
+    private String name;
     private float progress;
     private DyeColor color;
     private boolean isArtificial;
@@ -91,6 +96,31 @@ public class ShellState {
 
     public UUID getUuid() {
         return this.uuid;
+    }
+
+    @Nullable
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(@Nullable String name) {
+        String filtered = name == null ? null : StringUtil.filterText(name).trim();
+        this.name = filtered == null || filtered.isEmpty()
+                ? null
+                : StringUtil.truncateStringIfNecessary(filtered, MAX_NAME_LENGTH, false);
+    }
+
+    public boolean hasName() {
+        return this.name != null;
+    }
+
+    public Component getDisplayName() {
+        if (this.name != null) {
+            return Component.literal(this.name);
+        }
+        return this.pos == null
+                ? Component.empty()
+                : Component.translatable("gui.neosync.shell_selector.position", this.pos.getX(), this.pos.getY(), this.pos.getZ());
     }
 
     public DyeColor getColor() {
@@ -381,6 +411,7 @@ public class ShellState {
     static {
         NBT_SERIALIZER_FACTORY = new NbtSerializerFactoryBuilder<ShellState>()
                 .add(UUID.class, "uuid", x -> x.uuid, (x, uuid) -> x.uuid = uuid)
+                .add(String.class, "name", x -> x.name, (x, name) -> x.name = name)
                 .add(Integer.class, "color", x -> x.color == null ? -1 : x.color.getId(), (x, color) -> x.color = color == -1 ? null : DyeColor.byId(color))
                 .add(Float.class, "progress", x -> x.progress, (x, progress) -> x.progress = progress)
                 .add(Boolean.class, "isArtificial", x -> x.isArtificial, (x, isArtificial) -> x.isArtificial = isArtificial)

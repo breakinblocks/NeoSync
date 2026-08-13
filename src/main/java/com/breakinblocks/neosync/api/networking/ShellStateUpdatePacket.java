@@ -22,7 +22,8 @@ public record ShellStateUpdatePacket(
         @Nullable UUID targetUuid,
         float progress,
         @Nullable DyeColor color,
-        @Nullable BlockPos pos
+        @Nullable BlockPos pos,
+        @Nullable String name
 ) implements CustomPacketPayload {
 
     public static final Type<ShellStateUpdatePacket> TYPE = new Type<>(NeoSync.locate("shell/state/update"));
@@ -36,7 +37,8 @@ public record ShellStateUpdatePacket(
         this(kind, adoptedState(kind, state), state == null ? null : state.getUuid(),
              state == null ? 0F : state.getProgress(),
              state == null ? null : state.getColor(),
-             state == null ? null : state.getPos());
+             state == null ? null : state.getPos(),
+             state == null ? null : state.getName());
         if (state == null && kind != ShellStateUpdateType.NONE) {
             throw new IllegalStateException("ShellStateUpdatePacket requires a non-null state for kind " + kind);
         }
@@ -78,6 +80,7 @@ public record ShellStateUpdatePacket(
                 buf.writeVarInt((int) (payload.progress * 100));
                 buf.writeVarInt(payload.color == null ? Byte.MAX_VALUE : payload.color.getId());
                 buf.writeBlockPos(payload.pos);
+                buf.writeUtf(payload.name == null ? "" : payload.name, ShellState.MAX_NAME_LENGTH);
             }
             case NONE -> { }
         }
@@ -86,17 +89,18 @@ public record ShellStateUpdatePacket(
     private static ShellStateUpdatePacket decode(RegistryFriendlyByteBuf buf) {
         ShellStateUpdateType kind = buf.readEnum(ShellStateUpdateType.class);
         return switch (kind) {
-            case ADD -> new ShellStateUpdatePacket(kind, ShellState.STREAM_CODEC.decode(buf), null, 0F, null, null);
-            case REMOVE -> new ShellStateUpdatePacket(kind, null, buf.readUUID(), 0F, null, null);
+            case ADD -> new ShellStateUpdatePacket(kind, ShellState.STREAM_CODEC.decode(buf), null, 0F, null, null, null);
+            case REMOVE -> new ShellStateUpdatePacket(kind, null, buf.readUUID(), 0F, null, null, null);
             case UPDATE -> {
                 UUID uuid = buf.readUUID();
                 float progress = Mth.clamp(buf.readVarInt() / 100F, 0F, 1F);
                 int colorId = buf.readVarInt();
                 DyeColor color = colorId < 0 || colorId > 15 ? null : DyeColor.byId(colorId);
                 BlockPos pos = buf.readBlockPos();
-                yield new ShellStateUpdatePacket(kind, null, uuid, progress, color, pos);
+                String name = buf.readUtf(ShellState.MAX_NAME_LENGTH);
+                yield new ShellStateUpdatePacket(kind, null, uuid, progress, color, pos, name.isEmpty() ? null : name);
             }
-            case NONE -> new ShellStateUpdatePacket(kind, null, null, 0F, null, null);
+            case NONE -> new ShellStateUpdatePacket(kind, null, null, 0F, null, null, null);
         };
     }
 

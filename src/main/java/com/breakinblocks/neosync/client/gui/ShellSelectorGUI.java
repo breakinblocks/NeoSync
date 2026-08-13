@@ -1,8 +1,11 @@
 package com.breakinblocks.neosync.client.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -17,6 +20,7 @@ import org.joml.Matrix3x2f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
+import com.breakinblocks.neosync.api.networking.ShellRenamePacket;
 import com.breakinblocks.neosync.api.shell.ClientShell;
 import com.breakinblocks.neosync.api.shell.Shell;
 import com.breakinblocks.neosync.api.shell.ShellState;
@@ -37,6 +41,10 @@ import java.util.stream.Collectors;
 
 public class ShellSelectorGUI extends Screen {
     private static final Component TITLE = Component.translatable("gui.neosync.shell_selector.title");
+    private static final Component RENAME_TITLE = Component.translatable("gui.neosync.shell_selector.rename.title");
+    private static final Component RENAME_HINT = Component.translatable("gui.neosync.shell_selector.rename.hint");
+    private static final Component RENAME_PROMPT = Component.translatable("gui.neosync.shell_selector.rename.prompt");
+    private static final Component RENAME_PLACEHOLDER = Component.translatable("gui.neosync.shell_selector.rename.placeholder");
     private static final int SHELLS_PER_PAGE = 8;
     private static final float MENU_RADIUS = 0.3F;
     private static final float HOLLOW_RATIO = 0.6F;
@@ -52,6 +60,9 @@ public class ShellSelectorGUI extends Screen {
     private final Runnable onCloseCallback;
     private final Runnable onRemovedCallback;
     private final Map<UUID, ShellEntity> shellEntities = new HashMap<>();
+
+    private EditBox nameField;
+    private ShellState renaming;
 
     private List<Identifier> worlds = List.of();
     private List<ShellState> worldShells = List.of();
@@ -163,7 +174,7 @@ public class ShellSelectorGUI extends Screen {
             this.extractShell(graphics, this.page.get(i), i, count);
         }
 
-        this.extractCenter(graphics, mouseX, mouseY);
+        this.extractCenter(graphics, mouseX, mouseY, hovered);
         this.extractArrows(graphics, mouseX, mouseY);
     }
 
@@ -184,15 +195,27 @@ public class ShellSelectorGUI extends Screen {
                     Mth.ceil(shellX + half), Mth.ceil(shellY + half));
         }
 
+        float labelRadius = this.outerRadius - this.font.lineHeight;
+        int labelX = Mth.floor(this.centerX + Mth.cos(angle) * labelRadius);
+        int labelY = Mth.floor(this.centerY + Mth.sin(angle) * labelRadius - this.font.lineHeight / 2F);
+
         if (shell.getProgress() < ShellState.PROGRESS_DONE) {
             Component progress = Component.translatable("gui.neosync.shell_selector.progress_percent",
                     Mth.floor(shell.getProgress() * 100F));
-            float labelRadius = this.outerRadius - this.font.lineHeight;
-            graphics.centeredText(this.font, progress,
-                    Mth.floor(this.centerX + Mth.cos(angle) * labelRadius),
-                    Mth.floor(this.centerY + Mth.sin(angle) * labelRadius - this.font.lineHeight / 2F),
-                    0xFFFF5555);
+            graphics.centeredText(this.font, progress, labelX, labelY - this.font.lineHeight, 0xFFFF5555);
         }
+
+        float chord = 2F * labelRadius * Mth.sin(Math.min(this.sectorSpan(count), Radians.R_PI) / 2F);
+        int maxWidth = Mth.floor(Math.min(chord, this.outerRadius));
+        graphics.centeredText(this.font, this.truncate(shell.getDisplayName().getString(), maxWidth),
+                labelX, labelY, TEXT_COLOR);
+    }
+
+    private String truncate(String text, int maxWidth) {
+        if (this.font.width(text) <= maxWidth) {
+            return text;
+        }
+        return this.font.plainSubstrByWidth(text, Math.max(0, maxWidth - this.font.width("..."))) + "...";
     }
 
     private EntityRenderState extractShellRenderState(ShellState shell) {
@@ -213,10 +236,17 @@ public class ShellSelectorGUI extends Screen {
         return renderState;
     }
 
-    private void extractCenter(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+    private void extractCenter(GuiGraphicsExtractor graphics, int mouseX, int mouseY, int hovered) {
         int cx = Mth.floor(this.centerX);
         int cy = Mth.floor(this.centerY);
         int line = this.font.lineHeight + 3;
+
+        if (this.renaming != null) {
+            int fieldHalf = this.nameField == null ? 0 : this.nameField.getHeight() / 2;
+            graphics.centeredText(this.font, RENAME_TITLE, cx, cy - fieldHalf - line, TEXT_COLOR);
+            graphics.centeredText(this.font, RENAME_HINT, cx, cy + fieldHalf + line - this.font.lineHeight, DISABLED_TEXT_COLOR);
+            return;
+        }
 
         Component world = IdentifierUtil.prettifyAsText(this.worlds.get(this.worldIndex));
         graphics.centeredText(this.font, world, cx, cy - line - line / 2, TEXT_COLOR);
@@ -227,6 +257,12 @@ public class ShellSelectorGUI extends Screen {
         boolean overCenter = this.isOverCenter(mouseX, mouseY);
         Component close = Component.translatable("gui.neosync.default.cross_button.title");
         graphics.centeredText(this.font, close, cx, cy + line / 2, overCenter ? 0xFFFF5555 : DISABLED_TEXT_COLOR);
+
+        if (hovered >= 0 && hovered < this.page.size()) {
+            ShellState shell = this.page.get(hovered);
+            graphics.centeredText(this.font, shell.getDisplayName(), cx, cy + line + line / 2, TEXT_COLOR);
+            graphics.centeredText(this.font, RENAME_PROMPT, cx, cy + line * 2 + line / 2, DISABLED_TEXT_COLOR);
+        }
     }
 
     private void extractArrows(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
@@ -250,6 +286,22 @@ public class ShellSelectorGUI extends Screen {
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         double mouseX = event.x();
         double mouseY = event.y();
+
+        if (this.renaming != null) {
+            if (this.nameField != null && this.nameField.isMouseOver(mouseX, mouseY)) {
+                return super.mouseClicked(event, doubleClick);
+            }
+            this.commitRename();
+            return true;
+        }
+
+        if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
+            int index = this.sectorAt(mouseX, mouseY);
+            if (index >= 0 && index < this.page.size()) {
+                this.beginRename(this.page.get(index));
+                return true;
+            }
+        }
 
         if (this.pageCount > 1) {
             if (isInside(mouseX, mouseY, this.centerX - this.outerRadius - ARROW_HIT_SIZE, this.centerY, ARROW_HIT_SIZE)) {
@@ -285,6 +337,59 @@ public class ShellSelectorGUI extends Screen {
         }
 
         return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (this.renaming != null) {
+            if (event.isEscape()) {
+                this.endRename();
+                return true;
+            }
+            if (event.isConfirmation()) {
+                this.commitRename();
+                return true;
+            }
+        }
+        return super.keyPressed(event);
+    }
+
+    private void beginRename(ShellState shell) {
+        this.renaming = shell;
+
+        int width = Mth.floor(this.innerRadius * 1.3F);
+        int height = this.font.lineHeight + 8;
+        this.nameField = new EditBox(this.font, Mth.floor(this.centerX - width / 2F), Mth.floor(this.centerY - height / 2F),
+                width, height, RENAME_TITLE);
+        this.nameField.setMaxLength(ShellState.MAX_NAME_LENGTH);
+        this.nameField.setHint(RENAME_PLACEHOLDER);
+        this.nameField.setValue(shell.getName() == null ? "" : shell.getName());
+        this.nameField.moveCursorToEnd(false);
+
+        this.addRenderableWidget(this.nameField);
+        this.setFocused(this.nameField);
+        this.nameField.setFocused(true);
+    }
+
+    private void commitRename() {
+        ShellState shell = this.renaming;
+        String name = this.nameField == null ? "" : this.nameField.getValue().trim();
+        this.endRename();
+
+        if (shell == null) {
+            return;
+        }
+        shell.setName(name);
+        new ShellRenamePacket(shell, name).send();
+    }
+
+    private void endRename() {
+        if (this.nameField != null) {
+            this.removeWidget(this.nameField);
+            this.nameField = null;
+        }
+        this.renaming = null;
+        this.setFocused(null);
     }
 
     private void selectShell(ShellState shell) {

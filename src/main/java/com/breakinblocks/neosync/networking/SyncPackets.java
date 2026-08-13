@@ -8,6 +8,7 @@ import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.api.networking.OpenShellSelectorPacket;
 import com.breakinblocks.neosync.api.networking.PlayerIsAlivePacket;
 import com.breakinblocks.neosync.api.networking.ShellDestroyedPacket;
+import com.breakinblocks.neosync.api.networking.ShellRenamePacket;
 import com.breakinblocks.neosync.api.networking.ShellStateUpdatePacket;
 import com.breakinblocks.neosync.api.networking.ShellUpdatePacket;
 import com.breakinblocks.neosync.api.networking.SynchronizationRequestPacket;
@@ -27,6 +28,11 @@ public final class SyncPackets {
                 SynchronizationRequestPacket.TYPE,
                 SynchronizationRequestPacket.STREAM_CODEC,
                 SynchronizationRequestPacket::handle);
+
+        registrar.playToServer(
+                ShellRenamePacket.TYPE,
+                ShellRenamePacket.STREAM_CODEC,
+                ShellRenamePacket::handle);
 
         registrar.playToClient(
                 SynchronizationResponsePacket.TYPE,

@@ -48,6 +48,7 @@ public final class ClientNetworkHandler {
                     updated.setProgress(payload.progress());
                     updated.setColor(payload.color());
                     updated.setPos(payload.pos());
+                    updated.setName(payload.name());
                 }
             }
             case NONE -> { }
