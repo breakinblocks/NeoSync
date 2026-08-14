@@ -67,7 +67,7 @@ public class AnchorCommand implements Command {
         int count = 0;
         for (ServerPlayer player : players) {
             Shell shell = (Shell)player;
-            if (onlyIfStranded && shell.getAvailableShellStates().anyMatch(x -> x.getProgress() >= ShellState.PROGRESS_DONE)) {
+            if (onlyIfStranded && shell.getAvailableShellStates().anyMatch(x -> x.getProgress() >= ShellState.PROGRESS_DONE && worldId.equals(x.getWorld()))) {
                 context.getSource().sendSuccess(() -> Component.translatable("command.neosync.anchor.ensure.skipped",
                         player.getName().getString()), false);
                 continue;

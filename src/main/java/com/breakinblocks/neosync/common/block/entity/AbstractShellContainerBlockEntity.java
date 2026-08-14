@@ -86,7 +86,13 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
     @Override
     @Nullable
     public DyeColor getColor() {
-        return this.color;
+        return this.getBottomPart().map(x -> x.color).orElse(this.color);
+    }
+
+    public void setColor(@Nullable DyeColor color) {
+        AbstractShellContainerBlockEntity bottom = this.getBottomPart().orElse(this);
+        bottom.color = color;
+        bottom.setChanged();
     }
 
     public int getProgressComparatorOutput() {

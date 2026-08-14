@@ -42,7 +42,7 @@ public abstract class AbstractShellContainerBlockEntityRenderer<T extends Abstra
 
     protected abstract ShellContainerModel getModel();
 
-    protected abstract Identifier getTexture(BlockState blockState);
+    protected abstract Identifier getTexture(T blockEntity);
 
     @Override
     public ShellContainerRenderState createRenderState() {
@@ -56,7 +56,7 @@ public abstract class AbstractShellContainerBlockEntityRenderer<T extends Abstra
         renderState.facing = blockState.getValue(AbstractShellContainerBlock.FACING);
         renderState.isLowerHalf = blockState.getValue(AbstractShellContainerBlock.HALF) == DoubleBlockHalf.LOWER;
         renderState.renderBothHalves = false;
-        renderState.texture = this.getTexture(blockState);
+        renderState.texture = this.getTexture(blockEntity);
         renderState.doorOpenProgress = blockEntity.getDoorOpenProgress(partialTick);
 
         ShellState shell = blockEntity.getShellState();

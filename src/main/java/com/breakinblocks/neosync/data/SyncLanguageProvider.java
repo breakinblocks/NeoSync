@@ -74,11 +74,11 @@ public final class SyncLanguageProvider extends LanguageProvider {
         add("jei.neosync.category.treadmill_energy", "Treadmill Energy Sources");
         add("jei.neosync.energy_per_tick", "%s FE/tick");
         add("jei.neosync.info.sync_core", "The Sync Core is the key component in every shell-related block. Combine it with gray concrete to craft a Shell Constructor or a Shell Storage.");
-        add("jei.neosync.info.shell_constructor", "Place the Shell Constructor, supply it with energy via a Treadmill (or any FE source), then right-click it to begin constructing a new shell from your genetic sample. Warning: the sampling process deals damage.");
-        add("jei.neosync.info.shell_storage", "Place a Shell Storage and supply it with redstone power (or FE). Walk into it when the doors are open to pull up the radial shell menu and transfer your mind into a stored shell.");
+        add("jei.neosync.info.shell_constructor", "Place the Shell Constructor, supply it with energy via a Treadmill (or any FE source), then right-click it to begin constructing a new shell from your genetic sample. Warning: the sampling process deals damage. Sneak and right-click with a dye to color its trim; shells built inside take that color in the shell menu.");
+        add("jei.neosync.info.shell_storage", "Place a Shell Storage and supply it with redstone power (or FE). Walk into it when the doors are open to pull up the radial shell menu and transfer your mind into a stored shell. Sneak and right-click with a dye to color its trim and the shell stored inside.");
         add("jei.neosync.info.treadmill", "Two-block structure. Lure a pig, wolf, or other supported animal onto the front block and it will generate energy that neighbouring Shell Constructors / Storages will consume.");
-        add("jei.neosync.info.zero_point_shell_constructor", "A Shell Constructor powered by zero-point energy. Requires no external power and finishes new shells instantly. The sampling process still deals damage.");
-        add("jei.neosync.info.zero_point_shell_storage", "A Shell Storage powered by zero-point energy. Requires no redstone or FE - its doors open automatically as you approach and stored shells never decay.");
+        add("jei.neosync.info.zero_point_shell_constructor", "A Shell Constructor powered by zero-point energy. Requires no external power and finishes new shells instantly. The sampling process still deals damage. Sneak and right-click with a dye to recolor its cyan trim; shells built inside take that color in the shell menu.");
+        add("jei.neosync.info.zero_point_shell_storage", "A Shell Storage powered by zero-point energy. Requires no redstone or FE. Its doors open automatically as you approach and stored shells never decay. Sneak and right-click with a dye to recolor its cyan trim and the shell stored inside.");
 
         add("config.jade.plugin_neosync.shell_container", "Shell Container");
         add("config.jade.plugin_neosync.treadmill", "Treadmill");
