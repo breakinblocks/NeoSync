@@ -12,6 +12,8 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePrope
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.minecraft.data.loot.BlockLootSubProvider;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import com.breakinblocks.neosync.common.block.AbstractShellContainerBlock;
 import com.breakinblocks.neosync.common.block.SyncBlocks;
 import com.breakinblocks.neosync.common.block.TreadmillBlock;
 
@@ -25,10 +27,10 @@ public final class SyncBlockLootSubProvider extends BlockLootSubProvider {
 
     @Override
     protected void generate() {
-        this.dropSelf(SyncBlocks.SHELL_STORAGE.get());
-        this.dropSelf(SyncBlocks.SHELL_CONSTRUCTOR.get());
-        this.dropSelf(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get());
-        this.dropSelf(SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get());
+        this.add(SyncBlocks.SHELL_STORAGE.get(), block -> this.createSinglePropConditionTable(block, AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER));
+        this.add(SyncBlocks.SHELL_CONSTRUCTOR.get(), block -> this.createSinglePropConditionTable(block, AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER));
+        this.add(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get(), block -> this.createSinglePropConditionTable(block, AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER));
+        this.add(SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get(), block -> this.createSinglePropConditionTable(block, AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER));
         this.add(SyncBlocks.TREADMILL.get(), block -> LootTable.lootTable().withPool(
                 LootPool.lootPool()
                         .setRolls(ConstantValue.exactly(1))

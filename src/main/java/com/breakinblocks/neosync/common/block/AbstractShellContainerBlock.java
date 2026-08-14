@@ -33,6 +33,9 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.util.RandomSource;
 import com.breakinblocks.neosync.common.utils.ItemUtil;
 
 @SuppressWarnings("deprecation")
@@ -107,6 +110,32 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     @Override
     public void setPlacedBy(Level world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
         world.setBlock(pos.above(), state.setValue(HALF, DoubleBlockHalf.UPPER), 3);
+    }
+
+    @Override
+    protected BlockState updateShape(BlockState state, LevelReader world, ScheduledTickAccess tickAccess, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, RandomSource random) {
+        DoubleBlockHalf doubleBlockHalf = state.getValue(HALF);
+        if (direction.getAxis() == Direction.Axis.Y && (doubleBlockHalf == DoubleBlockHalf.LOWER) == (direction == Direction.UP)) {
+            return neighborState.is(this) && neighborState.getValue(HALF) != doubleBlockHalf ? state.setValue(FACING, neighborState.getValue(FACING)) : Blocks.AIR.defaultBlockState();
+        } else {
+            return doubleBlockHalf == DoubleBlockHalf.LOWER && direction == Direction.DOWN && !state.canSurvive(world, pos) ? Blocks.AIR.defaultBlockState() : super.updateShape(state, world, tickAccess, pos, direction, neighborPos, neighborState, random);
+        }
+    }
+
+    @Override
+    public BlockState playerWillDestroy(Level world, BlockPos pos, BlockState state, Player player) {
+        boolean bottom = isBottom(state);
+        BlockPos bottomPos = bottom ? pos : pos.below();
+        if (!world.isClientSide() && player.isCreative()) {
+            if (!bottom) {
+                BlockState blockState = world.getBlockState(bottomPos);
+                if (blockState.getBlock() == state.getBlock() && blockState.getValue(HALF) == DoubleBlockHalf.LOWER) {
+                    world.setBlock(bottomPos, Blocks.AIR.defaultBlockState(), 35);
+                    world.levelEvent(player, 2001, bottomPos, Block.getId(blockState));
+                }
+            }
+        }
+        return super.playerWillDestroy(world, pos, state, player);
     }
 
     @Override
