@@ -181,7 +181,15 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             }
         }
 
-        this.moveInto(state, targetShellContainer);
+        if (!this.moveInto(state, targetShellContainer)) {
+            if (currentShellContainer != null) {
+                if (storedState != null && currentShellContainer.isRemotelyAccessible()) {
+                    this.remove(storedState);
+                }
+                currentShellContainer.setShellState(null);
+            }
+            return Either.right(PlayerSyncEvents.SyncFailureReason.INVALID_TARGET_LOCATION);
+        }
 
         PlayerSyncEvents.STOP_SYNCING.invoker().onStopSyncing(player, currentPos, storedState);
         return Either.left(storedState);
@@ -206,18 +214,23 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     }
 
     @Unique
-    private void moveInto(ShellState state, ShellStateContainer targetShellContainer) {
+    private boolean moveInto(ShellState state, ShellStateContainer targetShellContainer) {
         ServerPlayer player = (ServerPlayer)(Object)this;
         if (targetShellContainer == null) {
+            if (!this.tryApply(ShellState.anchor(player, state.getWorld(), state.getPos()))) {
+                return false;
+            }
             if (state.isTemporary()) {
                 this.remove(state);
             }
-            this.apply(ShellState.anchor(player, state.getWorld(), state.getPos()));
-        } else {
-            targetShellContainer.setShellState(null);
-            this.remove(state);
-            this.apply(state);
+            return true;
         }
+        if (!this.tryApply(state)) {
+            return false;
+        }
+        targetShellContainer.setShellState(null);
+        this.remove(state);
+        return true;
     }
 
     @Unique
@@ -245,7 +258,10 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             state = targetShellContainer.getShellState();
         }
 
-        this.moveInto(state, targetShellContainer);
+        if (!this.moveInto(state, targetShellContainer)) {
+            this.failPendingSync(previousWorldId, previousPos, previousFacing);
+            return;
+        }
 
         new SynchronizationResponsePacket(
                 previousWorldId, previousPos, previousFacing,
@@ -264,13 +280,18 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
     @Override
     public void apply(ShellState state) {
+        this.tryApply(state);
+    }
+
+    @Unique
+    private boolean tryApply(ShellState state) {
         Objects.requireNonNull(state);
 
         ServerPlayer serverPlayer = (ServerPlayer)(Object)this;
         MinecraftServer server = Objects.requireNonNull(this.getServer());
         ServerLevel targetWorld = WorldUtil.findWorld(server.getAllLevels(), state.getWorld()).orElse(null);
         if (targetWorld == null) {
-            return;
+            return false;
         }
 
         this.stopRiding();
@@ -283,7 +304,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         new PlayerIsAlivePacket(serverPlayer).sendToAll(server);
         if (!this.teleport(targetWorld, state)) {
             SYNC_LOGGER.warn("Sync teleport to {} was refused; leaving {} untouched", state.getWorld(), this.getName().getString());
-            return;
+            return false;
         }
         this.isArtificial = state.isArtificial();
 
@@ -312,6 +333,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         this.lastSentHealth = -1;
         this.lastSentFood = -1;
         this.shellDirty = true;
+        return true;
     }
 
     @Override

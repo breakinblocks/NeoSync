@@ -1,5 +1,11 @@
 # NeoSync Changelog
 
+## 1.5.2
+
+### Fixed
+
+- A sync whose teleport is refused (by another mod cancelling the dimension change) no longer half-completes. Previously the player's current body was stored into the shell container, complete with a copy of their inventory, and the target shell was consumed before the teleport was attempted; a refused teleport then left the player where they stood with their items, a duplicate of that inventory inside the stored shell, and the target shell gone. The teleport now runs first, the target shell is only consumed after it succeeds, and a failed sync rolls back the stored shell and shows the standard failure message. Applies to both live syncs and syncs completed through death and respawn.
+
 ## 1.5.1
 
 ### Fixed
