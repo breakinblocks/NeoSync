@@ -27,6 +27,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Team;
+import com.breakinblocks.neosync.api.SyncTeleport;
 import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import com.breakinblocks.neosync.api.networking.PlayerIsAlivePacket;
 import com.breakinblocks.neosync.api.networking.ShellStateUpdatePacket;
@@ -291,6 +292,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         MinecraftServer server = Objects.requireNonNull(this.getServer());
         ServerLevel targetWorld = WorldUtil.findWorld(server.getAllLevels(), state.getWorld()).orElse(null);
         if (targetWorld == null) {
+            SYNC_LOGGER.warn("Sync target world {} does not exist; leaving {} untouched", state.getWorld(), this.getName().getString());
             return false;
         }
 
@@ -302,9 +304,14 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         this.removeAllEffects();
 
         new PlayerIsAlivePacket(serverPlayer).sendToAll(server);
-        if (!this.teleport(targetWorld, state)) {
-            SYNC_LOGGER.warn("Sync teleport to {} was refused; leaving {} untouched", state.getWorld(), this.getName().getString());
-            return false;
+        SyncTeleport.begin();
+        try {
+            if (!this.teleport(targetWorld, state)) {
+                SYNC_LOGGER.warn("Sync teleport to {} was refused; leaving {} untouched", state.getWorld(), this.getName().getString());
+                return false;
+            }
+        } finally {
+            SyncTeleport.end();
         }
         this.isArtificial = state.isArtificial();
 

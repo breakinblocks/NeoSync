@@ -1,5 +1,15 @@
 # NeoSync Changelog
 
+## 1.5.3
+
+### Added
+
+- isActive() reports whether the current server-thread call stack is inside a NeoSync sync teleport. Mods that police dimension changes can use it to recognise and permit sync travel without guessing from timing. Covers both the direct sync path and syncs completed through death and respawn.
+
+### Fixed
+
+- A sync whose target world does not exist now logs a warning instead of failing with no trace.
+
 ## 1.5.2
 
 ### Fixed
