@@ -99,8 +99,9 @@ Note that the sweep without coordinates also marks every one of that player's sh
 
 - **[JEI](https://www.curseforge.com/minecraft/mc-mods/jei)**. info descriptions on each sync block explaining the flow, plus a *Treadmill Energy Sources* category listing every entity the treadmill accepts and its FE/tick output (driven by `energyMap`).
 - **[Jade](https://www.curseforge.com/minecraft/mc-mods/jade)**. crosshair tooltip for shell constructor / storage / treadmill showing owner, build progress, color, powered state, and energy level.
+- **[Mekanism](https://www.curseforge.com/minecraft/mc-mods/mekanism)**. radiation belongs to the body, not the mind. A shell keeps the dose it absorbed while you were wearing it, a freshly built shell starts clean, and syncing into one no longer carries your radiation across.
 
-Both are optional; NeoSync runs fine without them.
+All are optional; NeoSync runs fine without them.
 
 ### Sable / Create Aeronautics
 

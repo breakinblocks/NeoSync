@@ -1,5 +1,11 @@
 # NeoSync Changelog
 
+## 1.6.0
+
+### Added
+
+- Optional Mekanism integration. Radiation is now stored per shell instead of following the player. A body left behind in a shell storage keeps the dose it absorbed, a shell out of the constructor starts clean, and an anchor respawn starts clean too. Reading and writing goes through Mekanism's radiation attachment, so no compile-time dependency is needed and the integration stays inactive when Mekanism is absent.
+
 ## 1.5.3
 
 ### Added
