@@ -28,6 +28,7 @@
   "command.neosync.ghostshells.not_found": "%s has no information about the shell that should be located at %s",
   "command.neosync.ghostshells.removed": "Successfully removed shell (%2$s) from %1$s's radial menu",
   "command.neosync.ghostshells.repaired": "Successfully repaired %s's shell at %s",
+  "command.neosync.purge.result": "Purged %2$s of %1$s's shells from %3$s",
   "command.neosync.select.no_shells": "%s has no shells ready to sync into",
   "command.neosync.select.opened": "Opened the shell selector for %s player(s)",
   "config.jade.plugin_neosync.shell_container": "Shell Container",
