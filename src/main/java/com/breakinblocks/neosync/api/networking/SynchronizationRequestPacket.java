@@ -73,7 +73,7 @@ public record SynchronizationRequestPacket(Optional<UUID> shellUuid) implements 
                 PacketDistributor.sendToPlayer(player, new SynchronizationResponsePacket(
                         currentWorldId, currentPos, currentFacing,
                         targetWorldId, targetPos, targetFacing,
-                        Optional.of(storedState)));
+                        Optional.ofNullable(storedState)));
             }).ifRight(failureReason -> {
                 Component failureText = failureReason.toText();
                 if (failureText != null) {

@@ -14,6 +14,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import org.jetbrains.annotations.Nullable;
 import com.breakinblocks.neosync.api.shell.Shell;
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.api.shell.ShellStateContainer;
@@ -38,44 +39,51 @@ public class PurgeShellsCommand implements Command {
     @Override
     public void build(ArgumentBuilder<CommandSourceStack, ?> builder) {
         builder.then(Commands.argument("target", EntityArgument.players())
+                .executes(context -> execute(context, null))
                 .then(Commands.argument("dimension", ResourceLocationArgument.id())
                         .suggests((context, suggestions) -> SharedSuggestionProvider.suggestResource(
                                 context.getSource().getServer().levelKeys().stream().map(ResourceKey::location),
                                 suggestions))
-                        .executes(PurgeShellsCommand::execute)
+                        .executes(context -> execute(context, ResourceLocationArgument.getId(context, "dimension")))
                 )
         );
     }
 
-    private static int execute(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        ResourceLocation worldId = ResourceLocationArgument.getId(context, "dimension");
+    private static int execute(CommandContext<CommandSourceStack> context, @Nullable ResourceLocation worldId)
+            throws CommandSyntaxException {
         Collection<ServerPlayer> players = EntityArgument.getPlayers(context, "target");
 
         int total = 0;
         for (ServerPlayer player : players) {
             int removed = purge(player, worldId);
             total += removed;
-            context.getSource().sendSuccess(() -> Component.translatable("command.neosync.purge.result",
-                    player.getName().getString(), removed, worldId.toString()), true);
+            context.getSource().sendSuccess(() -> worldId == null
+                    ? Component.translatable("command.neosync.purge.result_all",
+                            player.getName().getString(), removed)
+                    : Component.translatable("command.neosync.purge.result",
+                            player.getName().getString(), removed, worldId.toString()), true);
         }
         return total;
     }
 
-    public static int purge(ServerPlayer player, ResourceLocation worldId) {
+    public static int purge(ServerPlayer player, @Nullable ResourceLocation worldId) {
         Shell shell = (Shell) player;
         List<ShellState> doomed = shell.getAvailableShellStates()
-                .filter(x -> worldId.equals(x.getWorld()))
+                .filter(x -> worldId == null || worldId.equals(x.getWorld()))
                 .toList();
-        if (doomed.isEmpty()) {
-            return 0;
-        }
 
-        ServerLevel world = WorldUtil.findWorld(player.server.getAllLevels(), worldId).orElse(null);
         for (ShellState state : doomed) {
-            if (world != null && !state.isVirtual()) {
-                destroyContainedShell(world, state);
+            if (!state.isVirtual()) {
+                ServerLevel world = WorldUtil.findWorld(player.server.getAllLevels(), state.getWorld()).orElse(null);
+                if (world != null) {
+                    destroyContainedShell(world, state);
+                }
             }
             shell.remove(state);
+        }
+
+        if (shell.isArtificial() && shell.getAvailableShellStates().findAny().isEmpty()) {
+            shell.changeArtificialStatus(false);
         }
         return doomed.size();
     }

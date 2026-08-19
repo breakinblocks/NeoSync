@@ -33,6 +33,7 @@ public final class SyncLanguageProvider extends LanguageProvider {
         add("command.neosync.ghostshells.failed", "%s's shell cannot be repaired at %s. There's no shell container at the given coords");
         add("command.neosync.ghostshells.removed", "Successfully removed shell (%2$s) from %1$s's radial menu");
         add("command.neosync.purge.result", "Purged %2$s of %1$s's shells from %3$s");
+        add("command.neosync.purge.result_all", "Purged all %2$s of %1$s's shells");
 
         add("command.neosync.anchor.set", "Set a respawn anchor for %s at %s in %s");
         add("command.neosync.anchor.set.temporary", "Set a one-time respawn anchor for %s at %s in %s");
