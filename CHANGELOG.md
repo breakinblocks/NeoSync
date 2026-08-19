@@ -1,5 +1,11 @@
 # NeoSync Changelog
 
+## 1.6.1
+
+### Added
+
+- `/neosync purge <players> <dimension>` (op 2) deletes a player's shells in one dimension, both the player-side entry and the block-side copy. Contained bodies drop their inventory and XP at the block.
+
 ## 1.6.0
 
 ### Added
