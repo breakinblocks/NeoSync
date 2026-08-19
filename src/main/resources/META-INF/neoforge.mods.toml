@@ -50,3 +50,10 @@ type="optional"
 versionRange="[15,)"
 ordering="AFTER"
 side="CLIENT"
+
+[[dependencies.neosync]]
+modId="mekanism"
+type="optional"
+versionRange="[10.7,)"
+ordering="AFTER"
+side="BOTH"
