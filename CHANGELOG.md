@@ -4,7 +4,7 @@
 
 ### Added
 
-- `/neosync purge <players> <dimension>` (op 2) deletes a player's shells in one dimension, both the player-side entry and the block-side copy. Contained bodies drop their inventory and XP at the block.
+- `/neosync purge <players> [dimension]` (op 2) deletes a player's shells, both the player-side entry and the block-side copy. Contained bodies drop their inventory and XP at the block. Omit the dimension to wipe every shell; a player left with none stops counting as artificial.
 
 ## 1.5.3
 
