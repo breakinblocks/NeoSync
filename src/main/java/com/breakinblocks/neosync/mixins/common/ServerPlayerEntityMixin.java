@@ -25,7 +25,9 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.CommonHooks;
 import net.minecraft.world.scores.Team;
 import com.breakinblocks.neosync.api.SyncTeleport;
 import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
@@ -428,6 +430,12 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         ShellState respawnShell = this.shellsById.values().stream().filter(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE).findAny().orElse(null);
         if (respawnShell == null) {
+            return;
+        }
+
+        this.gameEvent(GameEvent.ENTITY_DIE);
+        if (CommonHooks.onLivingDeath(this, source)) {
+            ci.cancel();
             return;
         }
 
