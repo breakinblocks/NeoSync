@@ -29,10 +29,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gamerules.GameRule;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Team;
+import net.neoforged.neoforge.common.CommonHooks;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -450,6 +452,12 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
                 .filter(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE)
                 .findAny().orElse(null);
         if (respawnShell == null) {
+            return;
+        }
+
+        this.gameEvent(GameEvent.ENTITY_DIE);
+        if (CommonHooks.onLivingDeath(player, source)) {
+            ci.cancel();
             return;
         }
 
