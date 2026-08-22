@@ -4,7 +4,6 @@ import com.breakinblocks.neosync.compat.sable.SableCompat;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -21,7 +20,8 @@ public interface ShellStateContainer {
      */
     @Nullable
     static ShellStateContainer find(Level world, BlockPos pos) {
-        BlockEntity blockEntity = blockEntityIfLoaded(world, pos);
+        if (!world.isLoaded(pos)) return null;
+        BlockEntity blockEntity = world.getBlockEntity(pos);
         return blockEntity instanceof ShellStateContainer container ? container : null;
     }
 
@@ -29,12 +29,9 @@ public interface ShellStateContainer {
     static ShellStateContainer findNear(Entity entity) {
         Object sublevel = SableCompat.getTrackingSublevel(entity);
         if (sublevel != null) {
-            BlockGetter plot = SableCompat.getSublevelBlockGetter(sublevel);
-            if (plot != null) {
-                Vec3 local = SableCompat.worldToLocal(sublevel, entity.position());
-                BlockEntity be = blockEntityIfLoaded(plot, BlockPos.containing(local));
-                if (be instanceof ShellStateContainer container) return container;
-            }
+            Vec3 local = SableCompat.worldToLocal(sublevel, entity.position());
+            BlockEntity be = SableCompat.getSublevelBlockEntity(sublevel, BlockPos.containing(local));
+            if (be instanceof ShellStateContainer container) return container;
         }
         return find(entity.level(), entity.blockPosition());
     }
@@ -62,19 +59,9 @@ public interface ShellStateContainer {
     @Nullable
     private static ShellStateContainer lookupInSublevel(@Nullable Object sublevel, BlockPos worldPos, @Nullable Vec3 localPos) {
         if (sublevel == null) return null;
-        BlockGetter plot = SableCompat.getSublevelBlockGetter(sublevel);
-        if (plot == null) return null;
         Vec3 local = localPos != null ? localPos : SableCompat.worldToLocal(sublevel, Vec3.atCenterOf(worldPos));
-        BlockEntity be = blockEntityIfLoaded(plot, BlockPos.containing(local));
+        BlockEntity be = SableCompat.getSublevelBlockEntity(sublevel, BlockPos.containing(local));
         return be instanceof ShellStateContainer container ? container : null;
-    }
-
-    @Nullable
-    private static BlockEntity blockEntityIfLoaded(BlockGetter getter, BlockPos pos) {
-        if (getter instanceof Level level && !level.isLoaded(pos)) {
-            return null;
-        }
-        return getter.getBlockEntity(pos);
     }
 
     /**

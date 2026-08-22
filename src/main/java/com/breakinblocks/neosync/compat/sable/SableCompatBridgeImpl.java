@@ -6,11 +6,14 @@ import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
+import dev.ryanhcode.sable.sublevel.plot.LevelPlot;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
@@ -52,9 +55,16 @@ final class SableCompatBridgeImpl implements SableCompatBridge {
 
     @Override
     @Nullable
-    public BlockGetter getSublevelBlockGetter(@Nullable Object sublevel) {
+    public BlockEntity getSublevelBlockEntity(@Nullable Object sublevel, BlockPos localPos) {
         if (!(sublevel instanceof SubLevel sub)) return null;
-        return sub.getPlot().getEmbeddedLevelAccessor();
+        LevelPlot plot = sub.getPlot();
+        if (plot == null) return null;
+        BlockPos globalPos = localPos.offset(plot.getCenterBlock());
+        ChunkPos globalChunk = new ChunkPos(globalPos);
+        if (!plot.contains(globalChunk)) return null;
+        LevelChunk chunk = plot.getChunk(plot.toLocal(globalChunk));
+        if (chunk == null) return null;
+        return chunk.getBlockEntity(globalPos);
     }
 
     @Override

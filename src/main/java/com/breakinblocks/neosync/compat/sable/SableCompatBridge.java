@@ -1,8 +1,8 @@
 package com.breakinblocks.neosync.compat.sable;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -24,7 +24,7 @@ interface SableCompatBridge {
     default Vec3 transformDirectionToWorld(@Nullable Object sublevel, Vec3 localDir) { return localDir; }
 
     @Nullable
-    default BlockGetter getSublevelBlockGetter(@Nullable Object sublevel) { return null; }
+    default BlockEntity getSublevelBlockEntity(@Nullable Object sublevel, BlockPos localPos) { return null; }
 
     default float getSublevelYaw(@Nullable Object sublevel) { return 0F; }
 

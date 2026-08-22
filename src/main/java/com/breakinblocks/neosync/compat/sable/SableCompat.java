@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -58,8 +57,8 @@ public final class SableCompat {
     }
 
     @Nullable
-    public static BlockGetter getSublevelBlockGetter(@Nullable Object sublevel) {
-        return BRIDGE.getSublevelBlockGetter(sublevel);
+    public static BlockEntity getSublevelBlockEntity(@Nullable Object sublevel, BlockPos localPos) {
+        return BRIDGE.getSublevelBlockEntity(sublevel, localPos);
     }
 
     public static float getSublevelYaw(@Nullable Object sublevel) {
@@ -85,13 +84,10 @@ public final class SableCompat {
     public static BlockEntity findBlockEntity(Level worldLevel, BlockPos worldPos, Entity entityForSublevelLookup) {
         Object sub = getTrackingSublevel(entityForSublevelLookup);
         if (sub != null) {
-            BlockGetter plot = getSublevelBlockGetter(sub);
-            if (plot != null) {
-                Vec3 localPos = worldToLocal(sub, Vec3.atCenterOf(worldPos));
-                BlockEntity be = plot.getBlockEntity(BlockPos.containing(localPos));
-                if (be != null) return be;
-            }
+            Vec3 localPos = worldToLocal(sub, Vec3.atCenterOf(worldPos));
+            BlockEntity be = getSublevelBlockEntity(sub, BlockPos.containing(localPos));
+            if (be != null) return be;
         }
-        return worldLevel.getBlockEntity(worldPos);
+        return worldLevel.isLoaded(worldPos) ? worldLevel.getBlockEntity(worldPos) : null;
     }
 }

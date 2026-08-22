@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- Standing on a physics object no longer freezes the world and forces you to kill the game.
 - Dying in an artificial body now fires `LivingDeathEvent`. The death handler cancelled `ServerPlayer.die` at HEAD, ahead of NeoForge's hook, so grave and death-tracking mods never saw the death and the dropped inventory went to the ground uncaptured. A mod that cancels the event now keeps the body alive, as it does for an ordinary death.
 
 ## 1.6.1
