@@ -17,6 +17,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -224,6 +225,16 @@ public class ShellState {
 
     public void setPos(BlockPos pos) {
         this.pos = pos;
+        if (this.subLevelUuid != null) {
+            this.localOffset = this.blockCenter();
+        }
+    }
+
+    public void bindTo(BlockEntity container) {
+        Object sublevel = SableCompat.getContainingSublevel(container);
+        this.subLevelUuid = SableCompat.getSublevelUuid(sublevel);
+        this.localOffset = null;
+        this.setPos(container.getBlockPos());
     }
 
     @Nullable

@@ -26,7 +26,7 @@ final class SableCompatBridgeImpl implements SableCompatBridge {
     @Override
     @Nullable
     public Object getTrackingSublevel(Entity entity) {
-        return Sable.HELPER.getTrackingSubLevel(entity);
+        return Sable.HELPER.getTrackingOrVehicleSubLevel(entity);
     }
 
     @Override
@@ -59,12 +59,11 @@ final class SableCompatBridgeImpl implements SableCompatBridge {
         if (!(sublevel instanceof SubLevel sub)) return null;
         LevelPlot plot = sub.getPlot();
         if (plot == null) return null;
-        BlockPos globalPos = localPos.offset(plot.getCenterBlock());
-        ChunkPos globalChunk = new ChunkPos(globalPos);
-        if (!plot.contains(globalChunk)) return null;
-        LevelChunk chunk = plot.getChunk(plot.toLocal(globalChunk));
+        ChunkPos chunkPos = new ChunkPos(localPos);
+        if (!plot.contains(chunkPos)) return null;
+        LevelChunk chunk = plot.getChunk(plot.toLocal(chunkPos));
         if (chunk == null) return null;
-        return chunk.getBlockEntity(globalPos);
+        return chunk.getBlockEntity(localPos);
     }
 
     @Override

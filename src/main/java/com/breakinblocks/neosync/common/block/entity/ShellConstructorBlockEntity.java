@@ -69,6 +69,7 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
 
             player.hurt(FingerstickDamageSource.fingerstick(player), damage);
             this.shell = ShellState.empty(serverPlayer, this.worldPosition);
+            this.shell.bindTo(this);
             if (isCreative && config.enableInstantShellConstruction()) {
                 this.shell.setProgress(ShellState.PROGRESS_DONE);
             }

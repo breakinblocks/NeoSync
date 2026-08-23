@@ -67,7 +67,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
         this.shell = shell;
 
         if (shell != null && this.worldPosition != null) {
-            shell.setPos(this.worldPosition);
+            shell.bindTo(this);
         }
 
         if (this.level != null && !this.level.isClientSide && this.worldPosition != null && this.getBlockState() != null) {
@@ -265,7 +265,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
 
         // Fix position for existing shells
         if (this.shell != null && this.worldPosition != null) {
-            this.shell.setPos(this.worldPosition);
+            this.shell.bindTo(this);
         }
 
         int colorId = nbt.contains("color", Tag.TAG_INT) ? nbt.getInt("color") : -1;

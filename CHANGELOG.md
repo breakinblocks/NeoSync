@@ -1,5 +1,11 @@
 # NeoSync Changelog
 
+## 1.6.3
+
+### Fixed
+
+- Switching bodies inside a Shell Storage or Constructor on a physics object no longer kills you.
+
 ## 1.6.2
 
 ### Fixed
