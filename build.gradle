@@ -149,9 +149,20 @@ publishing {
 // Mod publishing to CurseForge and Modrinth (GitHub releases handled by CI)
 publishMods {
     file = jar.archiveFile
-    def changelogFile = file("metadata/changelogs/${project.mod_version}.md")
-    changelog = changelogFile.exists() ? changelogFile.text : "Release ${version}"
-    type = STABLE
+    def changelogFile = project.file('CHANGELOG.md')
+    def notes = []
+    def collecting = false
+    if (changelogFile.exists()) {
+        changelogFile.eachLine { line ->
+            if (line.startsWith('## ')) {
+                collecting = line.substring(3).trim() == project.mod_version
+            } else if (collecting) {
+                notes << line
+            }
+        }
+    }
+    changelog = notes ? notes.join(System.lineSeparator()).trim() : "Release ${project.version}"
+    type = isSnapshot ? BETA : STABLE
     modLoaders.add('neoforge')
 
     curseforge {
