@@ -1,5 +1,11 @@
 # NeoSync Changelog
 
+## 1.6.3
+
+### Fixed
+
+- Dying in an artificial body now respects the death message and mob forgiveness game rules.
+
 ## 1.6.2
 
 ### Fixed

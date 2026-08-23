@@ -187,7 +187,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         if (isDead && !this.undead) {
             this.pendingSyncTarget = requestedUuid;
-            player.connection.send(new ClientboundPlayerCombatKillPacket(player.getId(), Component.empty()));
+            sendEmptyDeathMessageInChat(player);
             return Either.right(PlayerSyncEvents.SyncFailureReason.OTHER_PROBLEM);
         }
 
@@ -461,10 +461,16 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             return;
         }
 
-        sendDeathMessageInChat(player, source);
+        if (player.level().getGameRules().get(GameRules.SHOW_DEATH_MESSAGES)) {
+            sendDeathMessageInChat(player, source);
+        } else {
+            sendEmptyDeathMessageInChat(player);
+        }
 
         this.removeEntitiesOnShoulder();
-        this.tellNeutralMobsThatIDied();
+        if (player.level().getGameRules().get(GameRules.FORGIVE_DEAD_PLAYERS)) {
+            this.tellNeutralMobsThatIDied();
+        }
 
         if (!this.isSpectator()) {
             this.dropAllDeathLoot(player.level(), source);
@@ -498,6 +504,11 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             player.remove(Entity.RemovalReason.KILLED);
         }
         return true;
+    }
+
+    @Unique
+    private static void sendEmptyDeathMessageInChat(ServerPlayer player) {
+        player.connection.send(new ClientboundPlayerCombatKillPacket(player.getId(), Component.empty()));
     }
 
     @Unique
