@@ -22,10 +22,11 @@ public final class BlockPosUtil {
     }
 
     public static boolean hasPlayerInside(BlockPos pos, EntityGetter world) {
-        double x = pos.getX() + 0.5;
-        double y = pos.getY() + 0.5;
-        double z = pos.getZ() + 0.5;
-        return world.getNearestPlayer(x, y, z, 1, false) != null;
+        return hasPlayerInside(new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), world);
+    }
+
+    public static boolean hasPlayerInside(Vec3 worldCenter, EntityGetter world) {
+        return world.getNearestPlayer(worldCenter.x, worldCenter.y, worldCenter.z, 1, false) != null;
     }
 
     public static boolean isEntityInside(Entity entity, BlockPos pos) {

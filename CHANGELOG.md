@@ -1,5 +1,13 @@
 # NeoSync Changelog
 
+## 1.6.4
+
+### Fixed
+
+- Walking into a Shell Storage or Constructor on a physics object no longer needs a jump or a crouch.
+- Syncing back into a body on a physics object no longer leaves the camera hanging in the air before it snaps to you.
+- The shell selector no longer reopens on its own while you stand in a Shell Storage on a physics object.
+
 ## 1.6.3
 
 ### Fixed

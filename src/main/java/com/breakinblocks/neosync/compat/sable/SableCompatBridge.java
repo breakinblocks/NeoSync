@@ -26,6 +26,9 @@ interface SableCompatBridge {
     @Nullable
     default BlockEntity getSublevelBlockEntity(@Nullable Object sublevel, BlockPos localPos) { return null; }
 
+    @Nullable
+    default Object findSublevelAt(Level level, Vec3 worldPos) { return null; }
+
     default float getSublevelYaw(@Nullable Object sublevel) { return 0F; }
 
     @Nullable

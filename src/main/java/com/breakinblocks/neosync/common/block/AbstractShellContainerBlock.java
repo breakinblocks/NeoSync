@@ -46,6 +46,9 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
 
     private static final VoxelShape SOLID_SHAPE_TOP;
     private static final VoxelShape SOLID_SHAPE_BOTTOM;
+    private static final VoxelShape[] OPEN_COLLISION_TOP = new VoxelShape[4];
+    private static final VoxelShape[] OPEN_COLLISION_BOTTOM = new VoxelShape[4];
+    private static final VoxelShape[] OPEN_COLLISION_BOTTOM_NO_FLOOR = new VoxelShape[4];
     private static final VoxelShape NORTH_SHAPE_TOP;
     private static final VoxelShape NORTH_SHAPE_BOTTOM;
     private static final VoxelShape SOUTH_SHAPE_TOP;
@@ -253,6 +256,24 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     }
 
     @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
+        if (!isOpen(state)) {
+            return this.getShape(state, world, pos, context);
+        }
+
+        int facing = state.getValue(FACING).get2DDataValue();
+        if (!isBottom(state)) {
+            return OPEN_COLLISION_TOP[facing];
+        }
+
+        BlockPos supportPos = pos.below();
+        BlockState support = world.getBlockState(supportPos);
+        return support.isFaceSturdy(world, supportPos, Direction.UP)
+                ? OPEN_COLLISION_BOTTOM_NO_FLOOR[facing]
+                : OPEN_COLLISION_BOTTOM[facing];
+    }
+
+    @Override
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
     }
@@ -287,6 +308,18 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
 
         SOLID_SHAPE_TOP = Shapes.or(NORTH_WALL, SOUTH_WALL, EAST_WALL, WEST_WALL, ROOF).optimize();
         SOLID_SHAPE_BOTTOM = Shapes.or(NORTH_WALL, SOUTH_WALL, EAST_WALL, WEST_WALL, FLOOR).optimize();
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            VoxelShape back = switch (direction) {
+                case NORTH -> NORTH_WALL;
+                case SOUTH -> SOUTH_WALL;
+                case EAST -> EAST_WALL;
+                default -> WEST_WALL;
+            };
+            int index = direction.get2DDataValue();
+            OPEN_COLLISION_TOP[index] = Shapes.or(back, ROOF).optimize();
+            OPEN_COLLISION_BOTTOM[index] = Shapes.or(back, FLOOR).optimize();
+            OPEN_COLLISION_BOTTOM_NO_FLOOR[index] = back;
+        }
 
         NORTH_SHAPE_TOP = Shapes.or(NORTH_SHAPE, ROOF).optimize();
         NORTH_SHAPE_BOTTOM = Shapes.or(NORTH_SHAPE, FLOOR).optimize();

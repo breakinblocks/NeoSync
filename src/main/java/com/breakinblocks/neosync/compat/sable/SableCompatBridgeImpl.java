@@ -3,6 +3,7 @@ package com.breakinblocks.neosync.compat.sable;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.sublevel.ServerSubLevelContainer;
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
@@ -64,6 +65,19 @@ final class SableCompatBridgeImpl implements SableCompatBridge {
         LevelChunk chunk = plot.getChunk(plot.toLocal(chunkPos));
         if (chunk == null) return null;
         return chunk.getBlockEntity(localPos);
+    }
+
+    @Override
+    @Nullable
+    public Object findSublevelAt(Level level, Vec3 worldPos) {
+        BoundingBox3d bounds = new BoundingBox3d(worldPos.subtract(0.5, 0.5, 0.5), worldPos.add(0.5, 0.5, 0.5));
+        for (SubLevel sub : Sable.HELPER.getAllIntersecting(level, bounds)) {
+            Vec3 local = sub.logicalPose().transformPositionInverse(worldPos);
+            if (Sable.HELPER.getContaining(level, local) == sub) {
+                return sub;
+            }
+        }
+        return null;
     }
 
     @Override

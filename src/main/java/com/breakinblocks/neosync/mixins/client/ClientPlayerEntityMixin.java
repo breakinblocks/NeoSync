@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
@@ -26,6 +27,7 @@ import com.breakinblocks.neosync.common.entity.PersistentCameraEntity;
 import com.breakinblocks.neosync.common.entity.PersistentCameraEntityGoal;
 import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import com.breakinblocks.neosync.common.utils.WorldUtil;
+import com.breakinblocks.neosync.compat.sable.SableCompat;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -127,13 +129,21 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
             }
         };
 
-        boolean enableCamera = Objects.equals(startWorld, targetWorld);
+        boolean enableCamera = Objects.equals(startWorld, targetWorld)
+                && !this.sync$isOnSublevel(startPos)
+                && !this.sync$isOnSublevel(targetPos)
+                && SableCompat.getTrackingSublevel(player) == null;
         if (enableCamera) {
             PersistentCameraEntityGoal cameraGoal = PersistentCameraEntityGoal.highwayToHell(startPos, startFacing, targetPos, targetFacing, __ -> restore.run());
             PersistentCameraEntity.setup(this.minecraft, cameraGoal);
         } else {
             restore.run();
         }
+    }
+
+    @Unique
+    private boolean sync$isOnSublevel(BlockPos pos) {
+        return SableCompat.findSublevelAt(this.level(), Vec3.atCenterOf(pos)) != null;
     }
 
     @Override

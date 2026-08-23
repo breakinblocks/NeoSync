@@ -103,7 +103,9 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
         this.connectorAnimator.setValue(this.shell != null);
         this.connectorAnimator.step();
         if (this.entityState == EntityState.LEAVING || this.entityState == EntityState.CHILLING) {
-            this.entityState = BlockPosUtil.hasPlayerInside(pos, world) ? this.entityState : EntityState.NONE;
+            Object sublevel = SableCompat.getContainingSublevel(this);
+            Vec3 center = SableCompat.localToWorld(sublevel, new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
+            this.entityState = BlockPosUtil.hasPlayerInside(center, world) ? this.entityState : EntityState.NONE;
         }
     }
 

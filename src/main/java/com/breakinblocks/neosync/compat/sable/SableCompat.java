@@ -61,6 +61,11 @@ public final class SableCompat {
         return BRIDGE.getSublevelBlockEntity(sublevel, localPos);
     }
 
+    @Nullable
+    public static Object findSublevelAt(Level level, Vec3 worldPos) {
+        return BRIDGE.findSublevelAt(level, worldPos);
+    }
+
     public static float getSublevelYaw(@Nullable Object sublevel) {
         return BRIDGE.getSublevelYaw(sublevel);
     }
