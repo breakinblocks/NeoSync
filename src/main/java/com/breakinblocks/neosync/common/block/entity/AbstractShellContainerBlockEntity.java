@@ -53,6 +53,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
     private ShellState syncedShell;
     private BlockPos syncedShellPos;
     private DyeColor syncedShellColor;
+    private boolean syncedShellManualOnly;
     private float syncedShellProgress;
     private DyeColor syncedColor;
     private boolean inventoryDirty;
@@ -119,9 +120,16 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
         this.checkShellState(world, pos, state);
     }
 
+    protected boolean isManualOnly() {
+        return false;
+    }
+
     private void checkShellState(Level world, BlockPos pos, BlockState state) {
         if (this.shell != null && this.shell.getColor() != this.color) {
             this.shell.setColor(this.color);
+        }
+        if (this.shell != null && this.shell.isManualOnly() != this.isManualOnly()) {
+            this.shell.setManualOnly(this.isManualOnly());
         }
 
         if (this.requiresSync()) {
@@ -130,6 +138,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
 
             this.syncedShellPos = this.shell == null ? null : this.shell.getPos();
             this.syncedShellColor = this.shell == null ? null : this.shell.getColor();
+            this.syncedShellManualOnly = this.shell != null && this.shell.isManualOnly();
             this.syncedShellProgress = this.shell == null ? -1 : this.shell.getProgress();
             this.syncedShell = this.shell;
             this.syncedColor = this.color;
@@ -155,6 +164,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
                         this.shell != null && (
                                 !this.shell.getPos().equals(this.syncedShellPos) ||
                                         !Objects.equals(this.shell.getColor(), this.syncedShellColor) ||
+                                        this.shell.isManualOnly() != this.syncedShellManualOnly ||
                                         this.shell.getProgress() != this.syncedShellProgress
                         )
         );

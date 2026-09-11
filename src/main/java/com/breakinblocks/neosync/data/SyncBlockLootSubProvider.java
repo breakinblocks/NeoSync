@@ -30,6 +30,7 @@ public final class SyncBlockLootSubProvider extends BlockLootSubProvider {
         this.add(SyncBlocks.SHELL_STORAGE.get(), block -> this.createSinglePropConditionTable(block, AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER));
         this.add(SyncBlocks.SHELL_CONSTRUCTOR.get(), block -> this.createSinglePropConditionTable(block, AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER));
         this.add(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get(), block -> this.createSinglePropConditionTable(block, AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER));
+        this.add(SyncBlocks.MANUAL_SHELL_STORAGE.get(), block -> this.createSinglePropConditionTable(block, AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER));
         this.add(SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get(), block -> this.createSinglePropConditionTable(block, AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER));
         this.add(SyncBlocks.TREADMILL.get(), block -> LootTable.lootTable().withPool(
                 LootPool.lootPool()
@@ -44,7 +45,7 @@ public final class SyncBlockLootSubProvider extends BlockLootSubProvider {
 
     @Override
     protected Iterable<Block> getKnownBlocks() {
-        return Stream.of(SyncBlocks.SHELL_STORAGE, SyncBlocks.SHELL_CONSTRUCTOR, SyncBlocks.ZERO_POINT_SHELL_STORAGE, SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR, SyncBlocks.TREADMILL)
+        return Stream.of(SyncBlocks.SHELL_STORAGE, SyncBlocks.SHELL_CONSTRUCTOR, SyncBlocks.ZERO_POINT_SHELL_STORAGE, SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR, SyncBlocks.MANUAL_SHELL_STORAGE, SyncBlocks.TREADMILL)
                 .map(DeferredBlock::get)
                 .map(b -> (Block) b)
                 .toList();

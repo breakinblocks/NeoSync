@@ -73,6 +73,12 @@ public final class SyncRecipeProvider extends RecipeProvider {
                 .unlockedBy("has_nether_star", has(Items.NETHER_STAR))
                 .save(this.output);
 
+        ShapelessRecipeBuilder.shapeless(items, RecipeCategory.REDSTONE, SyncItems.MANUAL_SHELL_STORAGE.get())
+                .requires(SyncItems.SHELL_STORAGE.get())
+                .requires(Items.LEVER)
+                .unlockedBy("has_shell_storage", has(SyncItems.SHELL_STORAGE.get()))
+                .save(this.output);
+
         ShapedRecipeBuilder.shaped(items, RecipeCategory.REDSTONE, SyncItems.TREADMILL.get())
                 .pattern("  D")
                 .pattern("CCI")

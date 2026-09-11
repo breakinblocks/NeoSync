@@ -203,6 +203,9 @@ public class ShellSelectorGUI extends Screen {
             Component progress = Component.translatable("gui.neosync.shell_selector.progress_percent",
                     Mth.floor(shell.getProgress() * 100F));
             graphics.centeredText(this.font, progress, labelX, labelY - this.font.lineHeight, 0xFFFF5555);
+        } else if (shell.isManualOnly()) {
+            Component manual = Component.translatable("gui.neosync.shell_selector.manual");
+            graphics.centeredText(this.font, manual, labelX, labelY - this.font.lineHeight, DISABLED_TEXT_COLOR);
         }
 
         float chord = 2F * labelRadius * Mth.sin(Math.min(this.sectorSpan(count), Radians.R_PI) / 2F);

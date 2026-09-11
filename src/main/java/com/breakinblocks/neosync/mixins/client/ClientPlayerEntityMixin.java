@@ -52,6 +52,9 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayer imple
     private boolean sync$isArtificial = false;
 
     @Unique
+    private boolean sync$autoSyncOnDeath = true;
+
+    @Unique
     private ConcurrentMap<UUID, ShellState> sync$shellsById = new ConcurrentHashMap<>();
 
     private ClientPlayerEntityMixin(ClientLevel level, GameProfile profile) {
@@ -150,6 +153,16 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayer imple
     }
 
     @Override
+    public boolean isDeathSyncEnabled() {
+        return this.sync$autoSyncOnDeath;
+    }
+
+    @Override
+    public void setDeathSyncEnabled(boolean enabled) {
+        this.sync$autoSyncOnDeath = enabled;
+    }
+
+    @Override
     public void setAvailableShellStates(Stream<ShellState> states) {
         this.sync$shellsById = states.collect(Collectors.toConcurrentMap(ShellState::getUuid, x -> x));
     }
@@ -206,7 +219,7 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayer imple
         }
         Comparator<ShellState> comparator = ShellPriority.asComparator(world, pos, priorities);
         ShellState respawnShell = this.sync$shellsById.values().stream()
-                .filter(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE)
+                .filter(this::canAutoSyncInto)
                 .min(comparator)
                 .orElse(null);
         if (respawnShell != null) {

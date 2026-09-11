@@ -78,16 +78,16 @@ public class PersistentCameraEntity extends LocalPlayer {
         this.setPos(newPos);
         this.setDeltaMovement(currentVelocity);
 
-        float factor = 1F - (float)(goal.pos.distanceTo(newPos) / this.initialDistance);
+        float factor = this.initialDistance <= 0 ? 1F : 1F - (float)(goal.pos.distanceTo(newPos) / this.initialDistance);
         float newYaw = this.initialYaw + (goal.yaw - this.initialYaw) * factor;
         float newPitch = this.initialPitch + (goal.pitch - this.initialPitch) * factor;
-        this.snapTo(newPos.x, newPos.y, newPos.z, newYaw, newPitch);
         this.setYRot(newYaw);
         this.setXRot(newPitch);
         this.setYHeadRot(newYaw);
         this.setYBodyRot(newYaw);
-        this.yRotO = this.yRotO + (newYaw - this.yRotO) * 0.5F;
-        this.xRotO = this.xRotO + (newPitch - this.xRotO) * 0.5F;
+        if (goal.duration <= 0) {
+            this.updateLastTickValues();
+        }
 
         this.lastMovementTime = currentTime;
         if (this.position().equals(goal.pos)) {

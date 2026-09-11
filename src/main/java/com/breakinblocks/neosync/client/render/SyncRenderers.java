@@ -26,6 +26,7 @@ public final class SyncRenderers {
         BlockEntityRenderers.register(SyncBlockEntities.SHELL_CONSTRUCTOR.get(), ShellConstructorBlockEntityRenderer::new);
         BlockEntityRenderers.register(SyncBlockEntities.ZERO_POINT_SHELL_STORAGE.get(), ShellStorageBlockEntityRenderer::new);
         BlockEntityRenderers.register(SyncBlockEntities.ZERO_POINT_SHELL_CONSTRUCTOR.get(), ShellConstructorBlockEntityRenderer::new);
+        BlockEntityRenderers.register(SyncBlockEntities.MANUAL_SHELL_STORAGE.get(), ShellStorageBlockEntityRenderer::new);
         BlockEntityRenderers.register(SyncBlockEntities.TREADMILL.get(), TreadmillBlockEntityRenderer::new);
     }
 

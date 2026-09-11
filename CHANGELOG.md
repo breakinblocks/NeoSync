@@ -1,5 +1,16 @@
 # NeoSync Changelog
 
+## 1.7.0
+
+### Added
+
+- Manual Shell Storage, a storage whose shell is never chosen automatically when you die. Craft it from a Shell Storage and a lever. Walk into it to sync by hand like any other storage.
+- A new config option, autoSyncOnDeath, that turns off automatic syncing on death for the whole server. Dying then shows the normal death screen and the player respawns as usual, with all shells still available.
+
+### Fixed
+
+- The camera flight when syncing into a body should now be smoother.
+
 ## 1.6.3
 
 ### Fixed

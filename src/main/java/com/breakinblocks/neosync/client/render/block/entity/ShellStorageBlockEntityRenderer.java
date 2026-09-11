@@ -17,6 +17,7 @@ import com.breakinblocks.neosync.client.model.ShellContainerModel;
 import com.breakinblocks.neosync.client.model.ShellStorageModel;
 import com.breakinblocks.neosync.client.model.SyncModelLayers;
 import com.breakinblocks.neosync.client.texture.TrimTextureGenerator;
+import com.breakinblocks.neosync.common.block.ManualShellStorageBlock;
 import com.breakinblocks.neosync.common.block.ZeroPointShellStorageBlock;
 import com.breakinblocks.neosync.common.block.entity.ShellEntity;
 import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
@@ -24,6 +25,7 @@ import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
 public class ShellStorageBlockEntityRenderer extends AbstractShellContainerBlockEntityRenderer<ShellStorageBlockEntity> {
     public static final Identifier TEXTURE = NeoSync.locate("textures/block/shell_storage.png");
     public static final Identifier ZERO_POINT_TEXTURE = NeoSync.locate("textures/block/zero_point_shell_storage.png");
+    public static final Identifier MANUAL_TEXTURE = NeoSync.locate("textures/block/manual_shell_storage.png");
     private static final TrimTextureGenerator TRIM_TEXTURES = new TrimTextureGenerator(TEXTURE, ZERO_POINT_TEXTURE);
 
     private final ShellStorageModel model;
@@ -43,6 +45,9 @@ public class ShellStorageBlockEntityRenderer extends AbstractShellContainerBlock
     @Override
     protected Identifier getTexture(ShellStorageBlockEntity blockEntity) {
         DyeColor color = blockEntity.getColor();
+        if (blockEntity.getBlockState().getBlock() instanceof ManualShellStorageBlock) {
+            return color == null ? MANUAL_TEXTURE : TRIM_TEXTURES.getTexture(color, MANUAL_TEXTURE);
+        }
         if (blockEntity.getBlockState().getBlock() instanceof ZeroPointShellStorageBlock) {
             if (color == null || color == DyeColor.CYAN) {
                 return ZERO_POINT_TEXTURE;

@@ -40,6 +40,12 @@ public class SyncItems {
                     .useBlockDescriptionPrefix()
                     .stacksTo(1)));
 
+    public static final DeferredItem<ShellStorageItem> MANUAL_SHELL_STORAGE = ITEMS.register("manual_shell_storage",
+            name -> new ShellStorageItem(SyncBlocks.MANUAL_SHELL_STORAGE.get(), new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, name))
+                    .useBlockDescriptionPrefix()
+                    .stacksTo(1)));
+
     public static final DeferredItem<TreadmillItem> TREADMILL = ITEMS.register("treadmill",
             name -> new TreadmillItem(SyncBlocks.TREADMILL.get(), new Item.Properties()
                     .setId(ResourceKey.create(Registries.ITEM, name))

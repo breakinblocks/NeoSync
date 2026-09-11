@@ -50,6 +50,19 @@ public interface Shell extends ShellStateManager {
         return this.isValidShellState(state) && this.getShellOwnerUuid().equals(state.getOwnerUuid());
     }
 
+    boolean isDeathSyncEnabled();
+
+    void setDeathSyncEnabled(boolean enabled);
+
+    @Contract("null -> false")
+    default boolean canAutoSyncInto(ShellState state) {
+        return this.isDeathSyncEnabled() && this.canBeApplied(state) && state.getProgress() >= ShellState.PROGRESS_DONE && !state.isManualOnly();
+    }
+
+    default boolean hasAutoSyncTarget() {
+        return this.getAvailableShellStates().anyMatch(this::canAutoSyncInto);
+    }
+
     /**
      * Returns a shell with the given uuid.
      *

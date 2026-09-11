@@ -19,6 +19,7 @@ public final class SyncLanguageProvider extends LanguageProvider {
         add(SyncBlocks.SHELL_CONSTRUCTOR.get(), "Shell Constructor");
         add(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get(), "Zero Point Shell Storage");
         add(SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get(), "Zero Point Shell Constructor");
+        add(SyncBlocks.MANUAL_SHELL_STORAGE.get(), "Manual Shell Storage");
         add(SyncBlocks.TREADMILL.get(), "Treadmill");
 
         add(SyncItems.SYNC_CORE.get(), "Sync Core");
@@ -57,6 +58,7 @@ public final class SyncLanguageProvider extends LanguageProvider {
         add("gui.neosync.shell_selector.left.title", "Previous page");
         add("gui.neosync.shell_selector.right.title", "Next page");
         add("gui.neosync.shell_selector.progress_percent", "%s%%");
+        add("gui.neosync.shell_selector.manual", "Manual");
         add("gui.neosync.shell_selector.position", "%s, %s, %s");
         add("gui.neosync.shell_selector.rename.title", "Rename shell");
         add("gui.neosync.shell_selector.rename.hint", "Enter to save, Esc to cancel");
@@ -81,6 +83,7 @@ public final class SyncLanguageProvider extends LanguageProvider {
         add("jei.neosync.info.treadmill", "Two-block structure. Lure a pig, wolf, or other supported animal onto the front block and it will generate energy that neighbouring Shell Constructors / Storages will consume.");
         add("jei.neosync.info.zero_point_shell_constructor", "A Shell Constructor powered by zero-point energy. Requires no external power and finishes new shells instantly. The sampling process still deals damage. Sneak and right-click with a dye to recolor its cyan trim; shells built inside take that color in the shell menu.");
         add("jei.neosync.info.zero_point_shell_storage", "A Shell Storage powered by zero-point energy. Requires no redstone or FE. Its doors open automatically as you approach and stored shells never decay. Sneak and right-click with a dye to recolor its cyan trim and the shell stored inside.");
+        add("jei.neosync.info.manual_shell_storage", "A Shell Storage whose stored shell is never chosen automatically when you die. Use it for bodies built for one job. Walk in to sync into it by hand like any other storage.");
 
         add("config.jade.plugin_neosync.shell_container", "Shell Container");
         add("config.jade.plugin_neosync.treadmill", "Treadmill");

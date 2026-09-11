@@ -19,6 +19,11 @@ public final class SyncCapabilities {
 
         event.registerBlockEntity(
                 Capabilities.Energy.BLOCK,
+                SyncBlockEntities.MANUAL_SHELL_STORAGE.get(),
+                (be, side) -> be);
+
+        event.registerBlockEntity(
+                Capabilities.Energy.BLOCK,
                 SyncBlockEntities.SHELL_CONSTRUCTOR.get(),
                 (be, side) -> be);
 
