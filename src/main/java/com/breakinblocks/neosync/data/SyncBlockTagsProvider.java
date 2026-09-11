@@ -22,6 +22,7 @@ public final class SyncBlockTagsProvider extends BlockTagsProvider {
                 .add(SyncBlocks.SHELL_CONSTRUCTOR.get())
                 .add(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get())
                 .add(SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get())
+                .add(SyncBlocks.MANUAL_SHELL_STORAGE.get())
                 .add(SyncBlocks.TREADMILL.get());
     }
 }

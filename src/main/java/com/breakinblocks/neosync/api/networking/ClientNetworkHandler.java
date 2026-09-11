@@ -31,6 +31,7 @@ public final class ClientNetworkHandler {
         if (player == null) return;
         Shell shell = (Shell) player;
         shell.changeArtificialStatus(payload.isArtificial());
+        shell.setDeathSyncEnabled(payload.autoSyncOnDeath());
         shell.setAvailableShellStates(payload.states().stream());
     }
 
@@ -51,6 +52,7 @@ public final class ClientNetworkHandler {
                     updated.setColor(payload.color());
                     updated.setPos(payload.pos());
                     updated.setName(payload.name());
+                    updated.setManualOnly(payload.manualOnly());
                 }
             }
             case NONE -> { }

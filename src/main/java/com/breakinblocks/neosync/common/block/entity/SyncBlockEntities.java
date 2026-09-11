@@ -21,6 +21,11 @@ public class SyncBlockEntities {
                     () -> BlockEntityType.Builder.of(ShellConstructorBlockEntity::new,
                             SyncBlocks.SHELL_CONSTRUCTOR.get()).build(null));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ManualShellStorageBlockEntity>> MANUAL_SHELL_STORAGE =
+            BLOCK_ENTITIES.register("manual_shell_storage",
+                    () -> BlockEntityType.Builder.of(ManualShellStorageBlockEntity::new,
+                            SyncBlocks.MANUAL_SHELL_STORAGE.get()).build(null));
+
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ZeroPointShellStorageBlockEntity>> ZERO_POINT_SHELL_STORAGE =
             BLOCK_ENTITIES.register("zero_point_shell_storage",
                     () -> BlockEntityType.Builder.of(ZeroPointShellStorageBlockEntity::new,

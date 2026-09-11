@@ -189,7 +189,10 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
     private void renderShellAndProgress(GuiGraphics guiGraphics) {
         this.renderShell(guiGraphics);
         if (this.shell.getProgress() < ShellState.PROGRESS_DONE) {
-            this.renderProgress(guiGraphics);
+            int progress = (int)Math.floor(this.shell.getProgress() * 100);
+            this.renderBadge(guiGraphics, Component.translatable("gui.neosync.shell_selector.progress_percent", progress));
+        } else if (this.shell.isManualOnly()) {
+            this.renderBadge(guiGraphics, Component.translatable("gui.neosync.shell_selector.manual"));
         }
         this.renderName(guiGraphics);
     }
@@ -263,7 +266,7 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
         }
     }
 
-    private void renderProgress(GuiGraphics guiGraphics) {
+    private void renderBadge(GuiGraphics guiGraphics, Component text) {
         final float FONT_SCALE = 0.15F;
         final float BOX_SCALE = 1.6F;
 
@@ -275,21 +278,19 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
         float fontHeight = (float)this.diffR * FONT_SCALE;
         float fontScale = fontHeight / font.lineHeight;
 
-        int progress = (int)Math.floor(this.shell.getProgress() * 100);
-        Component progressText = Component.translatable("gui.neosync.shell_selector.progress_percent", progress);
         float boxHeight = fontHeight * BOX_SCALE;
-        float progressTextWidth = font.width(progressText) * fontScale;
-        float progressBoxWidth = Math.max(boxHeight * 2F, progressTextWidth);
+        float textWidth = font.width(text) * fontScale;
+        float boxWidth = Math.max(boxHeight * 2F, textWidth);
         float boxTop = shellCY - boxHeight / 2 - font.lineHeight * fontScale * 0.125F;
-        float boxLeft = shellCX - progressBoxWidth / 2F;
+        float boxLeft = shellCX - boxWidth / 2F;
 
         PoseStack matrices = guiGraphics.pose();
 
         matrices.pushPose();
         try {
             matrices.translate(0, 0, this.majorR * 2);
-            RenderSystemUtil.drawRectangle(matrices, boxLeft, boxTop, progressBoxWidth, boxHeight, boxHeight * 0.25F, 1F, 0, (float)this.step, 0F, 0F, 0F, 0.8F);
-            RenderSystemUtil.drawCenteredText(guiGraphics, progressText, shellCX, shellCY, fontScale, ColorUtil.fromDyeColor(DyeColor.WHITE), true);
+            RenderSystemUtil.drawRectangle(matrices, boxLeft, boxTop, boxWidth, boxHeight, boxHeight * 0.25F, 1F, 0, (float)this.step, 0F, 0F, 0F, 0.8F);
+            RenderSystemUtil.drawCenteredText(guiGraphics, text, shellCX, shellCY, fontScale, ColorUtil.fromDyeColor(DyeColor.WHITE), true);
         } finally {
             matrices.popPose();
         }

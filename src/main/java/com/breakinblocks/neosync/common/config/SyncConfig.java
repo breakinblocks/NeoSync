@@ -7,6 +7,12 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import com.breakinblocks.neosync.api.networking.ShellUpdatePacket;
+import com.breakinblocks.neosync.api.shell.Shell;
+import com.breakinblocks.neosync.common.utils.WorldUtil;
 import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.api.shell.ShellPriority;
 
@@ -54,6 +60,7 @@ public class SyncConfig {
     // Misc settings
     private static final ModConfigSpec.BooleanValue UPDATE_TRANSLATIONS_AUTOMATICALLY;
     private static final ModConfigSpec.BooleanValue PRESERVE_ORIGINS;
+    private static final ModConfigSpec.BooleanValue AUTO_SYNC_ON_DEATH;
 
     // Technoblade easter egg
     private static final ModConfigSpec.BooleanValue ENABLE_TECHNOBLADE_EASTER_EGG;
@@ -163,6 +170,10 @@ public class SyncConfig {
                 .comment("If enabled, all shells share the same origins")
                 .define("preserveOrigins", false);
 
+        AUTO_SYNC_ON_DEATH = BUILDER
+                .comment("If enabled, dying in an artificial body automatically syncs into another finished shell")
+                .define("autoSyncOnDeath", true);
+
         BUILDER.pop();
 
         BUILDER.comment("Tool settings").push("tools");
@@ -240,6 +251,23 @@ public class SyncConfig {
         cachedEnergyMap = null;
         cachedSyncPriority = null;
         cachedTechnobladeUuids = null;
+        if (event instanceof ModConfigEvent.Reloading && event.getConfig().getSpec() == SPEC) {
+            resendShellUpdates();
+        }
+    }
+
+    private static void resendShellUpdates() {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null) {
+            return;
+        }
+        boolean autoSyncOnDeath = INSTANCE.autoSyncOnDeath();
+        server.execute(() -> {
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                Shell shell = (Shell) player;
+                new ShellUpdatePacket(WorldUtil.getId(player.level()), shell.isArtificial(), autoSyncOnDeath, shell.getAvailableShellStates().toList()).send(player);
+            }
+        });
     }
 
     private static final SyncConfig INSTANCE = new SyncConfig();
@@ -346,6 +374,10 @@ public class SyncConfig {
 
     public boolean preserveOrigins() {
         return PRESERVE_ORIGINS.get();
+    }
+
+    public boolean autoSyncOnDeath() {
+        return AUTO_SYNC_ON_DEATH.get();
     }
 
     public boolean enableTechnobladeEasterEgg() {

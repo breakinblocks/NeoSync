@@ -76,6 +76,7 @@ public class ShellState {
     private boolean isArtificial;
     private boolean isVirtual;
     private boolean isTemporary;
+    private boolean manualOnly;
 
     private UUID ownerUuid;
     private String ownerName;
@@ -157,6 +158,14 @@ public class ShellState {
 
     public boolean isTemporary() {
         return this.isTemporary;
+    }
+
+    public boolean isManualOnly() {
+        return this.manualOnly;
+    }
+
+    public void setManualOnly(boolean manualOnly) {
+        this.manualOnly = manualOnly;
     }
 
     public UUID getOwnerUuid() {
@@ -515,6 +524,7 @@ public class ShellState {
                 .add(Boolean.class, "isArtificial", x -> x.isArtificial, (x, isArtificial) -> x.isArtificial = isArtificial)
                 .add(Boolean.class, "isVirtual", x -> x.isVirtual, (x, isVirtual) -> x.isVirtual = isVirtual)
                 .add(Boolean.class, "isTemporary", x -> x.isTemporary, (x, isTemporary) -> x.isTemporary = isTemporary != null && isTemporary)
+                .add(Boolean.class, "manualOnly", x -> x.manualOnly, (x, manualOnly) -> x.manualOnly = manualOnly != null && manualOnly)
 
                 .add(UUID.class, "ownerUuid", x -> x.ownerUuid, (x, ownerUuid) -> x.ownerUuid = ownerUuid)
                 .add(String.class, "ownerName", x -> x.ownerName, (x, ownerName) -> x.ownerName = ownerName)

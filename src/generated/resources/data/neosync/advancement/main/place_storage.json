@@ -1,6 +1,17 @@
 {
   "parent": "neosync:main/root",
   "criteria": {
+    "placed_manual_storage": {
+      "conditions": {
+        "location": [
+          {
+            "block": "neosync:manual_shell_storage",
+            "condition": "minecraft:block_state_property"
+          }
+        ]
+      },
+      "trigger": "minecraft:placed_block"
+    },
     "placed_storage": {
       "conditions": {
         "location": [
@@ -39,7 +50,8 @@
   "requirements": [
     [
       "placed_storage",
-      "placed_zero_point_storage"
+      "placed_zero_point_storage",
+      "placed_manual_storage"
     ]
   ],
   "sends_telemetry_event": true

@@ -35,6 +35,10 @@ public final class SyncClientExtensions {
                 SyncItems.ZERO_POINT_SHELL_STORAGE.get());
 
         event.registerItem(
+                SyncRenderers.createItemRenderer(SyncBlockEntities.MANUAL_SHELL_STORAGE.get(), SyncItems.MANUAL_SHELL_STORAGE.get().getBlock()),
+                SyncItems.MANUAL_SHELL_STORAGE.get());
+
+        event.registerItem(
                 SyncRenderers.createItemRenderer(SyncBlockEntities.TREADMILL.get(), SyncItems.TREADMILL.get().getBlock()),
                 SyncItems.TREADMILL.get());
     }

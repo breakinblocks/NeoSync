@@ -34,6 +34,7 @@ import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import com.breakinblocks.neosync.api.networking.PlayerIsAlivePacket;
 import com.breakinblocks.neosync.api.networking.ShellStateUpdatePacket;
 import com.breakinblocks.neosync.api.networking.ShellUpdatePacket;
+import com.breakinblocks.neosync.common.config.SyncConfig;
 import com.breakinblocks.neosync.api.networking.SynchronizationResponsePacket;
 import com.breakinblocks.neosync.api.shell.*;
 import com.breakinblocks.neosync.common.entity.KillableEntity;
@@ -372,6 +373,15 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     }
 
     @Override
+    public boolean isDeathSyncEnabled() {
+        return SyncConfig.getInstance().autoSyncOnDeath();
+    }
+
+    @Override
+    public void setDeathSyncEnabled(boolean enabled) {
+    }
+
+    @Override
     public void remove(ShellState state) {
         if (state == null) {
             return;
@@ -408,7 +418,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         if (this.shellDirty) {
             this.shellDirty = false;
             this.shellStateChanges.clear();
-            new ShellUpdatePacket(WorldUtil.getId(this.level()), this.isArtificial, this.shellsById.values()).send(player);
+            new ShellUpdatePacket(WorldUtil.getId(this.level()), this.isArtificial, SyncConfig.getInstance().autoSyncOnDeath(), this.shellsById.values()).send(player);
         }
 
         for (Tuple<ShellStateUpdateType, ShellState> upd : this.shellStateChanges.values()) {
@@ -428,8 +438,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             return;
         }
 
-        ShellState respawnShell = this.shellsById.values().stream().filter(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE).findAny().orElse(null);
-        if (respawnShell == null) {
+        if (!this.hasAutoSyncTarget()) {
             return;
         }
 
@@ -469,7 +478,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             return true;
         }
 
-        if (this.isArtificial && this.shellsById.values().stream().anyMatch(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE)) {
+        if (this.isArtificial && this.hasAutoSyncTarget()) {
             return true;
         }
 

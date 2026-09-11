@@ -24,6 +24,9 @@ public class SyncItems {
     public static final DeferredItem<ShellStorageItem> ZERO_POINT_SHELL_STORAGE = ITEMS.register("zero_point_shell_storage",
             () -> new ShellStorageItem(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get(), new Item.Properties().stacksTo(1)));
 
+    public static final DeferredItem<ShellStorageItem> MANUAL_SHELL_STORAGE = ITEMS.register("manual_shell_storage",
+            () -> new ShellStorageItem(SyncBlocks.MANUAL_SHELL_STORAGE.get(), new Item.Properties().stacksTo(1)));
+
     public static final DeferredItem<TreadmillItem> TREADMILL = ITEMS.register("treadmill",
             () -> new TreadmillItem(SyncBlocks.TREADMILL.get(), new Item.Properties().stacksTo(1)));
 }

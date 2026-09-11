@@ -59,6 +59,7 @@ public final class SyncAdvancementProvider implements AdvancementGenerator {
                         true, true, false)
                 .addCriterion("placed_storage", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.SHELL_STORAGE.get()))
                 .addCriterion("placed_zero_point_storage", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get()))
+                .addCriterion("placed_manual_storage", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.MANUAL_SHELL_STORAGE.get()))
                 .requirements(AdvancementRequirements.Strategy.OR)
                 .save(saver, NeoSync.locate("main/place_storage"), existingFileHelper);
 
