@@ -26,6 +26,7 @@ import com.breakinblocks.neosync.common.block.entity.SyncBlockEntities;
 public final class SyncRenderers {
     public static void initClient() {
         register(ShellStorageBlockEntityRenderer::new, SyncBlockEntities.SHELL_STORAGE.get());
+        register(ShellStorageBlockEntityRenderer::new, SyncBlockEntities.MANUAL_SHELL_STORAGE.get());
         register(ShellConstructorBlockEntityRenderer::new, SyncBlockEntities.SHELL_CONSTRUCTOR.get());
         register(ZeroPointShellStorageBlockEntityRenderer::new, SyncBlockEntities.ZERO_POINT_SHELL_STORAGE.get());
         register(ZeroPointShellConstructorBlockEntityRenderer::new, SyncBlockEntities.ZERO_POINT_SHELL_CONSTRUCTOR.get());

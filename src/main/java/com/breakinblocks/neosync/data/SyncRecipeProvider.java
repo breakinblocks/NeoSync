@@ -8,7 +8,9 @@ import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.common.conditions.ModLoadedCondition;
 import com.breakinblocks.neosync.common.item.SyncItems;
+import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -84,5 +86,13 @@ public final class SyncRecipeProvider extends RecipeProvider {
                 .define('R', Items.REDSTONE)
                 .unlockedBy("has_daylight_detector", has(Items.DAYLIGHT_DETECTOR))
                 .save(output);
+
+        if (GuideMeCompat.isLoaded()) {
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, GuideMeCompat.createGuideItem())
+                    .requires(Items.BOOK)
+                    .requires(Items.REDSTONE, 3)
+                    .unlockedBy("has_book", has(Items.BOOK))
+                    .save(output.withConditions(new ModLoadedCondition("guideme")), GuideMeCompat.GUIDE_ID);
+        }
     }
 }

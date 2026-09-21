@@ -7,6 +7,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
 
 public class SyncCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
@@ -24,6 +25,9 @@ public class SyncCreativeTabs {
                         output.accept(SyncItems.ZERO_POINT_SHELL_CONSTRUCTOR.get());
                         output.accept(SyncItems.MANUAL_SHELL_STORAGE.get());
                         output.accept(SyncItems.TREADMILL.get());
+                        if (GuideMeCompat.isLoaded()) {
+                            output.accept(GuideMeCompat.createGuideItem());
+                        }
                     }).build()
     );
 }

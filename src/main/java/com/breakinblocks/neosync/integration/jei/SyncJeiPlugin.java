@@ -3,13 +3,20 @@ package com.breakinblocks.neosync.integration.jei;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;
+import mezz.jei.api.ingredients.subtypes.UidContext;
+import mezz.jei.api.registration.IIngredientAliasRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.registration.ISubtypeRegistration;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.common.item.SyncItems;
+import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
+
+import java.util.List;
 
 @JeiPlugin
 public class SyncJeiPlugin implements IModPlugin {
@@ -18,6 +25,33 @@ public class SyncJeiPlugin implements IModPlugin {
     @Override
     public ResourceLocation getPluginUid() {
         return ID;
+    }
+
+    @Override
+    public void registerItemSubtypes(ISubtypeRegistration registration) {
+        if (!GuideMeCompat.isLoaded()) {
+            return;
+        }
+        registration.registerSubtypeInterpreter(GuideMeCompat.createGuideItem().getItem(), new ISubtypeInterpreter<ItemStack>() {
+            @Override
+            public Object getSubtypeData(ItemStack stack, UidContext context) {
+                return GuideMeCompat.getGuideId(stack);
+            }
+
+            @Override
+            public String getLegacyStringSubtypeInfo(ItemStack stack, UidContext context) {
+                Object guideId = GuideMeCompat.getGuideId(stack);
+                return guideId == null ? "" : guideId.toString();
+            }
+        });
+    }
+
+    @Override
+    public void registerIngredientAliases(IIngredientAliasRegistration registration) {
+        if (!GuideMeCompat.isLoaded()) {
+            return;
+        }
+        registration.addAliases(VanillaTypes.ITEM_STACK, GuideMeCompat.createGuideItem(), List.of("neosync", "neosync guide", "guide book", "manual"));
     }
 
     @Override
@@ -48,6 +82,11 @@ public class SyncJeiPlugin implements IModPlugin {
 
         registration.addIngredientInfo(new ItemStack(SyncItems.TREADMILL.get()), VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.treadmill"));
+
+        if (GuideMeCompat.isLoaded()) {
+            registration.addIngredientInfo(GuideMeCompat.createGuideItem(), VanillaTypes.ITEM_STACK,
+                    Component.translatable("jei.neosync.info.guide"));
+        }
 
         // Treadmill energy sources: one entry per configured entity
         registration.addRecipes(TreadmillEnergyCategory.RECIPE_TYPE, TreadmillEnergyCategory.buildRecipes());

@@ -1,5 +1,11 @@
 # NeoSync Changelog
 
+## 1.7.1
+
+### Added
+
+- An in-game guide book when GuideMe is installed. Craft it from a book and three redstone. It covers the shell loop from Sync Core to first sync, every block, dying in a shell, the commands, the config and the mod integrations. The book sits in the NeoSync creative tab and in JEI, and hovering a NeoSync item with GuideMe's hotkey opens its page.
+
 ## 1.7.0
 
 ### Added
