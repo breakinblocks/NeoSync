@@ -9,9 +9,12 @@ import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.common.conditions.ModLoadedCondition;
 import com.breakinblocks.neosync.common.item.SyncItems;
+import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -90,6 +93,14 @@ public final class SyncRecipeProvider extends RecipeProvider {
                 .define('R', Items.REDSTONE)
                 .unlockedBy("has_daylight_detector", has(Items.DAYLIGHT_DETECTOR))
                 .save(this.output);
+
+        if (GuideMeCompat.isLoaded()) {
+            ShapelessRecipeBuilder.shapeless(items, RecipeCategory.MISC, GuideMeCompat.createGuideTemplate())
+                    .requires(Items.BOOK)
+                    .requires(Items.REDSTONE, 3)
+                    .unlockedBy("has_book", has(Items.BOOK))
+                    .save(this.output.withConditions(new ModLoadedCondition("guideme")), ResourceKey.create(Registries.RECIPE, GuideMeCompat.GUIDE_ID));
+        }
     }
 
     public static final class Runner extends RecipeProvider.Runner {

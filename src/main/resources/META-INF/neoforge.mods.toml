@@ -57,3 +57,10 @@ type="optional"
 versionRange="[10.7,)"
 ordering="AFTER"
 side="BOTH"
+
+[[dependencies.neosync]]
+modId="guideme"
+type="optional"
+versionRange="[26.1,)"
+ordering="AFTER"
+side="BOTH"

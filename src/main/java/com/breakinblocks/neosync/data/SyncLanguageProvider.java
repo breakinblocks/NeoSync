@@ -23,6 +23,7 @@ public final class SyncLanguageProvider extends LanguageProvider {
         add(SyncBlocks.TREADMILL.get(), "Treadmill");
 
         add(SyncItems.SYNC_CORE.get(), "Sync Core");
+        add("item.neosync.guide", "NeoSync Guide");
 
         add("death.attack.neosync.fingerstick", "%s died in the name of science");
 
@@ -84,6 +85,7 @@ public final class SyncLanguageProvider extends LanguageProvider {
         add("jei.neosync.info.zero_point_shell_constructor", "A Shell Constructor powered by zero-point energy. Requires no external power and finishes new shells instantly. The sampling process still deals damage. Sneak and right-click with a dye to recolor its cyan trim; shells built inside take that color in the shell menu.");
         add("jei.neosync.info.zero_point_shell_storage", "A Shell Storage powered by zero-point energy. Requires no redstone or FE. Its doors open automatically as you approach and stored shells never decay. Sneak and right-click with a dye to recolor its cyan trim and the shell stored inside.");
         add("jei.neosync.info.manual_shell_storage", "A Shell Storage whose stored shell is never chosen automatically when you die. Use it for bodies built for one job. Walk in to sync into it by hand like any other storage.");
+        add("jei.neosync.info.guide", "The NeoSync Guide explains the whole shell loop, from crafting a Sync Core to syncing between bodies, plus the commands, config and mod integrations. Craft it from a book and three redstone, or hold the GuideMe hotkey over any NeoSync item to jump to its page.");
 
         add("config.jade.plugin_neosync.shell_container", "Shell Container");
         add("config.jade.plugin_neosync.treadmill", "Treadmill");

@@ -94,6 +94,9 @@ dependencies {
 
     compileOnly "top.theillusivec4.curios:curios-neoforge:${project.curios_version}:api"
     localRuntime "top.theillusivec4.curios:curios-neoforge:${project.curios_version}"
+
+    compileOnly "org.appliedenergistics:guideme:${project.guideme_version}"
+    localRuntime "org.appliedenergistics:guideme:${project.guideme_version}"
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -172,14 +175,14 @@ publishMods {
         minecraftVersions.add(project.minecraft_version)
         clientRequired = true
         serverRequired = true
-        optional('jei', 'jade', 'curios')
+        optional('jei', 'jade', 'curios', 'guideme')
     }
 
     modrinth {
         projectId = project.modrinth_project_id
         accessToken = providers.environmentVariable('MODRINTH_TOKEN')
         minecraftVersions.add(project.minecraft_version)
-        optional('jei', 'jade', 'curios')
+        optional('jei', 'jade', 'curios', 'guideme')
     }
 }
 
