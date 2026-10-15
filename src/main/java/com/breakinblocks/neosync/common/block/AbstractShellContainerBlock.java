@@ -7,7 +7,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.LivingEntity;
@@ -143,13 +142,6 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
             InsideBlockEffectApplier effectApplier, boolean isPrecise) {
         if (!world.isClientSide() && entity instanceof Player && isBottom(state)) {
             setOpen(state, world, pos, true);
-        }
-    }
-
-    @Override
-    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel world, BlockPos pos, boolean movedByPiston) {
-        if (isBottom(state) && world.getBlockEntity(pos) instanceof AbstractShellContainerBlockEntity shellContainer) {
-            shellContainer.onBreak(world, pos);
         }
     }
 

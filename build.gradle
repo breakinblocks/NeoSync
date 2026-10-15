@@ -3,6 +3,7 @@ plugins {
     id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.141'
     id 'me.modmuss50.mod-publish-plugin' version '1.1.0'
+    id 'com.diffplug.spotless' version '8.10.3'
 }
 
 def isSnapshot = System.getenv('SNAPSHOT') == 'true'
@@ -191,5 +192,16 @@ tasks.named('publishMods') {
     def mavenUser = providers.environmentVariable('MAVEN_USER')
     if (mavenUser.isPresent()) {
         dependsOn 'publishMavenJavaPublicationToBreakInBlocksRepository'
+    }
+}
+
+spotless {
+    java {
+        target 'src/*/java/**/*.java'
+        palantirJavaFormat()
+        importOrder()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
     }
 }

@@ -213,6 +213,13 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
         this.doorAnimator.step();
     }
 
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        if (this.level != null && AbstractShellContainerBlock.isBottom(state)) {
+            this.onBreak(this.level, pos);
+        }
+    }
+
     public void onBreak(Level world, BlockPos pos) {
         if (this.shell != null && world instanceof ServerLevel serverWorld) {
             this.getShellStateManager().remove(this.shell);

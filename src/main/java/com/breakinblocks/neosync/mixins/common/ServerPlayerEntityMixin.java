@@ -291,6 +291,9 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             return;
         }
 
+        player.connection.waitingForRespawn = false;
+        player.connection.markClientLoaded();
+
         new SynchronizationResponsePacket(
                 previousWorldId, previousPos, previousFacing,
                 WorldUtil.getId(player.level()), player.blockPosition(), player.getDirection().getOpposite(),

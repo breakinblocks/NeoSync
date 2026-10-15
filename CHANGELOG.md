@@ -1,5 +1,13 @@
 # NeoSync Changelog
 
+## 1.7.2
+
+### Fixed
+
+- Shells now show their owner's skin again instead of a default Minecraft skin.
+- After dying into a shell, players can take damage and use blocks and items again without having to relog.
+- Breaking a Shell Storage or Shell Constructor with a shell inside now removes that shell from your list, so it no longer shows up as a shell that does not exist. Old leftover entries can be cleared with /neosync ghostshells remove.
+
 ## 1.7.1
 
 ### Added

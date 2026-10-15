@@ -6,18 +6,25 @@ import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.player.PlayerModelPart;
+import net.minecraft.world.entity.player.PlayerSkin;
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.compat.curios.CuriosClientCompat;
+
+import java.util.function.Supplier;
 
 public class ShellEntity extends RemotePlayer {
     public boolean isActive;
     public float pitchProgress;
     private final ShellState state;
     private Runnable onInitialized;
+    private Supplier<PlayerSkin> skinLookup;
 
     public ShellEntity(ShellState state) {
         this(Minecraft.getInstance().level, state);
@@ -70,8 +77,31 @@ public class ShellEntity extends RemotePlayer {
     }
 
     @Override
+    public boolean isModelPartShown(PlayerModelPart part) {
+        return true;
+    }
+
+    @Override
     public PlayerInfo getPlayerInfo() {
         return null;
+    }
+
+    @Override
+    public PlayerSkin getSkin() {
+        if (this.skinLookup != null) {
+            return this.skinLookup.get();
+        }
+
+        Minecraft client = Minecraft.getInstance();
+        GameProfile profile = this.getGameProfile();
+        if (profile.properties().containsKey("textures")) {
+            this.skinLookup = client.getSkinManager().createLookup(profile, false);
+            return this.skinLookup.get();
+        }
+
+        ClientPacketListener connection = client.getConnection();
+        PlayerInfo owner = connection != null ? connection.getPlayerInfo(profile.id()) : null;
+        return owner != null ? owner.getSkin() : DefaultPlayerSkin.get(profile);
     }
 
     private static GameProfile buildProfile(ShellState state) {
