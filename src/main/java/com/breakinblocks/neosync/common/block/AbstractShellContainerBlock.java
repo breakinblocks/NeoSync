@@ -40,7 +40,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
     public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
-    public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
+    public static final BooleanProperty OPEN = BooleanProperty.create("doors_open");
     public static final EnumProperty<ComparatorOutputType> OUTPUT =
             EnumProperty.create("output", ComparatorOutputType.class);
 
