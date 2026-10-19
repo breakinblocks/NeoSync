@@ -1,13 +1,13 @@
 package com.breakinblocks.neosync.client.model;
 
+import com.breakinblocks.neosync.client.render.block.entity.ShellContainerRenderState;
+import com.breakinblocks.neosync.common.utils.math.Radians;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import com.breakinblocks.neosync.client.render.block.entity.ShellContainerRenderState;
-import com.breakinblocks.neosync.common.utils.math.Radians;
 
 public abstract class ShellContainerModel extends Model<ShellContainerRenderState> {
     public static final float UPPER_ITEM_OFFSET = -32F;
@@ -31,17 +31,21 @@ public abstract class ShellContainerModel extends Model<ShellContainerRenderStat
     }
 
     protected static void addDoors(PartDefinition lower, PartDefinition upper) {
-        lower.addOrReplaceChild("door_left",
+        lower.addOrReplaceChild(
+                "door_left",
                 CubeListBuilder.create().mirror().texOffs(224, 32).addBox(0F, 0F, 0F, 15F, 31F, 1F),
                 PartPose.offset(-15F, -8F, -15F));
-        lower.addOrReplaceChild("door_right",
+        lower.addOrReplaceChild(
+                "door_right",
                 CubeListBuilder.create().mirror().texOffs(224, 32).addBox(0F, 0F, 0F, 15F, 31F, 1F),
                 PartPose.offsetAndRotation(15F, -8F, -14F, 0F, Radians.R_PI, 0F));
 
-        upper.addOrReplaceChild("door_left",
+        upper.addOrReplaceChild(
+                "door_left",
                 CubeListBuilder.create().mirror().texOffs(224, 0).addBox(0F, 0F, 0F, 15F, 30F, 1F),
                 PartPose.offset(-15F, -6F, -15F));
-        upper.addOrReplaceChild("door_right",
+        upper.addOrReplaceChild(
+                "door_right",
                 CubeListBuilder.create().mirror().texOffs(224, 0).addBox(0F, 0F, 0F, 15F, 30F, 1F),
                 PartPose.offsetAndRotation(15F, -6F, -14F, 0F, Radians.R_PI, 0F));
     }

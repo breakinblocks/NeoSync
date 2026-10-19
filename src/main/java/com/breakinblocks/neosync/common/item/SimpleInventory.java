@@ -3,6 +3,9 @@ package com.breakinblocks.neosync.common.item;
 import com.breakinblocks.neosync.common.utils.nbt.SyncRegistries;
 import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.DataResult;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -17,10 +20,6 @@ import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 public class SimpleInventory implements Container, Nameable {
     public final NonNullList<ItemStack> main;
@@ -52,7 +51,9 @@ public class SimpleInventory implements Container, Nameable {
     public ItemStack removeItem(int slot, int amount) {
         for (NonNullList<ItemStack> inventory : this.combinedInventory) {
             if (slot < inventory.size()) {
-                return !inventory.get(slot).isEmpty() ? ContainerHelper.removeItem(inventory, slot, amount) : ItemStack.EMPTY;
+                return !inventory.get(slot).isEmpty()
+                        ? ContainerHelper.removeItem(inventory, slot, amount)
+                        : ItemStack.EMPTY;
             }
             slot -= inventory.size();
         }
@@ -133,10 +134,11 @@ public class SimpleInventory implements Container, Nameable {
 
     public ListTag writeNbt(ListTag nbtList, HolderLookup.Provider registries) {
         RegistryOps<Tag> ops = registries.createSerializationContext(NbtOps.INSTANCE);
-        for (Map.Entry<NonNullList<ItemStack>, Integer> inventoryInfo : Map.of(this.main, 0, this.armor, 100, this.offHand, 150).entrySet()) {
+        for (Map.Entry<NonNullList<ItemStack>, Integer> inventoryInfo :
+                Map.of(this.main, 0, this.armor, 100, this.offHand, 150).entrySet()) {
             NonNullList<ItemStack> inventory = inventoryInfo.getKey();
             int delta = inventoryInfo.getValue();
-            for(int i = 0; i < inventory.size(); ++i) {
+            for (int i = 0; i < inventory.size(); ++i) {
                 ItemStack stack = inventory.get(i);
                 if (!stack.isEmpty()) {
                     DataResult<Tag> result = ItemStack.CODEC.encodeStart(ops, stack);
@@ -160,7 +162,8 @@ public class SimpleInventory implements Container, Nameable {
         for (int i = 0; i < nbtList.size(); ++i) {
             CompoundTag nbtCompound = nbtList.getCompound(i).orElse(new CompoundTag());
             int j = nbtCompound.getByteOr("Slot", (byte) 0) & 255;
-            ItemStack itemStack = ItemStack.CODEC.parse(ops, nbtCompound).result().orElse(ItemStack.EMPTY);
+            ItemStack itemStack =
+                    ItemStack.CODEC.parse(ops, nbtCompound).result().orElse(ItemStack.EMPTY);
             if (!itemStack.isEmpty()) {
                 if (j < this.main.size()) {
                     this.main.set(j, itemStack);
@@ -176,7 +179,7 @@ public class SimpleInventory implements Container, Nameable {
     public void clone(Container other) {
         int thisSize = this.getContainerSize();
         int otherSize = other.getContainerSize();
-        for(int i = 0; i < thisSize; ++i) {
+        for (int i = 0; i < thisSize; ++i) {
             this.setItem(i, i < otherSize ? other.getItem(i).copy() : ItemStack.EMPTY);
         }
 
@@ -190,7 +193,7 @@ public class SimpleInventory implements Container, Nameable {
     public void copyTo(Container other) {
         int thisSize = this.getContainerSize();
         int otherSize = other.getContainerSize();
-        for(int i = 0; i < otherSize; ++i) {
+        for (int i = 0; i < otherSize; ++i) {
             other.setItem(i, i < thisSize ? this.getItem(i).copy() : ItemStack.EMPTY);
         }
 

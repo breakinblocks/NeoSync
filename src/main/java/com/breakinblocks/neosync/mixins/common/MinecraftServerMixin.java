@@ -1,23 +1,10 @@
 package com.breakinblocks.neosync.mixins.common;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.players.PlayerList;
-import net.minecraft.util.Tuple;
 import com.breakinblocks.neosync.api.shell.Shell;
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.api.shell.ShellStateManager;
 import com.breakinblocks.neosync.api.shell.ShellStateUpdateType;
 import com.breakinblocks.neosync.common.utils.nbt.OfflinePlayerNbtManager;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +13,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.util.Tuple;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin implements ShellStateManager {
@@ -33,7 +31,8 @@ public abstract class MinecraftServerMixin implements ShellStateManager {
     private PlayerList playerList;
 
     @Unique
-    private final ConcurrentMap<UUID, ConcurrentMap<UUID, Tuple<ShellStateUpdateType, ShellState>>> sync$pendingShellStates = new ConcurrentHashMap<>();
+    private final ConcurrentMap<UUID, ConcurrentMap<UUID, Tuple<ShellStateUpdateType, ShellState>>>
+            sync$pendingShellStates = new ConcurrentHashMap<>();
 
     @Override
     public void setAvailableShellStates(UUID owner, Stream<ShellState> states) {
@@ -97,16 +96,20 @@ public abstract class MinecraftServerMixin implements ShellStateManager {
         this.sync$pendingShellStates.remove(owner);
     }
 
-    @Inject(method = "stopServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;removeAll()V"))
+    @Inject(
+            method = "stopServer",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;removeAll()V"))
     private void sync$onShutdown(CallbackInfo ci) {
-        for (Map.Entry<UUID, ConcurrentMap<UUID, Tuple<ShellStateUpdateType, ShellState>>> entry : this.sync$pendingShellStates.entrySet()) {
+        for (Map.Entry<UUID, ConcurrentMap<UUID, Tuple<ShellStateUpdateType, ShellState>>> entry :
+                this.sync$pendingShellStates.entrySet()) {
             UUID userId = entry.getKey();
-            Collection<Tuple<ShellStateUpdateType, ShellState>> updates = entry.getValue().values();
+            Collection<Tuple<ShellStateUpdateType, ShellState>> updates =
+                    entry.getValue().values();
             if (updates.size() == 0) {
                 continue;
             }
 
-            OfflinePlayerNbtManager.editPlayerNbt((MinecraftServer)(Object)this, userId, nbt -> {
+            OfflinePlayerNbtManager.editPlayerNbt((MinecraftServer) (Object) this, userId, nbt -> {
                 ListTag list = nbt.getList("Shells").orElse(new ListTag());
                 Map<UUID, ShellState> shells = list.stream()
                         .filter(t -> t instanceof CompoundTag)
@@ -139,7 +142,8 @@ public abstract class MinecraftServerMixin implements ShellStateManager {
             return;
         }
 
-        ConcurrentMap<UUID, Tuple<ShellStateUpdateType, ShellState>> updates = this.sync$pendingShellStates.get(state.getOwnerUuid());
+        ConcurrentMap<UUID, Tuple<ShellStateUpdateType, ShellState>> updates =
+                this.sync$pendingShellStates.get(state.getOwnerUuid());
         if (updates == null) {
             updates = new ConcurrentHashMap<>();
             this.sync$pendingShellStates.put(state.getOwnerUuid(), updates);
@@ -149,11 +153,11 @@ public abstract class MinecraftServerMixin implements ShellStateManager {
 
     @Unique
     private Shell sync$getShellById(UUID id) {
-        return this.isValidShellOwnerUuid(id) ? (Shell)this.playerList.getPlayer(id) : null;
+        return this.isValidShellOwnerUuid(id) ? (Shell) this.playerList.getPlayer(id) : null;
     }
 
     @Unique
     private Shell sync$getShellByItsState(ShellState state) {
-        return this.isValidShellState(state) ? (Shell)this.playerList.getPlayer(state.getOwnerUuid()) : null;
+        return this.isValidShellState(state) ? (Shell) this.playerList.getPlayer(state.getOwnerUuid()) : null;
     }
 }

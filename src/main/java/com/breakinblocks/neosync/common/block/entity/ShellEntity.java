@@ -1,9 +1,12 @@
 package com.breakinblocks.neosync.common.block.entity;
 
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.compat.curios.CuriosClientCompat;
 import com.google.common.collect.ImmutableMultimap;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
+import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -14,10 +17,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.entity.player.PlayerSkin;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.compat.curios.CuriosClientCompat;
-
-import java.util.function.Supplier;
 
 public class ShellEntity extends RemotePlayer {
     public boolean isActive;
@@ -37,7 +36,12 @@ public class ShellEntity extends RemotePlayer {
         this.state = state;
         state.getInventory().copyTo(this.getInventory());
         CuriosClientCompat.dressShell(this, state);
-        this.snapTo(state.getPos().getX() + 0.5, state.getPos().getY(), state.getPos().getZ() + 0.5, 0F, 0F);
+        this.snapTo(
+                state.getPos().getX() + 0.5,
+                state.getPos().getY(),
+                state.getPos().getZ() + 0.5,
+                0F,
+                0F);
 
         if (this.onInitialized != null) {
             this.onInitialized.run();
@@ -58,8 +62,7 @@ public class ShellEntity extends RemotePlayer {
     }
 
     @Override
-    protected void dropAllDeathLoot(ServerLevel level, DamageSource damageSource) {
-    }
+    protected void dropAllDeathLoot(ServerLevel level, DamageSource damageSource) {}
 
     @Override
     public boolean isCreative() {

@@ -32,7 +32,8 @@ public final class ShellCurios {
                     continue;
                 }
 
-                byte[] stored = slotType.getByteArray(CuriosShellStateComponent.RENDERS).orElse(new byte[0]);
+                byte[] stored =
+                        slotType.getByteArray(CuriosShellStateComponent.RENDERS).orElse(new byte[0]);
                 handler.getStacksHandler(slotType.getStringOr(CuriosShellStateComponent.IDENTIFIER, ""))
                         .ifPresent(stacksHandler -> applyRenders(stacksHandler.getRenders(), stored));
             }

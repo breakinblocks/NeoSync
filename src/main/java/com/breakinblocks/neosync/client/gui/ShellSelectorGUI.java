@@ -1,6 +1,24 @@
 package com.breakinblocks.neosync.client.gui;
 
+import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
+import com.breakinblocks.neosync.api.networking.ShellRenamePacket;
+import com.breakinblocks.neosync.api.shell.ClientShell;
+import com.breakinblocks.neosync.api.shell.Shell;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.client.gui.hud.HudController;
+import com.breakinblocks.neosync.client.gui.render.AnnulusSectorRenderState;
+import com.breakinblocks.neosync.client.utils.render.ColorUtil;
+import com.breakinblocks.neosync.common.block.entity.ShellEntity;
+import com.breakinblocks.neosync.common.utils.IdentifierUtil;
+import com.breakinblocks.neosync.common.utils.math.Radians;
 import com.mojang.blaze3d.platform.InputConstants;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
@@ -19,32 +37,14 @@ import net.minecraft.world.item.DyeColor;
 import org.joml.Matrix3x2f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
-import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
-import com.breakinblocks.neosync.api.networking.ShellRenamePacket;
-import com.breakinblocks.neosync.api.shell.ClientShell;
-import com.breakinblocks.neosync.api.shell.Shell;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.client.gui.hud.HudController;
-import com.breakinblocks.neosync.client.gui.render.AnnulusSectorRenderState;
-import com.breakinblocks.neosync.client.utils.render.ColorUtil;
-import com.breakinblocks.neosync.common.block.entity.ShellEntity;
-import com.breakinblocks.neosync.common.utils.IdentifierUtil;
-import com.breakinblocks.neosync.common.utils.math.Radians;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class ShellSelectorGUI extends Screen {
     private static final Component TITLE = Component.translatable("gui.neosync.shell_selector.title");
     private static final Component RENAME_TITLE = Component.translatable("gui.neosync.shell_selector.rename.title");
     private static final Component RENAME_HINT = Component.translatable("gui.neosync.shell_selector.rename.hint");
     private static final Component RENAME_PROMPT = Component.translatable("gui.neosync.shell_selector.rename.prompt");
-    private static final Component RENAME_PLACEHOLDER = Component.translatable("gui.neosync.shell_selector.rename.placeholder");
+    private static final Component RENAME_PLACEHOLDER =
+            Component.translatable("gui.neosync.shell_selector.rename.placeholder");
     private static final int SHELLS_PER_PAGE = 8;
     private static final float MENU_RADIUS = 0.3F;
     private static final float HOLLOW_RATIO = 0.6F;
@@ -122,7 +122,8 @@ public class ShellSelectorGUI extends Screen {
         LocalPlayer player = this.minecraft == null ? null : this.minecraft.player;
         List<ShellState> shells = player == null
                 ? List.of()
-                : ((Shell) player).getAvailableShellStates()
+                : ((Shell) player)
+                        .getAvailableShellStates()
                         .filter(s -> s.getWorld().equals(world))
                         .sorted(Comparator.comparing(s -> s.getUuid().toString()))
                         .collect(Collectors.toList());
@@ -158,15 +159,29 @@ public class ShellSelectorGUI extends Screen {
             float to = from + this.sectorSpan(count);
             boolean isHovered = shell != null && i == hovered;
 
-            graphics.submitGuiElementRenderState(new AnnulusSectorRenderState(pose, this.centerX, this.centerY,
-                    this.innerRadius, this.outerRadius, from, to,
-                    isHovered ? SECTOR_HOVERED_COLOR : SECTOR_COLOR, graphics.peekScissorStack()));
+            graphics.submitGuiElementRenderState(new AnnulusSectorRenderState(
+                    pose,
+                    this.centerX,
+                    this.centerY,
+                    this.innerRadius,
+                    this.outerRadius,
+                    from,
+                    to,
+                    isHovered ? SECTOR_HOVERED_COLOR : SECTOR_COLOR,
+                    graphics.peekScissorStack()));
 
             if (shell != null) {
                 DyeColor color = shell.getColor() == null ? DyeColor.WHITE : shell.getColor();
-                graphics.submitGuiElementRenderState(new AnnulusSectorRenderState(pose, this.centerX, this.centerY,
-                        this.borderRadius, this.outerRadius, from, to,
-                        ColorUtil.fromDyeColor(color, isHovered ? 1F : 0.75F), graphics.peekScissorStack()));
+                graphics.submitGuiElementRenderState(new AnnulusSectorRenderState(
+                        pose,
+                        this.centerX,
+                        this.centerY,
+                        this.borderRadius,
+                        this.outerRadius,
+                        from,
+                        to,
+                        ColorUtil.fromDyeColor(color, isHovered ? 1F : 0.75F),
+                        graphics.peekScissorStack()));
             }
         }
 
@@ -187,12 +202,16 @@ public class ShellSelectorGUI extends Screen {
 
         EntityRenderState renderState = this.extractShellRenderState(shell);
         if (renderState != null) {
-            graphics.entity(renderState, half * 0.75F,
+            graphics.entity(
+                    renderState,
+                    half * 0.75F,
                     new Vector3f(0F, renderState.boundingBoxHeight / 2F, 0F),
                     new Quaternionf().rotateZ(Radians.R_PI),
                     null,
-                    Mth.floor(shellX - half), Mth.floor(shellY - half),
-                    Mth.ceil(shellX + half), Mth.ceil(shellY + half));
+                    Mth.floor(shellX - half),
+                    Mth.floor(shellY - half),
+                    Mth.ceil(shellX + half),
+                    Mth.ceil(shellY + half));
         }
 
         float labelRadius = this.outerRadius - this.font.lineHeight;
@@ -200,8 +219,8 @@ public class ShellSelectorGUI extends Screen {
         int labelY = Mth.floor(this.centerY + Mth.sin(angle) * labelRadius - this.font.lineHeight / 2F);
 
         if (shell.getProgress() < ShellState.PROGRESS_DONE) {
-            Component progress = Component.translatable("gui.neosync.shell_selector.progress_percent",
-                    Mth.floor(shell.getProgress() * 100F));
+            Component progress = Component.translatable(
+                    "gui.neosync.shell_selector.progress_percent", Mth.floor(shell.getProgress() * 100F));
             graphics.centeredText(this.font, progress, labelX, labelY - this.font.lineHeight, 0xFFFF5555);
         } else if (shell.isManualOnly()) {
             Component manual = Component.translatable("gui.neosync.shell_selector.manual");
@@ -210,8 +229,8 @@ public class ShellSelectorGUI extends Screen {
 
         float chord = 2F * labelRadius * Mth.sin(Math.min(this.sectorSpan(count), Radians.R_PI) / 2F);
         int maxWidth = Mth.floor(Math.min(chord, this.outerRadius));
-        graphics.centeredText(this.font, this.truncate(shell.getDisplayName().getString(), maxWidth),
-                labelX, labelY, TEXT_COLOR);
+        graphics.centeredText(
+                this.font, this.truncate(shell.getDisplayName().getString(), maxWidth), labelX, labelY, TEXT_COLOR);
     }
 
     private String truncate(String text, int maxWidth) {
@@ -247,15 +266,18 @@ public class ShellSelectorGUI extends Screen {
         if (this.renaming != null) {
             int fieldHalf = this.nameField == null ? 0 : this.nameField.getHeight() / 2;
             graphics.centeredText(this.font, RENAME_TITLE, cx, cy - fieldHalf - line, TEXT_COLOR);
-            graphics.centeredText(this.font, RENAME_HINT, cx, cy + fieldHalf + line - this.font.lineHeight, DISABLED_TEXT_COLOR);
+            graphics.centeredText(
+                    this.font, RENAME_HINT, cx, cy + fieldHalf + line - this.font.lineHeight, DISABLED_TEXT_COLOR);
             return;
         }
 
         Component world = IdentifierUtil.prettifyAsText(this.worlds.get(this.worldIndex));
         graphics.centeredText(this.font, world, cx, cy - line - line / 2, TEXT_COLOR);
 
-        Component pagination = Component.translatable("gui.neosync.page_display.pagination", this.pageIndex + 1, this.pageCount);
-        graphics.centeredText(this.font, pagination, cx, cy - line / 2, this.pageCount > 1 ? TEXT_COLOR : DISABLED_TEXT_COLOR);
+        Component pagination =
+                Component.translatable("gui.neosync.page_display.pagination", this.pageIndex + 1, this.pageCount);
+        graphics.centeredText(
+                this.font, pagination, cx, cy - line / 2, this.pageCount > 1 ? TEXT_COLOR : DISABLED_TEXT_COLOR);
 
         boolean overCenter = this.isOverCenter(mouseX, mouseY);
         Component close = Component.translatable("gui.neosync.default.cross_button.title");
@@ -270,18 +292,26 @@ public class ShellSelectorGUI extends Screen {
 
     private void extractArrows(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         if (this.pageCount > 1) {
-            this.extractArrow(graphics, "<", this.centerX - this.outerRadius - ARROW_HIT_SIZE, this.centerY, mouseX, mouseY);
-            this.extractArrow(graphics, ">", this.centerX + this.outerRadius + ARROW_HIT_SIZE, this.centerY, mouseX, mouseY);
+            this.extractArrow(
+                    graphics, "<", this.centerX - this.outerRadius - ARROW_HIT_SIZE, this.centerY, mouseX, mouseY);
+            this.extractArrow(
+                    graphics, ">", this.centerX + this.outerRadius + ARROW_HIT_SIZE, this.centerY, mouseX, mouseY);
         }
         if (this.worlds.size() > 1) {
-            this.extractArrow(graphics, "^", this.centerX, this.centerY - this.outerRadius - ARROW_HIT_SIZE, mouseX, mouseY);
-            this.extractArrow(graphics, "v", this.centerX, this.centerY + this.outerRadius + ARROW_HIT_SIZE, mouseX, mouseY);
+            this.extractArrow(
+                    graphics, "^", this.centerX, this.centerY - this.outerRadius - ARROW_HIT_SIZE, mouseX, mouseY);
+            this.extractArrow(
+                    graphics, "v", this.centerX, this.centerY + this.outerRadius + ARROW_HIT_SIZE, mouseX, mouseY);
         }
     }
 
     private void extractArrow(GuiGraphicsExtractor graphics, String glyph, float x, float y, int mouseX, int mouseY) {
         boolean isHovered = isInside(mouseX, mouseY, x, y, ARROW_HIT_SIZE);
-        graphics.centeredText(this.font, glyph, Mth.floor(x), Mth.floor(y - this.font.lineHeight / 2F),
+        graphics.centeredText(
+                this.font,
+                glyph,
+                Mth.floor(x),
+                Mth.floor(y - this.font.lineHeight / 2F),
                 isHovered ? TEXT_COLOR : DISABLED_TEXT_COLOR);
     }
 
@@ -307,22 +337,26 @@ public class ShellSelectorGUI extends Screen {
         }
 
         if (this.pageCount > 1) {
-            if (isInside(mouseX, mouseY, this.centerX - this.outerRadius - ARROW_HIT_SIZE, this.centerY, ARROW_HIT_SIZE)) {
+            if (isInside(
+                    mouseX, mouseY, this.centerX - this.outerRadius - ARROW_HIT_SIZE, this.centerY, ARROW_HIT_SIZE)) {
                 this.selectPage(this.pageIndex - 1);
                 return true;
             }
-            if (isInside(mouseX, mouseY, this.centerX + this.outerRadius + ARROW_HIT_SIZE, this.centerY, ARROW_HIT_SIZE)) {
+            if (isInside(
+                    mouseX, mouseY, this.centerX + this.outerRadius + ARROW_HIT_SIZE, this.centerY, ARROW_HIT_SIZE)) {
                 this.selectPage(this.pageIndex + 1);
                 return true;
             }
         }
 
         if (this.worlds.size() > 1) {
-            if (isInside(mouseX, mouseY, this.centerX, this.centerY - this.outerRadius - ARROW_HIT_SIZE, ARROW_HIT_SIZE)) {
+            if (isInside(
+                    mouseX, mouseY, this.centerX, this.centerY - this.outerRadius - ARROW_HIT_SIZE, ARROW_HIT_SIZE)) {
                 this.selectWorld(this.worldIndex - 1);
                 return true;
             }
-            if (isInside(mouseX, mouseY, this.centerX, this.centerY + this.outerRadius + ARROW_HIT_SIZE, ARROW_HIT_SIZE)) {
+            if (isInside(
+                    mouseX, mouseY, this.centerX, this.centerY + this.outerRadius + ARROW_HIT_SIZE, ARROW_HIT_SIZE)) {
                 this.selectWorld(this.worldIndex + 1);
                 return true;
             }
@@ -362,8 +396,13 @@ public class ShellSelectorGUI extends Screen {
 
         int width = Mth.floor(this.innerRadius * 1.3F);
         int height = this.font.lineHeight + 8;
-        this.nameField = new EditBox(this.font, Mth.floor(this.centerX - width / 2F), Mth.floor(this.centerY - height / 2F),
-                width, height, RENAME_TITLE);
+        this.nameField = new EditBox(
+                this.font,
+                Mth.floor(this.centerX - width / 2F),
+                Mth.floor(this.centerY - height / 2F),
+                width,
+                height,
+                RENAME_TITLE);
         this.nameField.setMaxLength(ShellState.MAX_NAME_LENGTH);
         this.nameField.setHint(RENAME_PLACEHOLDER);
         this.nameField.setValue(shell.getName() == null ? "" : shell.getName());

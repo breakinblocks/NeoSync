@@ -1,15 +1,14 @@
 package com.breakinblocks.neosync.data;
 
+import com.breakinblocks.neosync.NeoSync;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.advancements.AdvancementProvider;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
-import com.breakinblocks.neosync.NeoSync;
-
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @EventBusSubscriber(modid = NeoSync.MOD_ID)
 public final class SyncDataGenerators {

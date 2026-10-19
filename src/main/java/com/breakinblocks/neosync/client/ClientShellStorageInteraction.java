@@ -22,17 +22,28 @@ public final class ClientShellStorageInteraction {
 
         if (blockEntity.getEntityState() == EntityState.NONE) {
             boolean isInside = BlockPosUtil.isEntityInside(entity, blockEntity.getBlockPos());
-            PlayerSyncEvents.ShellSelectionFailureReason failureReason = !isInside && client.player == entity ? PlayerSyncEvents.ALLOW_SHELL_SELECTION.invoker().allowShellSelection(player, blockEntity) : null;
+            PlayerSyncEvents.ShellSelectionFailureReason failureReason = !isInside && client.player == entity
+                    ? PlayerSyncEvents.ALLOW_SHELL_SELECTION.invoker().allowShellSelection(player, blockEntity)
+                    : null;
             blockEntity.setEntityState(isInside || failureReason != null ? EntityState.CHILLING : EntityState.ENTERING);
             if (failureReason != null) {
                 player.sendSystemMessage(failureReason.toText());
             }
         } else if (blockEntity.getEntityState() != EntityState.CHILLING && client.screen == null) {
-            BlockPosUtil.moveEntity(entity, blockEntity.getBlockPos(), state.getValue(ShellStorageBlock.FACING), blockEntity.getEntityState() == EntityState.ENTERING);
+            BlockPosUtil.moveEntity(
+                    entity,
+                    blockEntity.getBlockPos(),
+                    state.getValue(ShellStorageBlock.FACING),
+                    blockEntity.getEntityState() == EntityState.ENTERING);
         }
 
-        if (blockEntity.getEntityState() == EntityState.ENTERING && client.player == entity && client.screen == null && BlockPosUtil.isEntityInside(entity, blockEntity.getBlockPos())) {
-            client.setScreen(new ShellSelectorGUI(() -> blockEntity.setEntityState(EntityState.LEAVING), () -> blockEntity.setEntityState(EntityState.CHILLING)));
+        if (blockEntity.getEntityState() == EntityState.ENTERING
+                && client.player == entity
+                && client.screen == null
+                && BlockPosUtil.isEntityInside(entity, blockEntity.getBlockPos())) {
+            client.setScreen(new ShellSelectorGUI(
+                    () -> blockEntity.setEntityState(EntityState.LEAVING),
+                    () -> blockEntity.setEntityState(EntityState.CHILLING)));
         }
     }
 }

@@ -1,6 +1,28 @@
 package com.breakinblocks.neosync.mixins.client;
 
+import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
+import com.breakinblocks.neosync.api.networking.SynchronizationRequestPacket;
+import com.breakinblocks.neosync.api.shell.ClientShell;
+import com.breakinblocks.neosync.api.shell.ShellPriority;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.client.gui.controller.DeathScreenController;
+import com.breakinblocks.neosync.client.gui.hud.HudController;
+import com.breakinblocks.neosync.common.config.SyncConfig;
+import com.breakinblocks.neosync.common.entity.KillableEntity;
+import com.breakinblocks.neosync.common.entity.LookingEntity;
+import com.breakinblocks.neosync.common.entity.PersistentCameraEntity;
+import com.breakinblocks.neosync.common.entity.PersistentCameraEntityGoal;
+import com.breakinblocks.neosync.common.utils.BlockPosUtil;
+import com.breakinblocks.neosync.common.utils.WorldUtil;
 import com.mojang.authlib.GameProfile;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -18,32 +40,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
-import com.breakinblocks.neosync.api.networking.SynchronizationRequestPacket;
-import com.breakinblocks.neosync.api.shell.ClientShell;
-import com.breakinblocks.neosync.api.shell.ShellPriority;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.client.gui.controller.DeathScreenController;
-import com.breakinblocks.neosync.client.gui.hud.HudController;
-import com.breakinblocks.neosync.common.config.SyncConfig;
-import com.breakinblocks.neosync.common.entity.KillableEntity;
-import com.breakinblocks.neosync.common.entity.LookingEntity;
-import com.breakinblocks.neosync.common.entity.PersistentCameraEntity;
-import com.breakinblocks.neosync.common.entity.PersistentCameraEntityGoal;
-import com.breakinblocks.neosync.common.utils.BlockPosUtil;
-import com.breakinblocks.neosync.common.utils.WorldUtil;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 @Mixin(LocalPlayer.class)
-public abstract class ClientPlayerEntityMixin extends AbstractClientPlayer implements ClientShell, KillableEntity, LookingEntity {
+public abstract class ClientPlayerEntityMixin extends AbstractClientPlayer
+        implements ClientShell, KillableEntity, LookingEntity {
     @Final
     @Shadow
     protected Minecraft minecraft;
@@ -95,7 +94,14 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayer imple
     }
 
     @Override
-    public void endSync(Identifier startWorld, BlockPos startPos, Direction startFacing, Identifier targetWorld, BlockPos targetPos, Direction targetFacing, @Nullable ShellState storedState) {
+    public void endSync(
+            Identifier startWorld,
+            BlockPos startPos,
+            Direction startFacing,
+            Identifier targetWorld,
+            BlockPos targetPos,
+            Direction targetFacing,
+            @Nullable ShellState storedState) {
         boolean syncFailed = Objects.equals(startPos, targetPos);
 
         if (!syncFailed) {
@@ -129,8 +135,8 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayer imple
 
         boolean enableCamera = Objects.equals(startWorld, targetWorld);
         if (enableCamera) {
-            PersistentCameraEntityGoal cameraGoal =
-                    PersistentCameraEntityGoal.highwayToHell(startPos, startFacing, targetPos, targetFacing, __ -> restore.run());
+            PersistentCameraEntityGoal cameraGoal = PersistentCameraEntityGoal.highwayToHell(
+                    startPos, startFacing, targetPos, targetFacing, __ -> restore.run());
             PersistentCameraEntity.setup(this.minecraft, cameraGoal);
         } else {
             restore.run();

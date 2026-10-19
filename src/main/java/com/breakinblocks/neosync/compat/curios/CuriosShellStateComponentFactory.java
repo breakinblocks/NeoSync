@@ -2,6 +2,7 @@ package com.breakinblocks.neosync.compat.curios;
 
 import com.breakinblocks.neosync.api.shell.ShellStateComponent;
 import com.breakinblocks.neosync.api.shell.ShellStateComponentFactoryRegistry;
+import java.util.List;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -11,8 +12,6 @@ import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
-
-import java.util.List;
 
 public class CuriosShellStateComponentFactory implements ShellStateComponentFactoryRegistry.ShellStateComponentFactory {
     @Override
@@ -48,7 +47,9 @@ public class CuriosShellStateComponentFactory implements ShellStateComponentFact
 
         @Override
         protected ListTag getCurios() {
-            return CuriosApi.getCuriosInventory(this.player).map(WornCurios::save).orElseGet(ListTag::new);
+            return CuriosApi.getCuriosInventory(this.player)
+                    .map(WornCurios::save)
+                    .orElseGet(ListTag::new);
         }
 
         @Override
@@ -69,7 +70,8 @@ public class CuriosShellStateComponentFactory implements ShellStateComponentFact
                 }
 
                 handler.getStacksHandler(slotType.getStringOr(IDENTIFIER, ""))
-                        .ifPresent(stacksHandler -> slotType.putByteArray(RENDERS, renders(stacksHandler.getRenders())));
+                        .ifPresent(
+                                stacksHandler -> slotType.putByteArray(RENDERS, renders(stacksHandler.getRenders())));
             }
             return curios;
         }
@@ -77,7 +79,7 @@ public class CuriosShellStateComponentFactory implements ShellStateComponentFact
         private static byte[] renders(NonNullList<Boolean> renderStates) {
             byte[] renders = new byte[renderStates.size()];
             for (int i = 0; i < renders.length; i++) {
-                renders[i] = (byte)(renderStates.get(i) ? 1 : 0);
+                renders[i] = (byte) (renderStates.get(i) ? 1 : 0);
             }
             return renders;
         }

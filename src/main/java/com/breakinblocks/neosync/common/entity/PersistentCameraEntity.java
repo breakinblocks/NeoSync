@@ -1,5 +1,9 @@
 package com.breakinblocks.neosync.common.entity;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.client.gui.controller.DeathScreenController;
+import com.breakinblocks.neosync.client.gui.hud.HudController;
+import java.util.Objects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.chat.ChatAbilities;
@@ -11,11 +15,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.client.gui.controller.DeathScreenController;
-import com.breakinblocks.neosync.client.gui.hud.HudController;
-
-import java.util.Objects;
 
 @EventBusSubscriber(modid = NeoSync.MOD_ID, value = Dist.CLIENT)
 public class PersistentCameraEntity extends LocalPlayer {
@@ -29,8 +28,15 @@ public class PersistentCameraEntity extends LocalPlayer {
     private long goalIdleSince = 0;
 
     private PersistentCameraEntity(Minecraft client, ClientLevel world, LocalPlayer player) {
-        super(client, world, player.connection, player.getStats(), player.getRecipeBook(),
-                Input.EMPTY, false, ChatAbilities.NO_RESTRICTIONS);
+        super(
+                client,
+                world,
+                player.connection,
+                player.getStats(),
+                player.getRecipeBook(),
+                Input.EMPTY,
+                false,
+                ChatAbilities.NO_RESTRICTIONS);
         this.snapTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
         this.setYRot(player.getYRot());
         this.setXRot(player.getXRot());
@@ -78,7 +84,8 @@ public class PersistentCameraEntity extends LocalPlayer {
         this.setPos(newPos);
         this.setDeltaMovement(currentVelocity);
 
-        float factor = this.initialDistance <= 0 ? 1F : 1F - (float)(goal.pos.distanceTo(newPos) / this.initialDistance);
+        float factor =
+                this.initialDistance <= 0 ? 1F : 1F - (float) (goal.pos.distanceTo(newPos) / this.initialDistance);
         float newYaw = this.initialYaw + (goal.yaw - this.initialYaw) * factor;
         float newPitch = this.initialPitch + (goal.pitch - this.initialPitch) * factor;
         this.setYRot(newYaw);

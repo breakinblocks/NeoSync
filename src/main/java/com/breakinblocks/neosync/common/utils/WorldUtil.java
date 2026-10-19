@@ -1,10 +1,9 @@
 package com.breakinblocks.neosync.common.utils;
 
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.Level;
-
 import java.util.Optional;
 import java.util.stream.StreamSupport;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.Level;
 
 public final class WorldUtil {
     public static Identifier getId(Level world) {

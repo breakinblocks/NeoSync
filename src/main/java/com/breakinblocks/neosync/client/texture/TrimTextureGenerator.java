@@ -1,6 +1,11 @@
 package com.breakinblocks.neosync.client.texture;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -8,12 +13,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.world.item.DyeColor;
 import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
 
 public final class TrimTextureGenerator implements TextureGenerator {
     private final Identifier baseTextureId;
@@ -37,7 +36,10 @@ public final class TrimTextureGenerator implements TextureGenerator {
     public Stream<AbstractTexture> generateTextures() {
         NativeImage base = load(this.baseTextureId);
         NativeImage trimmed = load(this.trimmedTextureId);
-        if (base == null || trimmed == null || base.getWidth() != trimmed.getWidth() || base.getHeight() != trimmed.getHeight()) {
+        if (base == null
+                || trimmed == null
+                || base.getWidth() != trimmed.getWidth()
+                || base.getHeight() != trimmed.getHeight()) {
             if (base != null) {
                 base.close();
             }
@@ -85,7 +87,7 @@ public final class TrimTextureGenerator implements TextureGenerator {
                 int g = ARGB.green(trimPixel);
                 int b = ARGB.blue(trimPixel);
 
-                float scale = Math.min(Math.max(r, Math.max(g, b)) / (float)cyanMax, maxScale);
+                float scale = Math.min(Math.max(r, Math.max(g, b)) / (float) cyanMax, maxScale);
                 int outR = Math.round(dyeR * scale);
                 int outG = Math.round(dyeG * scale);
                 int outB = Math.round(dyeB * scale);

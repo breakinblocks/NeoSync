@@ -1,14 +1,14 @@
 package com.breakinblocks.neosync.client.model;
 
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.client.render.block.entity.ShellContainerRenderState;
+import com.breakinblocks.neosync.common.utils.math.Radians;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.client.render.block.entity.ShellContainerRenderState;
-import com.breakinblocks.neosync.common.utils.math.Radians;
 
 public class ShellConstructorModel extends ShellContainerModel {
     private static final float MIN_SPRAYER_Y = 22F;
@@ -73,15 +73,28 @@ public class ShellConstructorModel extends ShellContainerModel {
         PartDefinition inner = lower.addOrReplaceChild("inner", CubeListBuilder.create(), PartPose.ZERO);
 
         PartDefinition printer = inner.addOrReplaceChild("printer", CubeListBuilder.create(), PartPose.ZERO);
-        printer.addOrReplaceChild("printer_left", box(54, 66, 1F, 2F, 2F), PartPose.offsetAndRotation(13F, 0F, 12F, 0F, -Radians.R_PI_4, 0F));
-        printer.addOrReplaceChild("printer_right", box(54, 66, 1F, 2F, 2F), PartPose.offsetAndRotation(-14F, 0F, 12F, 0F, Radians.R_PI_4, 0F));
+        printer.addOrReplaceChild(
+                "printer_left",
+                box(54, 66, 1F, 2F, 2F),
+                PartPose.offsetAndRotation(13F, 0F, 12F, 0F, -Radians.R_PI_4, 0F));
+        printer.addOrReplaceChild(
+                "printer_right",
+                box(54, 66, 1F, 2F, 2F),
+                PartPose.offsetAndRotation(-14F, 0F, 12F, 0F, Radians.R_PI_4, 0F));
 
         addMasts(inner.addOrReplaceChild("sprayer_masts", CubeListBuilder.create(), PartPose.ZERO));
-        addMasts(inner.addOrReplaceChild("sprayer_masts_base", CubeListBuilder.create(), PartPose.offset(0F, MAST_Y, 0F)));
+        addMasts(inner.addOrReplaceChild(
+                "sprayer_masts_base", CubeListBuilder.create(), PartPose.offset(0F, MAST_Y, 0F)));
 
         PartDefinition heads = inner.addOrReplaceChild("sprayer_heads", CubeListBuilder.create(), PartPose.ZERO);
-        heads.addOrReplaceChild("sprayer_red", box(132, 0, 2F, 1F, 2F), PartPose.offsetAndRotation(-12F, 0F, -9.55F, 0F, Radians.R_PI_4, 0F));
-        heads.addOrReplaceChild("sprayer_green", box(132, 0, 2F, 1F, 2F), PartPose.offsetAndRotation(10F, 0F, -9.55F, 0F, -Radians.R_PI_4, 0F));
+        heads.addOrReplaceChild(
+                "sprayer_red",
+                box(132, 0, 2F, 1F, 2F),
+                PartPose.offsetAndRotation(-12F, 0F, -9.55F, 0F, Radians.R_PI_4, 0F));
+        heads.addOrReplaceChild(
+                "sprayer_green",
+                box(132, 0, 2F, 1F, 2F),
+                PartPose.offsetAndRotation(10F, 0F, -9.55F, 0F, -Radians.R_PI_4, 0F));
         heads.addOrReplaceChild("sprayer_blue", box(132, 0, 2F, 1F, 2F), PartPose.offset(-1F, 0F, 10.55F));
 
         addDoors(lower, upper);
@@ -89,8 +102,14 @@ public class ShellConstructorModel extends ShellContainerModel {
     }
 
     private static void addMasts(PartDefinition masts) {
-        masts.addOrReplaceChild("mast_red", box(128, 0, 1F, 32F, 1F), PartPose.offsetAndRotation(-11.5F, 0F, -9.5F, 0F, Radians.R_PI_4, 0F));
-        masts.addOrReplaceChild("mast_green", box(128, 0, 1F, 32F, 1F), PartPose.offsetAndRotation(10.5F, 0F, -9.5F, 0F, -Radians.R_PI_4, 0F));
+        masts.addOrReplaceChild(
+                "mast_red",
+                box(128, 0, 1F, 32F, 1F),
+                PartPose.offsetAndRotation(-11.5F, 0F, -9.5F, 0F, Radians.R_PI_4, 0F));
+        masts.addOrReplaceChild(
+                "mast_green",
+                box(128, 0, 1F, 32F, 1F),
+                PartPose.offsetAndRotation(10.5F, 0F, -9.5F, 0F, -Radians.R_PI_4, 0F));
         masts.addOrReplaceChild("mast_blue", box(128, 0, 1F, 32F, 1F), PartPose.offset(-0.5F, 0F, 11.5F));
     }
 
@@ -110,12 +129,16 @@ public class ShellConstructorModel extends ShellContainerModel {
         float printingProgress = state.shellProgress / ShellState.PROGRESS_PRINTING;
         float paintingProgress = (state.shellProgress - ShellState.PROGRESS_PRINTING) / ShellState.PROGRESS_PAINTING;
 
-        float printerY = MIN_PRINTER_Y + PRINTER_HEIGHT * (printingProgress <= 1F ? printingProgress : (1F - paintingProgress));
-        float sprayerY = MIN_SPRAYER_Y + SPRAYER_HEIGHT * (printingProgress < SPRAYER_ACTIVATION_STAGE
-                ? 0F
-                : printingProgress <= 1F
-                        ? ((printingProgress - SPRAYER_ACTIVATION_STAGE) / (1F - SPRAYER_ACTIVATION_STAGE))
-                        : (1F - paintingProgress));
+        float printerY =
+                MIN_PRINTER_Y + PRINTER_HEIGHT * (printingProgress <= 1F ? printingProgress : (1F - paintingProgress));
+        float sprayerY = MIN_SPRAYER_Y
+                + SPRAYER_HEIGHT
+                        * (printingProgress < SPRAYER_ACTIVATION_STAGE
+                                ? 0F
+                                : printingProgress <= 1F
+                                        ? ((printingProgress - SPRAYER_ACTIVATION_STAGE)
+                                                / (1F - SPRAYER_ACTIVATION_STAGE))
+                                        : (1F - paintingProgress));
 
         this.printer.y = printerY;
         this.sprayerMasts.y = sprayerY;

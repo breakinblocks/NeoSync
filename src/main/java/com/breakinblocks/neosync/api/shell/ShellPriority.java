@@ -1,14 +1,13 @@
 package com.breakinblocks.neosync.api.shell;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.resources.Identifier;
-import net.minecraft.util.StringRepresentable;
-import net.minecraft.world.item.DyeColor;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.stream.Stream;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.item.DyeColor;
 
 /**
  * Describes priority of one shell over others.
@@ -104,12 +103,10 @@ public enum ShellPriority implements StringRepresentable {
      */
     NATURAL(17, "natural", true, null);
 
-
     private final int id;
     private final String name;
     private final Boolean nearest;
     private final Boolean natural;
-
 
     ShellPriority(DyeColor color) {
         this(color.getId(), color.getName(), null, null);
@@ -121,7 +118,6 @@ public enum ShellPriority implements StringRepresentable {
         this.natural = natural;
         this.nearest = nearest;
     }
-
 
     /**
      * @return the name of this enum constant.
@@ -138,7 +134,6 @@ public enum ShellPriority implements StringRepresentable {
     public String toString() {
         return this.name;
     }
-
 
     /**
      * Creates a comparator that can be used to sort {@linkplain ShellState}s with respect to the specified priority.
@@ -231,7 +226,8 @@ public enum ShellPriority implements StringRepresentable {
      * @param priorities The {@linkplain ShellPriority} values.
      * @return the comparator that can be used to sort {@linkplain ShellState}s with respect to the specified priorities.
      */
-    public static Comparator<ShellState> asComparator(Identifier world, BlockPos pos, Collection<ShellPriority> priorities) {
+    public static Comparator<ShellState> asComparator(
+            Identifier world, BlockPos pos, Collection<ShellPriority> priorities) {
         return asComparator(world, pos, priorities.stream());
     }
 
@@ -243,7 +239,9 @@ public enum ShellPriority implements StringRepresentable {
      * @param priorities The {@linkplain ShellPriority} values.
      * @return the comparator that can be used to sort {@linkplain ShellState}s with respect to the specified priorities.
      */
-    public static Comparator<ShellState> asComparator(Identifier world, BlockPos pos, Stream<ShellPriority> priorities) {
-        return priorities.reduce((__, ___) -> 0, (acc, x) -> acc.thenComparing(asComparator(world, pos, x)), Comparator::thenComparing);
+    public static Comparator<ShellState> asComparator(
+            Identifier world, BlockPos pos, Stream<ShellPriority> priorities) {
+        return priorities.reduce(
+                (__, ___) -> 0, (acc, x) -> acc.thenComparing(asComparator(world, pos, x)), Comparator::thenComparing);
     }
 }

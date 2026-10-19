@@ -1,48 +1,46 @@
 package com.breakinblocks.neosync.common.block.entity;
 
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import com.breakinblocks.neosync.api.networking.ShellDestroyedPacket;
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.api.shell.ShellStateContainer;
 import com.breakinblocks.neosync.api.shell.ShellStateManager;
 import com.breakinblocks.neosync.common.block.AbstractShellContainerBlock;
 import com.breakinblocks.neosync.common.item.SimpleInventory;
+import com.breakinblocks.neosync.common.utils.ItemUtil;
 import com.breakinblocks.neosync.common.utils.nbt.SyncRegistries;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.Container;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.item.DyeColor;
+import java.util.Objects;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.Container;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
-import com.breakinblocks.neosync.common.utils.ItemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
-import java.util.Optional;
-
-public abstract class AbstractShellContainerBlockEntity extends BlockEntity implements ShellStateContainer, DoubleBlockEntity, TickableBlockEntity, Container {
+public abstract class AbstractShellContainerBlockEntity extends BlockEntity
+        implements ShellStateContainer, DoubleBlockEntity, TickableBlockEntity, Container {
     protected final BooleanAnimator doorAnimator;
     protected ShellState shell;
     protected DyeColor color;
@@ -59,12 +57,13 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
     private boolean inventoryDirty;
     private boolean visibleInventoryDirty;
 
-
-    public AbstractShellContainerBlockEntity(@NotNull BlockEntityType<? extends AbstractShellContainerBlockEntity> type, BlockPos pos, BlockState state) {
+    public AbstractShellContainerBlockEntity(
+            @NotNull BlockEntityType<? extends AbstractShellContainerBlockEntity> type,
+            BlockPos pos,
+            BlockState state) {
         super(type, pos, state);
         this.doorAnimator = new BooleanAnimator(AbstractShellContainerBlock.isOpen(state));
     }
-
 
     @Override
     public void setShellState(ShellState shell) {
@@ -74,7 +73,10 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
             shell.setPos(this.worldPosition);
         }
 
-        if (this.level != null && !this.level.isClientSide() && this.worldPosition != null && this.getBlockState() != null) {
+        if (this.level != null
+                && !this.level.isClientSide()
+                && this.worldPosition != null
+                && this.getBlockState() != null) {
             this.checkShellState(this.level, this.worldPosition, this.getBlockState());
         }
     }
@@ -105,12 +107,17 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
     }
 
     protected ShellStateManager getShellStateManager() {
-        return (ShellStateManager)Objects.requireNonNull(this.level).getServer();
+        return (ShellStateManager) Objects.requireNonNull(this.level).getServer();
     }
 
     public Optional<AbstractShellContainerBlockEntity> getBottomPart() {
         if (this.bottomPart == null && this.level != null) {
-            this.bottomPart = AbstractShellContainerBlock.isBottom(this.getBlockState()) ? this : (this.level.getBlockEntity(this.worldPosition.relative(Direction.DOWN)) instanceof AbstractShellContainerBlockEntity x ? x : null);
+            this.bottomPart = AbstractShellContainerBlock.isBottom(this.getBlockState())
+                    ? this
+                    : (this.level.getBlockEntity(this.worldPosition.relative(Direction.DOWN))
+                                    instanceof AbstractShellContainerBlockEntity x
+                            ? x
+                            : null);
         }
         return Optional.ofNullable(this.bottomPart);
     }
@@ -157,17 +164,14 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
     }
 
     private boolean requiresSync() {
-        return (
-                this.visibleInventoryDirty ||
-                        this.syncedShell != this.shell ||
-                        this.syncedColor != this.color ||
-                        this.shell != null && (
-                                !this.shell.getPos().equals(this.syncedShellPos) ||
-                                        !Objects.equals(this.shell.getColor(), this.syncedShellColor) ||
-                                        this.shell.isManualOnly() != this.syncedShellManualOnly ||
-                                        this.shell.getProgress() != this.syncedShellProgress
-                        )
-        );
+        return (this.visibleInventoryDirty
+                || this.syncedShell != this.shell
+                || this.syncedColor != this.color
+                || this.shell != null
+                        && (!this.shell.getPos().equals(this.syncedShellPos)
+                                || !Objects.equals(this.shell.getColor(), this.syncedShellColor)
+                                || this.shell.isManualOnly() != this.syncedShellManualOnly
+                                || this.shell.getProgress() != this.syncedShellProgress));
     }
 
     private void updateShell(boolean isNew, boolean partialUpdate) {
@@ -183,25 +187,33 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
     }
 
     private void updateComparatorOutput(Level world, BlockPos pos, BlockState state) {
-        int currentProgressOutput = this.shell == null ? 0 : Mth.clamp((int)(this.shell.getProgress() * 15), 1, 15);
-        int currentInventoryOutput = this.shell == null ? 0 : AbstractContainerMenu.getRedstoneSignalFromContainer(this.shell.getInventory());
+        int currentProgressOutput = this.shell == null ? 0 : Mth.clamp((int) (this.shell.getProgress() * 15), 1, 15);
+        int currentInventoryOutput = this.shell == null
+                ? 0
+                : AbstractContainerMenu.getRedstoneSignalFromContainer(this.shell.getInventory());
         BlockPos topPartPos = pos.relative(AbstractShellContainerBlock.getDirectionTowardsAnotherPart(state));
         BlockState topPartState = world.getBlockState(topPartPos);
         if (this.progressComparatorOutput != currentProgressOutput) {
             this.progressComparatorOutput = currentProgressOutput;
-            if (state.getValue(AbstractShellContainerBlock.OUTPUT) == AbstractShellContainerBlock.ComparatorOutputType.PROGRESS) {
+            if (state.getValue(AbstractShellContainerBlock.OUTPUT)
+                    == AbstractShellContainerBlock.ComparatorOutputType.PROGRESS) {
                 world.updateNeighbourForOutputSignal(pos, state.getBlock());
             }
-            if (topPartState.hasProperty(AbstractShellContainerBlock.OUTPUT) && topPartState.getValue(AbstractShellContainerBlock.OUTPUT) == AbstractShellContainerBlock.ComparatorOutputType.PROGRESS) {
+            if (topPartState.hasProperty(AbstractShellContainerBlock.OUTPUT)
+                    && topPartState.getValue(AbstractShellContainerBlock.OUTPUT)
+                            == AbstractShellContainerBlock.ComparatorOutputType.PROGRESS) {
                 world.updateNeighbourForOutputSignal(topPartPos, topPartState.getBlock());
             }
         }
         if (this.inventoryComparatorOutput != currentInventoryOutput) {
             this.inventoryComparatorOutput = currentInventoryOutput;
-            if (state.getValue(AbstractShellContainerBlock.OUTPUT) == AbstractShellContainerBlock.ComparatorOutputType.INVENTORY) {
+            if (state.getValue(AbstractShellContainerBlock.OUTPUT)
+                    == AbstractShellContainerBlock.ComparatorOutputType.INVENTORY) {
                 world.updateNeighbourForOutputSignal(pos, state.getBlock());
             }
-            if (topPartState.hasProperty(AbstractShellContainerBlock.OUTPUT) && topPartState.getValue(AbstractShellContainerBlock.OUTPUT) == AbstractShellContainerBlock.ComparatorOutputType.INVENTORY) {
+            if (topPartState.hasProperty(AbstractShellContainerBlock.OUTPUT)
+                    && topPartState.getValue(AbstractShellContainerBlock.OUTPUT)
+                            == AbstractShellContainerBlock.ComparatorOutputType.INVENTORY) {
                 world.updateNeighbourForOutputSignal(topPartPos, topPartState.getBlock());
             }
         }
@@ -238,7 +250,9 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
     public abstract InteractionResult onUse(Level world, BlockPos pos, Player player, InteractionHand hand);
 
     public float getDoorOpenProgress(float tickDelta) {
-        return this.getBottomPart().map(x -> x.doorAnimator.getProgress(tickDelta)).orElse(0f);
+        return this.getBottomPart()
+                .map(x -> x.doorAnimator.getProgress(tickDelta))
+                .orElse(0f);
     }
 
     @Override
@@ -272,7 +286,8 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
         super.loadAdditional(in);
         SyncRegistries.push(in.lookup());
         try {
-            this.shell = in.read("shell", CompoundTag.CODEC).map(ShellState::fromNbt).orElse(null);
+            this.shell =
+                    in.read("shell", CompoundTag.CODEC).map(ShellState::fromNbt).orElse(null);
         } finally {
             SyncRegistries.pop();
         }
@@ -289,13 +304,11 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
         final int mainSize = inventory.main.size();
         final int armorSize = inventory.armor.size();
         final int offHandSize = inventory.offHand.size();
-        return (
-                slot >= 0 && slot < armorSize
+        return (slot >= 0 && slot < armorSize
+                ? (slot + mainSize)
+                : slot >= armorSize && slot < (armorSize + offHandSize)
                         ? (slot + mainSize)
-                        : slot >= armorSize && slot < (armorSize + offHandSize)
-                        ? (slot + mainSize)
-                        : (slot - armorSize - offHandSize)
-        );
+                        : (slot - armorSize - offHandSize));
     }
 
     private static boolean isVisibleSlot(int slot, SimpleInventory inventory) {
@@ -316,12 +329,18 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
         boolean isArmorSlot = slot >= 0 && slot < armorSize;
         if (isArmorSlot) {
             EquipmentSlot equipmentSlot = ItemUtil.getPreferredEquipmentSlot(stack);
-            return ItemUtil.isArmor(stack) && equipmentSlot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR && slot == equipmentSlot.getIndex();
+            return ItemUtil.isArmor(stack)
+                    && equipmentSlot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR
+                    && slot == equipmentSlot.getIndex();
         }
 
         boolean isOffHandSlot = slot >= armorSize && slot < (armorSize + inventory.offHand.size());
         if (isOffHandSlot) {
-            return ItemUtil.getPreferredEquipmentSlot(stack) == EquipmentSlot.OFFHAND || inventory.main.stream().noneMatch(x -> x.isEmpty() || (x.getCount() + stack.getCount()) <= x.getMaxStackSize() && ItemStack.isSameItemSameComponents(x, stack));
+            return ItemUtil.getPreferredEquipmentSlot(stack) == EquipmentSlot.OFFHAND
+                    || inventory.main.stream()
+                            .noneMatch(x -> x.isEmpty()
+                                    || (x.getCount() + stack.getCount()) <= x.getMaxStackSize()
+                                            && ItemStack.isSameItemSameComponents(x, stack));
         }
 
         return true;
@@ -329,7 +348,10 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
 
     @Override
     public ItemStack getItem(int slot) {
-        return this.getBottomPart().filter(x -> x.shell != null).map(x -> x.shell.getInventory().getItem(reorderSlotIndex(slot, x.shell.getInventory()))).orElse(ItemStack.EMPTY);
+        return this.getBottomPart()
+                .filter(x -> x.shell != null)
+                .map(x -> x.shell.getInventory().getItem(reorderSlotIndex(slot, x.shell.getInventory())))
+                .orElse(ItemStack.EMPTY);
     }
 
     @Override
@@ -387,12 +409,18 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity impl
 
     @Override
     public int getContainerSize() {
-        return this.getBottomPart().map(x -> x.shell == null || x.shell.getProgress() < ShellState.PROGRESS_DONE ? 0 : x.shell.getInventory().getContainerSize()).orElse(0);
+        return this.getBottomPart()
+                .map(x -> x.shell == null || x.shell.getProgress() < ShellState.PROGRESS_DONE
+                        ? 0
+                        : x.shell.getInventory().getContainerSize())
+                .orElse(0);
     }
 
     @Override
     public boolean isEmpty() {
-        return this.getBottomPart().map(x -> x.shell == null || x.shell.getInventory().isEmpty()).orElse(true);
+        return this.getBottomPart()
+                .map(x -> x.shell == null || x.shell.getInventory().isEmpty())
+                .orElse(true);
     }
 
     @Override

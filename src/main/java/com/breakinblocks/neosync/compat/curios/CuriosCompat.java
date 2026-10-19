@@ -23,7 +23,8 @@ public final class CuriosCompat {
         try {
             Class<?> cls = Class.forName("com.breakinblocks.neosync.compat.curios.CuriosShellStateComponentFactory");
             ShellStateComponentFactoryRegistry.ShellStateComponentFactory factory =
-                    (ShellStateComponentFactoryRegistry.ShellStateComponentFactory)cls.getDeclaredConstructor().newInstance();
+                    (ShellStateComponentFactoryRegistry.ShellStateComponentFactory)
+                            cls.getDeclaredConstructor().newInstance();
             ShellStateComponentFactoryRegistry.getInstance().register(factory);
         } catch (Throwable t) {
             LOGGER.warn("Curios is loaded but the shell state integration failed to initialize", t);

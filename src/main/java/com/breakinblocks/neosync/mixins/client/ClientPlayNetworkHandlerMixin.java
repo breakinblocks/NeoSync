@@ -1,8 +1,8 @@
 package com.breakinblocks.neosync.mixins.client;
 
+import com.breakinblocks.neosync.client.gui.controller.DeathScreenController;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
-import com.breakinblocks.neosync.client.gui.controller.DeathScreenController;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

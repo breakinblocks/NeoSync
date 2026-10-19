@@ -1,5 +1,7 @@
 package com.breakinblocks.neosync.client.model;
 
+import com.breakinblocks.neosync.client.render.block.entity.TreadmillRenderState;
+import com.breakinblocks.neosync.common.utils.math.Radians;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -8,8 +10,6 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import com.breakinblocks.neosync.client.render.block.entity.TreadmillRenderState;
-import com.breakinblocks.neosync.common.utils.math.Radians;
 
 public class TreadmillModel extends Model<TreadmillRenderState> {
     private static final float FRONT_ITEM_OFFSET = 32F;
@@ -34,7 +34,9 @@ public class TreadmillModel extends Model<TreadmillRenderState> {
         front.addOrReplaceChild("running_belt", box(31, 0, 18F, 4F, 31F), pitched(-9F, 17F, -16F));
         back.addOrReplaceChild("running_belt", box(31, 31, 18F, 4F, 31F), pitched(-9F, 18.3F, -14F));
 
-        front.addOrReplaceChild("console", box(0, 3, 26F, 10F, 2F),
+        front.addOrReplaceChild(
+                "console",
+                box(0, 3, 26F, 10F, 2F),
                 PartPose.offsetAndRotation(13F, 6F, 16F, CONSOLE_PITCH, Radians.R_PI, 0F));
         front.addOrReplaceChild("console_mast_left", box(0, 66, 1F, 15F, 2F), PartPose.offset(12.5F, 7F, 10F));
         front.addOrReplaceChild("console_mast_right", box(0, 66, 1F, 15F, 2F), PartPose.offset(-13.5F, 7F, 10F));

@@ -1,7 +1,7 @@
 package com.breakinblocks.neosync.common.utils.math;
 
 public final class Radians {
-    public static final float R_PI = (float)Math.PI;
+    public static final float R_PI = (float) Math.PI;
     public static final float R_2_PI = 2F * R_PI;
 
     public static final float R_PI_128 = R_PI / 128;
@@ -17,6 +17,5 @@ public final class Radians {
     public static final float R_2_PI_3 = 2 * R_PI / 3;
     public static final float R_3_PI_2 = 3 * R_PI / 2;
 
-    private Radians() {
-    }
+    private Radians() {}
 }

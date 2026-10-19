@@ -1,5 +1,8 @@
 package com.breakinblocks.neosync.api.networking;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -10,10 +13,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.api.shell.ShellState;
-
-import java.util.Optional;
 
 public record SynchronizationResponsePacket(
         Identifier startWorld,
@@ -22,15 +21,14 @@ public record SynchronizationResponsePacket(
         Identifier targetWorld,
         BlockPos targetPos,
         Direction targetFacing,
-        Optional<ShellState> storedState
-) implements CustomPacketPayload {
+        Optional<ShellState> storedState)
+        implements CustomPacketPayload {
 
-    public static final Type<SynchronizationResponsePacket> TYPE = new Type<>(NeoSync.locate("shell/synchronization/response"));
+    public static final Type<SynchronizationResponsePacket> TYPE =
+            new Type<>(NeoSync.locate("shell/synchronization/response"));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, SynchronizationResponsePacket> STREAM_CODEC = StreamCodec.of(
-            SynchronizationResponsePacket::encode,
-            SynchronizationResponsePacket::decode
-    );
+    public static final StreamCodec<RegistryFriendlyByteBuf, SynchronizationResponsePacket> STREAM_CODEC =
+            StreamCodec.of(SynchronizationResponsePacket::encode, SynchronizationResponsePacket::decode);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
@@ -58,8 +56,10 @@ public record SynchronizationResponsePacket(
         Identifier targetWorld = buf.readIdentifier();
         BlockPos targetPos = buf.readBlockPos();
         Direction targetFacing = Direction.from3DDataValue(buf.readVarInt());
-        Optional<ShellState> storedState = ByteBufCodecs.optional(ShellState.STREAM_CODEC).decode(buf);
-        return new SynchronizationResponsePacket(startWorld, startPos, startFacing, targetWorld, targetPos, targetFacing, storedState);
+        Optional<ShellState> storedState =
+                ByteBufCodecs.optional(ShellState.STREAM_CODEC).decode(buf);
+        return new SynchronizationResponsePacket(
+                startWorld, startPos, startFacing, targetWorld, targetPos, targetFacing, storedState);
     }
 
     public static void handle(SynchronizationResponsePacket payload, IPayloadContext context) {

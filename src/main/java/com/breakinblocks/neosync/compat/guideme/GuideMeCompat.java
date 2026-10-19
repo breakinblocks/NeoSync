@@ -32,7 +32,8 @@ public final class GuideMeCompat {
     public static ItemStackTemplate createGuideTemplate() {
         Item item = BuiltInRegistries.ITEM.getValue(GUIDE_ITEM);
         DataComponentType<Identifier> type = (DataComponentType<Identifier>) guideIdComponent();
-        return new ItemStackTemplate(item, DataComponentPatch.builder().set(type, GUIDE_ID).build());
+        return new ItemStackTemplate(
+                item, DataComponentPatch.builder().set(type, GUIDE_ID).build());
     }
 
     @Nullable

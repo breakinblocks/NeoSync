@@ -1,5 +1,7 @@
 package com.breakinblocks.neosync.api.event;
 
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.api.shell.ShellStateContainer;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -7,8 +9,6 @@ import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.ICancellableEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.api.shell.ShellStateContainer;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -63,7 +63,8 @@ public final class PlayerSyncEvents {
         }
 
         @Override
-        public ShellConstructionFailureReason allowShellConstruction(Player player, ShellStateContainer targetContainer) {
+        public ShellConstructionFailureReason allowShellConstruction(
+                Player player, ShellStateContainer targetContainer) {
             AllowShellConstruction event = new AllowShellConstruction(player, targetContainer);
             NeoForge.EVENT_BUS.post(event);
             return event.getFailureReason();
@@ -83,7 +84,8 @@ public final class PlayerSyncEvents {
             try {
                 NeoForge.EVENT_BUS.post(event);
             } catch (Throwable t) {
-                LOGGER.error("A listener of {} threw an exception", event.getClass().getSimpleName(), t);
+                LOGGER.error(
+                        "A listener of {} threw an exception", event.getClass().getSimpleName(), t);
             }
         }
     }
@@ -240,6 +242,7 @@ public final class PlayerSyncEvents {
      */
     public static class StopSyncing extends PlayerSyncEvent {
         private final BlockPos previousPos;
+
         @Nullable
         private final ShellState storedState;
 
@@ -264,8 +267,10 @@ public final class PlayerSyncEvents {
     public interface SyncFailureReason {
         SyncFailureReason OTHER_PROBLEM = () -> null;
         SyncFailureReason INVALID_SHELL = create(Component.translatable("event.neosync.request.fail.invalid.shell"));
-        SyncFailureReason INVALID_CURRENT_LOCATION = create(Component.translatable("event.neosync.request.fail.invalid.location.current"));
-        SyncFailureReason INVALID_TARGET_LOCATION = create(Component.translatable("event.neosync.request.fail.invalid.location.target"));
+        SyncFailureReason INVALID_CURRENT_LOCATION =
+                create(Component.translatable("event.neosync.request.fail.invalid.location.current"));
+        SyncFailureReason INVALID_TARGET_LOCATION =
+                create(Component.translatable("event.neosync.request.fail.invalid.location.target"));
 
         @Nullable
         Component toText();
@@ -278,8 +283,10 @@ public final class PlayerSyncEvents {
     @FunctionalInterface
     public interface ShellConstructionFailureReason {
         ShellConstructionFailureReason OTHER_PROBLEM = () -> null;
-        ShellConstructionFailureReason OCCUPIED = create(Component.translatable("event.neosync.construction.fail.occupied"));
-        ShellConstructionFailureReason NOT_ENOUGH_HEALTH = create(Component.translatable("event.neosync.construction.fail.health"));
+        ShellConstructionFailureReason OCCUPIED =
+                create(Component.translatable("event.neosync.construction.fail.occupied"));
+        ShellConstructionFailureReason NOT_ENOUGH_HEALTH =
+                create(Component.translatable("event.neosync.construction.fail.health"));
 
         @Nullable
         Component toText();
@@ -301,6 +308,5 @@ public final class PlayerSyncEvents {
         }
     }
 
-    private PlayerSyncEvents() {
-    }
+    private PlayerSyncEvents() {}
 }

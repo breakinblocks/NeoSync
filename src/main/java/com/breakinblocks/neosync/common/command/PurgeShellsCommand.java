@@ -1,8 +1,15 @@
 package com.breakinblocks.neosync.common.command;
 
+import com.breakinblocks.neosync.api.shell.Shell;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.api.shell.ShellStateContainer;
+import com.breakinblocks.neosync.common.block.entity.AbstractShellContainerBlockEntity;
+import com.breakinblocks.neosync.common.utils.WorldUtil;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import java.util.Collection;
+import java.util.List;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -17,14 +24,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 import org.jetbrains.annotations.Nullable;
-import com.breakinblocks.neosync.api.shell.Shell;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.api.shell.ShellStateContainer;
-import com.breakinblocks.neosync.common.block.entity.AbstractShellContainerBlockEntity;
-import com.breakinblocks.neosync.common.utils.WorldUtil;
-
-import java.util.Collection;
-import java.util.List;
 
 public class PurgeShellsCommand implements Command {
     @Override
@@ -34,7 +33,8 @@ public class PurgeShellsCommand implements Command {
 
     @Override
     public boolean hasPermissions(CommandSourceStack commandSource) {
-        return commandSource.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) || commandSource.getServer().isSingleplayer();
+        return commandSource.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)
+                || commandSource.getServer().isSingleplayer();
     }
 
     @Override
@@ -43,11 +43,10 @@ public class PurgeShellsCommand implements Command {
                 .executes(context -> execute(context, null))
                 .then(Commands.argument("dimension", IdentifierArgument.id())
                         .suggests((context, suggestions) -> SharedSuggestionProvider.suggestResource(
-                                context.getSource().getServer().levelKeys().stream().map(ResourceKey::identifier),
+                                context.getSource().getServer().levelKeys().stream()
+                                        .map(ResourceKey::identifier),
                                 suggestions))
-                        .executes(context -> execute(context, IdentifierArgument.getId(context, "dimension")))
-                )
-        );
+                        .executes(context -> execute(context, IdentifierArgument.getId(context, "dimension")))));
     }
 
     private static int execute(CommandContext<CommandSourceStack> context, @Nullable Identifier worldId)
@@ -59,11 +58,19 @@ public class PurgeShellsCommand implements Command {
         for (ServerPlayer player : players) {
             int removed = purge(server, player, worldId);
             total += removed;
-            context.getSource().sendSuccess(() -> worldId == null
-                    ? Component.translatable("command.neosync.purge.result_all",
-                            player.getName().getString(), removed)
-                    : Component.translatable("command.neosync.purge.result",
-                            player.getName().getString(), removed, worldId.toString()), true);
+            context.getSource()
+                    .sendSuccess(
+                            () -> worldId == null
+                                    ? Component.translatable(
+                                            "command.neosync.purge.result_all",
+                                            player.getName().getString(),
+                                            removed)
+                                    : Component.translatable(
+                                            "command.neosync.purge.result",
+                                            player.getName().getString(),
+                                            removed,
+                                            worldId.toString()),
+                            true);
         }
         return total;
     }
@@ -76,7 +83,8 @@ public class PurgeShellsCommand implements Command {
 
         for (ShellState state : doomed) {
             if (!state.isVirtual()) {
-                ServerLevel world = WorldUtil.findWorld(server.getAllLevels(), state.getWorld()).orElse(null);
+                ServerLevel world = WorldUtil.findWorld(server.getAllLevels(), state.getWorld())
+                        .orElse(null);
                 if (world != null) {
                     destroyContainedShell(world, state);
                 }

@@ -1,10 +1,19 @@
 package com.breakinblocks.neosync.client.render.block.entity;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.client.model.ShellContainerModel;
+import com.breakinblocks.neosync.client.model.ShellVoxelModel;
+import com.breakinblocks.neosync.common.block.AbstractShellContainerBlock;
+import com.breakinblocks.neosync.common.block.entity.AbstractShellContainerBlockEntity;
+import com.breakinblocks.neosync.common.block.entity.ShellEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import java.util.Map;
+import java.util.WeakHashMap;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
@@ -18,18 +27,9 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.client.model.ShellContainerModel;
-import com.breakinblocks.neosync.client.model.ShellVoxelModel;
-import com.breakinblocks.neosync.common.block.AbstractShellContainerBlock;
-import com.breakinblocks.neosync.common.block.entity.AbstractShellContainerBlockEntity;
-import com.breakinblocks.neosync.common.block.entity.ShellEntity;
 
-import java.util.Map;
-import java.util.WeakHashMap;
-
-public abstract class AbstractShellContainerBlockEntityRenderer<T extends AbstractShellContainerBlockEntity> extends DoubleBlockEntityRenderer<T, ShellContainerRenderState> {
+public abstract class AbstractShellContainerBlockEntityRenderer<T extends AbstractShellContainerBlockEntity>
+        extends DoubleBlockEntityRenderer<T, ShellContainerRenderState> {
     public static final Identifier VOXEL_TEXTURE = NeoSync.locate("textures/entity/voxel.png");
 
     private final Map<AbstractShellContainerBlockEntity, CachedShell> shellEntities = new WeakHashMap<>();
@@ -50,7 +50,12 @@ public abstract class AbstractShellContainerBlockEntityRenderer<T extends Abstra
     }
 
     @Override
-    public void extractRenderState(T blockEntity, ShellContainerRenderState renderState, float partialTick, Vec3 cameraPosition, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
+    public void extractRenderState(
+            T blockEntity,
+            ShellContainerRenderState renderState,
+            float partialTick,
+            Vec3 cameraPosition,
+            ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
         super.extractRenderState(blockEntity, renderState, partialTick, cameraPosition, breakProgress);
         BlockState blockState = blockEntity.getBlockState();
         renderState.facing = blockState.getValue(AbstractShellContainerBlock.FACING);
@@ -78,10 +83,22 @@ public abstract class AbstractShellContainerBlockEntityRenderer<T extends Abstra
     }
 
     @Override
-    public void submit(ShellContainerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
+    public void submit(
+            ShellContainerRenderState state,
+            PoseStack poseStack,
+            SubmitNodeCollector submitNodeCollector,
+            CameraRenderState camera) {
         poseStack.pushPose();
         applyMachineTransform(poseStack, state.facing);
-        submitNodeCollector.submitModel(this.getModel(), state, poseStack, state.texture, state.lightCoords, OverlayTexture.NO_OVERLAY, 0, state.breakProgress);
+        submitNodeCollector.submitModel(
+                this.getModel(),
+                state,
+                poseStack,
+                state.texture,
+                state.lightCoords,
+                OverlayTexture.NO_OVERLAY,
+                0,
+                state.breakProgress);
         this.submitExtras(state, poseStack, submitNodeCollector);
         poseStack.popPose();
 
@@ -100,24 +117,32 @@ public abstract class AbstractShellContainerBlockEntityRenderer<T extends Abstra
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         poseStack.pushPose();
         poseStack.translate(0.5, 0.0, 0.5);
-        poseStack.mulPose(new Quaternionf().rotationY((float)Math.toRadians(facingYaw(state.facing))));
+        poseStack.mulPose(new Quaternionf().rotationY((float) Math.toRadians(facingYaw(state.facing))));
         dispatcher.submit(state.shellEntityState, camera, 0.0, 0.0, 0.0, poseStack, submitNodeCollector);
         poseStack.popPose();
     }
 
-    private void submitVoxelShell(ShellContainerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector) {
+    private void submitVoxelShell(
+            ShellContainerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector) {
         poseStack.pushPose();
         poseStack.translate(0.5, 0.0, 0.5);
         poseStack.mulPose(Axis.YP.rotationDegrees(facingYaw(state.facing) + 180F));
         poseStack.scale(-1F, -1F, 1F);
         poseStack.translate(0.0, -1.501, 0.0);
-        submitNodeCollector.submitModel(this.voxelModel, state, poseStack, VOXEL_TEXTURE,
-                state.lightCoords, OverlayTexture.NO_OVERLAY, 0, state.breakProgress);
+        submitNodeCollector.submitModel(
+                this.voxelModel,
+                state,
+                poseStack,
+                VOXEL_TEXTURE,
+                state.lightCoords,
+                OverlayTexture.NO_OVERLAY,
+                0,
+                state.breakProgress);
         poseStack.popPose();
     }
 
-    protected void submitExtras(ShellContainerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector) {
-    }
+    protected void submitExtras(
+            ShellContainerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector) {}
 
     protected void poseShell(ShellEntity shell, T blockEntity, float partialTick) {
         shell.isActive = false;

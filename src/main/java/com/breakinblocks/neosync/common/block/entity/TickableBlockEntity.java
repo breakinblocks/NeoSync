@@ -1,10 +1,10 @@
 package com.breakinblocks.neosync.common.block.entity;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.state.BlockState;
 
 public interface TickableBlockEntity {
     static <T extends BlockEntity> void clientTicker(Level world, BlockPos pos, BlockState state, T blockEntity) {
@@ -32,5 +32,5 @@ public interface TickableBlockEntity {
     }
 
     @SuppressWarnings("unused")
-    default void onTick(Level world, BlockPos pos, BlockState state) { }
+    default void onTick(Level world, BlockPos pos, BlockState state) {}
 }

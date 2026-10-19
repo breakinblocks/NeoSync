@@ -21,13 +21,30 @@ public record AnnulusSectorRenderState(
         float toAngle,
         int color,
         @Nullable ScreenRectangle scissorArea,
-        @Nullable ScreenRectangle bounds
-) implements GuiElementRenderState {
+        @Nullable ScreenRectangle bounds)
+        implements GuiElementRenderState {
     private static final float MAX_STEP = Mth.PI / 64F;
 
-    public AnnulusSectorRenderState(Matrix3x2f pose, float centerX, float centerY, float innerRadius, float outerRadius,
-                                    float fromAngle, float toAngle, int color, @Nullable ScreenRectangle scissorArea) {
-        this(pose, centerX, centerY, innerRadius, outerRadius, fromAngle, toAngle, color, scissorArea,
+    public AnnulusSectorRenderState(
+            Matrix3x2f pose,
+            float centerX,
+            float centerY,
+            float innerRadius,
+            float outerRadius,
+            float fromAngle,
+            float toAngle,
+            int color,
+            @Nullable ScreenRectangle scissorArea) {
+        this(
+                pose,
+                centerX,
+                centerY,
+                innerRadius,
+                outerRadius,
+                fromAngle,
+                toAngle,
+                color,
+                scissorArea,
                 computeBounds(centerX, centerY, outerRadius, pose, scissorArea));
     }
 
@@ -45,10 +62,22 @@ public record AnnulusSectorRenderState(
             float cos1 = Mth.cos(a1);
             float sin1 = Mth.sin(a1);
 
-            vertexConsumer.addVertexWith2DPose(this.pose, this.centerX + cos1 * this.innerRadius, this.centerY + sin1 * this.innerRadius).setColor(this.color);
-            vertexConsumer.addVertexWith2DPose(this.pose, this.centerX + cos1 * this.outerRadius, this.centerY + sin1 * this.outerRadius).setColor(this.color);
-            vertexConsumer.addVertexWith2DPose(this.pose, this.centerX + cos0 * this.outerRadius, this.centerY + sin0 * this.outerRadius).setColor(this.color);
-            vertexConsumer.addVertexWith2DPose(this.pose, this.centerX + cos0 * this.innerRadius, this.centerY + sin0 * this.innerRadius).setColor(this.color);
+            vertexConsumer
+                    .addVertexWith2DPose(
+                            this.pose, this.centerX + cos1 * this.innerRadius, this.centerY + sin1 * this.innerRadius)
+                    .setColor(this.color);
+            vertexConsumer
+                    .addVertexWith2DPose(
+                            this.pose, this.centerX + cos1 * this.outerRadius, this.centerY + sin1 * this.outerRadius)
+                    .setColor(this.color);
+            vertexConsumer
+                    .addVertexWith2DPose(
+                            this.pose, this.centerX + cos0 * this.outerRadius, this.centerY + sin0 * this.outerRadius)
+                    .setColor(this.color);
+            vertexConsumer
+                    .addVertexWith2DPose(
+                            this.pose, this.centerX + cos0 * this.innerRadius, this.centerY + sin0 * this.innerRadius)
+                    .setColor(this.color);
         }
     }
 
@@ -63,9 +92,11 @@ public record AnnulusSectorRenderState(
     }
 
     @Nullable
-    private static ScreenRectangle computeBounds(float centerX, float centerY, float outerRadius, Matrix3x2fc pose, @Nullable ScreenRectangle scissorArea) {
+    private static ScreenRectangle computeBounds(
+            float centerX, float centerY, float outerRadius, Matrix3x2fc pose, @Nullable ScreenRectangle scissorArea) {
         int size = Mth.ceil(outerRadius * 2F) + 2;
-        ScreenRectangle rectangle = new ScreenRectangle(Mth.floor(centerX - outerRadius) - 1, Mth.floor(centerY - outerRadius) - 1, size, size)
+        ScreenRectangle rectangle = new ScreenRectangle(
+                        Mth.floor(centerX - outerRadius) - 1, Mth.floor(centerY - outerRadius) - 1, size, size)
                 .transformMaxBounds(pose);
         return scissorArea != null ? scissorArea.intersection(rectangle) : rectangle;
     }

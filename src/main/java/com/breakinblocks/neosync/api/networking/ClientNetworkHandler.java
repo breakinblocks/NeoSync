@@ -1,5 +1,9 @@
 package com.breakinblocks.neosync.api.networking;
 
+import com.breakinblocks.neosync.api.shell.ClientShell;
+import com.breakinblocks.neosync.api.shell.Shell;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.client.gui.ShellSelectorGUI;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -7,10 +11,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
-import com.breakinblocks.neosync.api.shell.ClientShell;
-import com.breakinblocks.neosync.client.gui.ShellSelectorGUI;
-import com.breakinblocks.neosync.api.shell.Shell;
-import com.breakinblocks.neosync.api.shell.ShellState;
 
 public final class ClientNetworkHandler {
     private ClientNetworkHandler() {}
@@ -18,10 +18,15 @@ public final class ClientNetworkHandler {
     public static void onSynchronizationResponse(SynchronizationResponsePacket payload) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
-        ((ClientShell) player).endSync(
-                payload.startWorld(), payload.startPos(), payload.startFacing(),
-                payload.targetWorld(), payload.targetPos(), payload.targetFacing(),
-                payload.storedState().orElse(null));
+        ((ClientShell) player)
+                .endSync(
+                        payload.startWorld(),
+                        payload.startPos(),
+                        payload.startFacing(),
+                        payload.targetWorld(),
+                        payload.targetPos(),
+                        payload.targetFacing(),
+                        payload.storedState().orElse(null));
     }
 
     public static void onShellUpdate(ShellUpdatePacket payload) {
@@ -53,7 +58,7 @@ public final class ClientNetworkHandler {
                     updated.setManualOnly(payload.manualOnly());
                 }
             }
-            case NONE -> { }
+            case NONE -> {}
         }
     }
 
@@ -81,8 +86,16 @@ public final class ClientNetworkHandler {
         if (player == null) return;
         for (int i = 0; i < 3; ++i) {
             ((ClientLevel) player.level()).addDestroyBlockEffect(payload.pos(), Blocks.DEEPSLATE.defaultBlockState());
-            ((ClientLevel) player.level()).addDestroyBlockEffect(payload.pos().above(), Blocks.DEEPSLATE.defaultBlockState());
+            ((ClientLevel) player.level())
+                    .addDestroyBlockEffect(payload.pos().above(), Blocks.DEEPSLATE.defaultBlockState());
         }
-        ((ClientLevel) player.level()).playSound(player, payload.pos(), SoundEvents.DEEPSLATE_BREAK, SoundSource.BLOCKS, 1F, player.getVoicePitch());
+        ((ClientLevel) player.level())
+                .playSound(
+                        player,
+                        payload.pos(),
+                        SoundEvents.DEEPSLATE_BREAK,
+                        SoundSource.BLOCKS,
+                        1F,
+                        player.getVoicePitch());
     }
 }

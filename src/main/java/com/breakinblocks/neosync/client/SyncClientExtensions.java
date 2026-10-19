@@ -1,12 +1,12 @@
 package com.breakinblocks.neosync.client;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.integration.jade.JadeIntegration;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.integration.jade.JadeIntegration;
 
 @EventBusSubscriber(modid = NeoSync.MOD_ID, value = Dist.CLIENT)
 public final class SyncClientExtensions {

@@ -1,13 +1,12 @@
 package com.breakinblocks.neosync.api.shell;
 
+import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
+import java.util.Optional;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
-import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Optional;
 
 /**
  * Client-side version of the {@link Shell}.
@@ -24,7 +23,8 @@ public interface ClientShell extends Shell {
      * @param state Target state.
      * @return null if the sync process was started; otherwise, a failure reason is returned.
      */
-    @Nullable PlayerSyncEvents.SyncFailureReason beginSync(ShellState state);
+    @Nullable
+    PlayerSyncEvents.SyncFailureReason beginSync(ShellState state);
 
     /**
      * Handles the end of an asynchronous sync operation.
@@ -37,13 +37,19 @@ public interface ClientShell extends Shell {
      * @param targetFacing Direction the target shell is currently looking at.
      * @param storedState New state that was generated during the sync process, if any; otherwise, null.
      */
-    void endSync(Identifier startWorld, BlockPos startPos, Direction startFacing, Identifier targetWorld, BlockPos targetPos, Direction targetFacing, @Nullable ShellState storedState);
-
+    void endSync(
+            Identifier startWorld,
+            BlockPos startPos,
+            Direction startFacing,
+            Identifier targetWorld,
+            BlockPos targetPos,
+            Direction targetFacing,
+            @Nullable ShellState storedState);
 
     /**
      * @return Main player in the form of {@link ClientShell}.
      */
     static Optional<ClientShell> getMainPlayer() {
-        return Optional.ofNullable((ClientShell)Minecraft.getInstance().player);
+        return Optional.ofNullable((ClientShell) Minecraft.getInstance().player);
     }
 }

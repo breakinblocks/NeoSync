@@ -1,20 +1,19 @@
 package com.breakinblocks.neosync.common.command;
 
+import com.breakinblocks.neosync.api.networking.OpenShellSelectorPacket;
+import com.breakinblocks.neosync.api.shell.Shell;
+import com.breakinblocks.neosync.api.shell.ShellState;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import java.util.Collection;
+import java.util.List;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
-import com.breakinblocks.neosync.api.networking.OpenShellSelectorPacket;
-import com.breakinblocks.neosync.api.shell.Shell;
-import com.breakinblocks.neosync.api.shell.ShellState;
-
-import java.util.Collection;
-import java.util.List;
 
 public class ShellSelectorCommand implements Command {
     @Override
@@ -34,11 +33,14 @@ public class ShellSelectorCommand implements Command {
                 .executes(context -> open(context, EntityArgument.getPlayers(context, "target"))));
     }
 
-    private static int open(CommandContext<CommandSourceStack> context, Collection<ServerPlayer> players) throws CommandSyntaxException {
+    private static int open(CommandContext<CommandSourceStack> context, Collection<ServerPlayer> players)
+            throws CommandSyntaxException {
         int opened = 0;
         for (ServerPlayer player : players) {
             if (!hasAvailableShell(player)) {
-                context.getSource().sendFailure(Component.translatable("command.neosync.select.no_shells", player.getDisplayName()));
+                context.getSource()
+                        .sendFailure(
+                                Component.translatable("command.neosync.select.no_shells", player.getDisplayName()));
                 continue;
             }
 
@@ -54,7 +56,8 @@ public class ShellSelectorCommand implements Command {
     }
 
     private static boolean hasAvailableShell(ServerPlayer player) {
-        return ((Shell) player).getAvailableShellStates()
+        return ((Shell) player)
+                .getAvailableShellStates()
                 .anyMatch(state -> state.getProgress() >= ShellState.PROGRESS_DONE);
     }
 }

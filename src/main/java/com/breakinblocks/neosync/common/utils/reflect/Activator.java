@@ -1,7 +1,6 @@
 package com.breakinblocks.neosync.common.utils.reflect;
 
 import com.breakinblocks.neosync.common.utils.function.FunctionUtil;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
@@ -18,7 +17,7 @@ public final class Activator {
 
         Constructor<?>[] constructors = type.getConstructors();
         if (constructors.length != 0) {
-            return Optional.of((Constructor<T>)constructors[0]);
+            return Optional.of((Constructor<T>) constructors[0]);
         }
 
         return Optional.empty();
@@ -55,6 +54,5 @@ public final class Activator {
         return type.isPrimitive() ? Array.get(Array.newInstance(type, 1), 0) : null;
     }
 
-    private Activator() {
-    }
+    private Activator() {}
 }

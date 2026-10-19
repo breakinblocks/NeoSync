@@ -1,13 +1,12 @@
 package com.breakinblocks.neosync.api.shell;
 
-import net.minecraft.util.Tuple;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Stream;
+import net.minecraft.util.Tuple;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * An interface that represents a replicable life form.
@@ -56,7 +55,10 @@ public interface Shell extends ShellStateManager {
 
     @Contract("null -> false")
     default boolean canAutoSyncInto(ShellState state) {
-        return this.isDeathSyncEnabled() && this.canBeApplied(state) && state.getProgress() >= ShellState.PROGRESS_DONE && !state.isManualOnly();
+        return this.isDeathSyncEnabled()
+                && this.canBeApplied(state)
+                && state.getProgress() >= ShellState.PROGRESS_DONE
+                && !state.isManualOnly();
     }
 
     default boolean hasAutoSyncTarget() {
@@ -110,5 +112,5 @@ public interface Shell extends ShellStateManager {
     }
 
     @Override
-    default void clearPendingUpdates(UUID owner) { }
+    default void clearPendingUpdates(UUID owner) {}
 }

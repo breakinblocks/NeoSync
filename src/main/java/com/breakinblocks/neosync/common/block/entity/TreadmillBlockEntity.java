@@ -1,21 +1,21 @@
 package com.breakinblocks.neosync.common.block.entity;
 
+import com.breakinblocks.neosync.api.event.EntityFitnessEvents;
+import com.breakinblocks.neosync.common.block.TreadmillBlock;
+import com.breakinblocks.neosync.common.config.SyncConfig;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.util.RandomSource;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.network.Connection;
-import net.minecraft.util.ProblemReporter;
-import net.minecraft.world.level.storage.TagValueInput;
-import net.minecraft.world.level.storage.TagValueOutput;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -26,18 +26,14 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.transfer.energy.EnergyHandler;
 import net.neoforged.neoforge.transfer.transaction.Transaction;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
-import com.breakinblocks.neosync.api.event.EntityFitnessEvents;
-import com.breakinblocks.neosync.common.block.TreadmillBlock;
-import com.breakinblocks.neosync.common.config.SyncConfig;
-
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEntity, TickableBlockEntity, EnergyHandler {
     private static final int MAX_RUNNING_TIME = 20 * 60 * 15;
@@ -123,16 +119,24 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
             for (int i = 0; i < 2; ++i) {
                 double dx = (rand.nextDouble() - 0.5) * 0.4;
                 double dz = (rand.nextDouble() - 0.5) * 0.4;
-                world.addParticle(ParticleTypes.SMOKE,
-                        cx + dx, cy + rand.nextDouble() * 0.1, cz + dz,
-                        face.getStepX() * -0.05, 0.02, face.getStepZ() * -0.05);
+                world.addParticle(
+                        ParticleTypes.SMOKE,
+                        cx + dx,
+                        cy + rand.nextDouble() * 0.1,
+                        cz + dz,
+                        face.getStepX() * -0.05,
+                        0.02,
+                        face.getStepZ() * -0.05);
             }
             if (this.isOverheated() && this.runningTime % 4 == 0) {
-                world.addParticle(ParticleTypes.LARGE_SMOKE,
+                world.addParticle(
+                        ParticleTypes.LARGE_SMOKE,
                         cx + (rand.nextDouble() - 0.5) * 0.3,
                         cy + 0.2,
                         cz + (rand.nextDouble() - 0.5) * 0.3,
-                        0, 0.05, 0);
+                        0,
+                        0.05,
+                        0);
             }
         }
     }
@@ -176,7 +180,7 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
 
             livingEntity.setNoActionTime(0);
         }
-        this.storedEnergy = this.producibleEnergyQuantity * (long)(1.0 + 0.5 * this.runningTime / MAX_RUNNING_TIME);
+        this.storedEnergy = this.producibleEnergyQuantity * (long) (1.0 + 0.5 * this.runningTime / MAX_RUNNING_TIME);
         this.transferEnergy(world, pos);
         if (this.runningTime < MAX_RUNNING_TIME) {
             ++this.runningTime;
@@ -188,7 +192,8 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
     }
 
     public void onSteppedOn(BlockPos pos, BlockState state, Entity entity) {
-        if (this.runner != null || !isEntityNear(entity, computeTreadmillPivot(pos, state.getValue(TreadmillBlock.FACING)))) {
+        if (this.runner != null
+                || !isEntityNear(entity, computeTreadmillPivot(pos, state.getValue(TreadmillBlock.FACING)))) {
             return;
         }
 
@@ -241,8 +246,8 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
             for (Direction direction : Direction.values()) {
                 if (back.storedEnergy <= 0) return;
                 BlockPos neighborPos = pos.relative(direction);
-                EnergyHandler neighbor = serverLevel.getCapability(Capabilities.Energy.BLOCK,
-                        neighborPos, direction.getOpposite());
+                EnergyHandler neighbor =
+                        serverLevel.getCapability(Capabilities.Energy.BLOCK, neighborPos, direction.getOpposite());
                 if (neighbor != null) {
                     try (Transaction tx = Transaction.openRoot()) {
                         int transferred = neighbor.insert((int) Math.min(back.storedEnergy, Integer.MAX_VALUE), tx);
@@ -270,7 +275,8 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
         if (TreadmillBlock.isBack(this.getBlockState())) {
             this.cachedBackPart = this;
         } else {
-            BlockPos backPartPos = this.worldPosition.relative(this.getBlockState().getValue(TreadmillBlock.FACING).getOpposite());
+            BlockPos backPartPos = this.worldPosition.relative(
+                    this.getBlockState().getValue(TreadmillBlock.FACING).getOpposite());
             BlockEntity be = this.level.getBlockEntity(backPartPos);
             this.cachedBackPart = be instanceof TreadmillBlockEntity ? (TreadmillBlockEntity) be : null;
         }
@@ -295,7 +301,6 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
         return out.buildResult();
     }
 
-
     @Override
     protected void loadAdditional(ValueInput in) {
         super.loadAdditional(in);
@@ -308,7 +313,8 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
     @Override
     protected void saveAdditional(ValueOutput out) {
         super.saveAdditional(out);
-        UUID runnerUuid = this.runnerUUID == null ? this.runner == null ? null : this.runner.getUUID() : this.runnerUUID;
+        UUID runnerUuid =
+                this.runnerUUID == null ? this.runner == null ? null : this.runner.getUUID() : this.runnerUUID;
         if (runnerUuid != null) {
             out.store("runner", UUIDUtil.CODEC, runnerUuid);
         }
@@ -321,7 +327,9 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
     }
 
     private static Long getOutputEnergyQuantityForEntity(Entity entity, EnergyHandler energyStorage) {
-        return EntityFitnessEvents.MODIFY_OUTPUT_ENERGY_QUANTITY.invoker().modifyOutputEnergyQuantity(entity, energyStorage, ENERGY_MAP.get(entity.getType()));
+        return EntityFitnessEvents.MODIFY_OUTPUT_ENERGY_QUANTITY
+                .invoker()
+                .modifyOutputEnergyQuantity(entity, energyStorage, ENERGY_MAP.get(entity.getType()));
     }
 
     private static boolean isValidEntity(Entity entity) {
@@ -329,12 +337,13 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
             return false;
         }
 
-        return (
-                !entity.isSpectator() && !entity.isCrouching() && !entity.isInWater() &&
-                        (!(entity instanceof LivingEntity livingEntity) || livingEntity.hurtTime <= 0 && !livingEntity.isBaby()) &&
-                        (!(entity instanceof Mob mobEntity) || !mobEntity.isLeashed()) &&
-                        (!(entity instanceof TamableAnimal tameableEntity) || !tameableEntity.isOrderedToSit())
-        );
+        return (!entity.isSpectator()
+                && !entity.isCrouching()
+                && !entity.isInWater()
+                && (!(entity instanceof LivingEntity livingEntity)
+                        || livingEntity.hurtTime <= 0 && !livingEntity.isBaby())
+                && (!(entity instanceof Mob mobEntity) || !mobEntity.isLeashed())
+                && (!(entity instanceof TamableAnimal tameableEntity) || !tameableEntity.isOrderedToSit()));
     }
 
     private static boolean isEntityNear(Entity entity, Vec3 pos) {
@@ -342,17 +351,19 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
     }
 
     private static Vec3 computeTreadmillPivot(BlockPos pos, Direction face) {
-        double x = switch (face) {
-            case WEST -> pos.getX();
-            case EAST -> pos.getX() + 1;
-            default -> pos.getX() + 0.5D;
-        };
+        double x =
+                switch (face) {
+                    case WEST -> pos.getX();
+                    case EAST -> pos.getX() + 1;
+                    default -> pos.getX() + 0.5D;
+                };
         double y = pos.getY() + 0.175;
-        double z = switch (face) {
-            case SOUTH -> pos.getZ() + 1;
-            case NORTH -> pos.getZ();
-            default -> pos.getZ() + 0.5D;
-        };
+        double z =
+                switch (face) {
+                    case SOUTH -> pos.getZ() + 1;
+                    case NORTH -> pos.getZ();
+                    default -> pos.getZ() + 0.5D;
+                };
         return new Vec3(x, y, z);
     }
 
@@ -361,7 +372,6 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
                 .collect(Collectors.toUnmodifiableMap(
                         SyncConfig.EnergyMapEntry::getEntityType,
                         SyncConfig.EnergyMapEntry::outputEnergyQuantity,
-                        (a, b) -> a
-                ));
+                        (a, b) -> a));
     }
 }

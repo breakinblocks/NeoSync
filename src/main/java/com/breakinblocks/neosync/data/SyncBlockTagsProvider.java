@@ -1,13 +1,12 @@
 package com.breakinblocks.neosync.data;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.common.block.SyncBlocks;
+import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.common.block.SyncBlocks;
-
-import java.util.concurrent.CompletableFuture;
 
 public final class SyncBlockTagsProvider extends BlockTagsProvider {
     public SyncBlockTagsProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {

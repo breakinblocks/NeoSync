@@ -1,8 +1,7 @@
 package com.breakinblocks.neosync.client.texture;
 
-import net.minecraft.client.renderer.texture.AbstractTexture;
-
 import java.util.stream.Stream;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 
 @FunctionalInterface
 public interface TextureGenerator {

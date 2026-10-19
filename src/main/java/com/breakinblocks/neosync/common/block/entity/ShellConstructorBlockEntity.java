@@ -1,9 +1,16 @@
 package com.breakinblocks.neosync.common.block.entity;
 
+import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.common.block.AbstractShellContainerBlock;
+import com.breakinblocks.neosync.common.block.ShellConstructorBlock;
+import com.breakinblocks.neosync.common.config.SyncConfig;
+import com.breakinblocks.neosync.common.entity.damage.FingerstickDamageSource;
+import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.util.RandomSource;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -13,13 +20,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.transfer.energy.EnergyHandler;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
-import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.common.block.AbstractShellContainerBlock;
-import com.breakinblocks.neosync.common.block.ShellConstructorBlock;
-import com.breakinblocks.neosync.common.config.SyncConfig;
-import com.breakinblocks.neosync.common.entity.damage.FingerstickDamageSource;
-import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import org.jetbrains.annotations.Nullable;
 
 public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEntity implements EnergyHandler {
@@ -27,7 +27,8 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
         this(SyncBlockEntities.SHELL_CONSTRUCTOR.get(), pos, state);
     }
 
-    protected ShellConstructorBlockEntity(BlockEntityType<? extends ShellConstructorBlockEntity> type, BlockPos pos, BlockState state) {
+    protected ShellConstructorBlockEntity(
+            BlockEntityType<? extends ShellConstructorBlockEntity> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
@@ -50,8 +51,14 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
         double px = pos.getX() + 0.5 + (rand.nextDouble() - 0.5) * 0.8;
         double pz = pos.getZ() + 0.5 + (rand.nextDouble() - 0.5) * 0.8;
         double py = pos.getY() + s.getProgress() * 1.8 + rand.nextDouble() * 0.2;
-        world.addParticle(ParticleTypes.ELECTRIC_SPARK, px, py, pz,
-                (rand.nextDouble() - 0.5) * 0.02, rand.nextDouble() * 0.04, (rand.nextDouble() - 0.5) * 0.02);
+        world.addParticle(
+                ParticleTypes.ELECTRIC_SPARK,
+                px,
+                py,
+                pz,
+                (rand.nextDouble() - 0.5) * 0.02,
+                rand.nextDouble() * 0.04,
+                (rand.nextDouble() - 0.5) * 0.02);
     }
 
     public InteractionResult onUse(Level world, BlockPos pos, Player player, InteractionHand hand) {
@@ -77,11 +84,14 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
         if (player instanceof ServerPlayer serverPlayer) {
             SyncConfig config = SyncConfig.getInstance();
 
-            float damage = serverPlayer.level().getServer().isHardcore() ? config.hardcoreFingerstickDamage() : config.fingerstickDamage();
+            float damage = serverPlayer.level().getServer().isHardcore()
+                    ? config.hardcoreFingerstickDamage()
+                    : config.fingerstickDamage();
 
             boolean isCreative = !serverPlayer.gameMode.isSurvival();
             boolean isLowOnHealth = (player.getHealth() + player.getAbsorptionAmount()) <= damage;
-            boolean hasTotemOfUndying = player.getMainHandItem().is(Items.TOTEM_OF_UNDYING) || player.getOffhandItem().is(Items.TOTEM_OF_UNDYING);
+            boolean hasTotemOfUndying = player.getMainHandItem().is(Items.TOTEM_OF_UNDYING)
+                    || player.getOffhandItem().is(Items.TOTEM_OF_UNDYING);
             if (isLowOnHealth && !isCreative && !hasTotemOfUndying && config.warnPlayerInsteadOfKilling()) {
                 return PlayerSyncEvents.ShellConstructionFailureReason.NOT_ENOUGH_HEALTH;
             }
@@ -99,7 +109,8 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
 
     @Override
     public long getAmountAsLong() {
-        ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
+        ShellConstructorBlockEntity bottom =
+                (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
         if (bottom == null || bottom.shell == null) return 0L;
         long cap = SyncConfig.getInstance().shellConstructorEnergyRequirement();
         return (long) (bottom.shell.getProgress() * cap);
@@ -107,13 +118,17 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
 
     @Override
     public long getCapacityAsLong() {
-        ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
-        return bottom != null && bottom.shell != null ? SyncConfig.getInstance().shellConstructorEnergyRequirement() : 0L;
+        ShellConstructorBlockEntity bottom =
+                (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
+        return bottom != null && bottom.shell != null
+                ? SyncConfig.getInstance().shellConstructorEnergyRequirement()
+                : 0L;
     }
 
     @Override
     public int insert(int amount, TransactionContext transaction) {
-        ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
+        ShellConstructorBlockEntity bottom =
+                (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
         if (bottom == null || bottom.shell == null || bottom.shell.getProgress() >= ShellState.PROGRESS_DONE) return 0;
         int capacity = (int) SyncConfig.getInstance().shellConstructorEnergyRequirement();
         int missingFE = (int) Math.ceil((ShellState.PROGRESS_DONE - bottom.shell.getProgress()) * capacity);

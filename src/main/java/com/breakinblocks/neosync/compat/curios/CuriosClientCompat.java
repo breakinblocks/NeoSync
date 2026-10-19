@@ -2,12 +2,11 @@ package com.breakinblocks.neosync.compat.curios;
 
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.mojang.logging.LogUtils;
-import net.minecraft.world.entity.LivingEntity;
-import org.slf4j.Logger;
-
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import net.minecraft.world.entity.LivingEntity;
+import org.slf4j.Logger;
 
 public final class CuriosClientCompat {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -39,8 +38,8 @@ public final class CuriosClientCompat {
     private static MethodHandle findDressShell() {
         try {
             Class<?> cls = Class.forName("com.breakinblocks.neosync.compat.curios.client.ShellCurios");
-            return MethodHandles.lookup().findStatic(cls, "dress",
-                    MethodType.methodType(void.class, LivingEntity.class, ShellState.class));
+            return MethodHandles.lookup()
+                    .findStatic(cls, "dress", MethodType.methodType(void.class, LivingEntity.class, ShellState.class));
         } catch (Throwable t) {
             LOGGER.warn("Curios is loaded but stored shells will render without their curios", t);
             return null;

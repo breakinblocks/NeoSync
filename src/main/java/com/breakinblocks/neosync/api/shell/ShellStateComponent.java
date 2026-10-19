@@ -1,15 +1,14 @@
 package com.breakinblocks.neosync.api.shell;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Represents attachable shell data.
@@ -83,9 +82,8 @@ public abstract class ShellStateComponent {
     @Nullable
     @SuppressWarnings("unchecked")
     public <T> T as(Class<T> type) {
-        return type.isInstance(this) ? (T)this : null;
+        return type.isInstance(this) ? (T) this : null;
     }
-
 
     /**
      * Creates a new instance of {@link ShellStateComponent} that has no player data.
@@ -93,7 +91,8 @@ public abstract class ShellStateComponent {
      * @return The {@linkplain ShellStateComponent}.
      */
     public static ShellStateComponent empty() {
-        Collection<ShellStateComponentFactoryRegistry.ShellStateComponentFactory> factories = ShellStateComponentFactoryRegistry.getInstance().getValues();
+        Collection<ShellStateComponentFactoryRegistry.ShellStateComponentFactory> factories =
+                ShellStateComponentFactoryRegistry.getInstance().getValues();
         List<ShellStateComponent> components = new ArrayList<>(factories.size());
         for (ShellStateComponentFactoryRegistry.ShellStateComponentFactory factory : factories) {
             components.add(factory.empty());
@@ -107,14 +106,14 @@ public abstract class ShellStateComponent {
      * @return The {@linkplain ShellStateComponent}.
      */
     public static ShellStateComponent of(ServerPlayer player) {
-        Collection<ShellStateComponentFactoryRegistry.ShellStateComponentFactory> factories = ShellStateComponentFactoryRegistry.getInstance().getValues();
+        Collection<ShellStateComponentFactoryRegistry.ShellStateComponentFactory> factories =
+                ShellStateComponentFactoryRegistry.getInstance().getValues();
         List<ShellStateComponent> components = new ArrayList<>(factories.size());
         for (ShellStateComponentFactoryRegistry.ShellStateComponentFactory factory : factories) {
             components.add(factory.of(player));
         }
         return ShellStateComponent.combine(components);
     }
-
 
     /**
      * Combines several {@link ShellStateComponent} into a single one.
@@ -155,7 +154,6 @@ public abstract class ShellStateComponent {
         };
     }
 
-
     private static class EmptyShellStateComponent extends ShellStateComponent {
         public static final ShellStateComponent INSTANCE = new EmptyShellStateComponent();
 
@@ -165,10 +163,10 @@ public abstract class ShellStateComponent {
         }
 
         @Override
-        public void clone(ShellStateComponent component) { }
+        public void clone(ShellStateComponent component) {}
 
         @Override
-        public void readNbt(CompoundTag nbt) { }
+        public void readNbt(CompoundTag nbt) {}
 
         @Override
         public CompoundTag writeNbt(CompoundTag nbt) {
@@ -181,7 +179,7 @@ public abstract class ShellStateComponent {
         }
 
         @Override
-        protected void readComponentNbt(CompoundTag nbt) { }
+        protected void readComponentNbt(CompoundTag nbt) {}
 
         @Override
         protected CompoundTag writeComponentNbt(CompoundTag nbt) {
@@ -253,7 +251,7 @@ public abstract class ShellStateComponent {
         }
 
         @Override
-        protected void readComponentNbt(CompoundTag nbt) { }
+        protected void readComponentNbt(CompoundTag nbt) {}
 
         @Override
         protected CompoundTag writeComponentNbt(CompoundTag nbt) {

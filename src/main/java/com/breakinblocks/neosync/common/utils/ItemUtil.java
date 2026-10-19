@@ -1,18 +1,18 @@
 package com.breakinblocks.neosync.common.utils;
 
+import com.breakinblocks.neosync.common.config.SyncConfig;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EquipmentSlot;
 // ArmorType import not needed
-import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.core.registries.BuiltInRegistries;
-import com.breakinblocks.neosync.common.config.SyncConfig;
 
 public final class ItemUtil {
     private static final TagKey<Item> WRENCHES = ItemTags.create(Identifier.fromNamespaceAndPath("c", "tools/wrench"));
@@ -23,7 +23,8 @@ public final class ItemUtil {
         }
 
         SyncConfig config = SyncConfig.getInstance();
-        Identifier wrenchId = config.wrench() == null || config.wrench().isBlank() ? null : Identifier.tryParse(config.wrench());
+        Identifier wrenchId =
+                config.wrench() == null || config.wrench().isBlank() ? null : Identifier.tryParse(config.wrench());
         if (wrenchId == null) {
             return false;
         }
@@ -56,6 +57,5 @@ public final class ItemUtil {
         return getPreferredEquipmentSlot(new ItemStack(item));
     }
 
-    private ItemUtil() {
-    }
+    private ItemUtil() {}
 }

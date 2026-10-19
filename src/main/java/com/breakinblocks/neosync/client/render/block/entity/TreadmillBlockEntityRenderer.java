@@ -1,5 +1,10 @@
 package com.breakinblocks.neosync.client.render.block.entity;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.client.model.SyncModelLayers;
+import com.breakinblocks.neosync.client.model.TreadmillModel;
+import com.breakinblocks.neosync.common.block.TreadmillBlock;
+import com.breakinblocks.neosync.common.block.entity.TreadmillBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -10,13 +15,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.client.model.SyncModelLayers;
-import com.breakinblocks.neosync.client.model.TreadmillModel;
-import com.breakinblocks.neosync.common.block.TreadmillBlock;
-import com.breakinblocks.neosync.common.block.entity.TreadmillBlockEntity;
 
-public class TreadmillBlockEntityRenderer extends DoubleBlockEntityRenderer<TreadmillBlockEntity, TreadmillRenderState> {
+public class TreadmillBlockEntityRenderer
+        extends DoubleBlockEntityRenderer<TreadmillBlockEntity, TreadmillRenderState> {
     public static final Identifier TEXTURE = NeoSync.locate("textures/block/treadmill.png");
 
     private final TreadmillModel model;
@@ -32,7 +33,12 @@ public class TreadmillBlockEntityRenderer extends DoubleBlockEntityRenderer<Trea
     }
 
     @Override
-    public void extractRenderState(TreadmillBlockEntity blockEntity, TreadmillRenderState renderState, float partialTick, Vec3 cameraPosition, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
+    public void extractRenderState(
+            TreadmillBlockEntity blockEntity,
+            TreadmillRenderState renderState,
+            float partialTick,
+            Vec3 cameraPosition,
+            ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
         super.extractRenderState(blockEntity, renderState, partialTick, cameraPosition, breakProgress);
         BlockState blockState = blockEntity.getBlockState();
         renderState.facing = blockState.getValue(TreadmillBlock.FACING);
@@ -41,10 +47,22 @@ public class TreadmillBlockEntityRenderer extends DoubleBlockEntityRenderer<Trea
     }
 
     @Override
-    public void submit(TreadmillRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
+    public void submit(
+            TreadmillRenderState state,
+            PoseStack poseStack,
+            SubmitNodeCollector submitNodeCollector,
+            CameraRenderState camera) {
         poseStack.pushPose();
         AbstractShellContainerBlockEntityRenderer.applyMachineTransform(poseStack, state.facing);
-        submitNodeCollector.submitModel(this.model, state, poseStack, TEXTURE, state.lightCoords, OverlayTexture.NO_OVERLAY, 0, state.breakProgress);
+        submitNodeCollector.submitModel(
+                this.model,
+                state,
+                poseStack,
+                TEXTURE,
+                state.lightCoords,
+                OverlayTexture.NO_OVERLAY,
+                0,
+                state.breakProgress);
         poseStack.popPose();
     }
 }

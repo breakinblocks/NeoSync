@@ -1,18 +1,16 @@
 package com.breakinblocks.neosync.common.command;
 
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
-import net.minecraft.server.MinecraftServer;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.common.utils.reflect.Activator;
-
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import java.util.HashSet;
 import java.util.Set;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 @EventBusSubscriber(modid = NeoSync.MOD_ID)
 public class SyncCommands {
@@ -25,8 +23,7 @@ public class SyncCommands {
         register(PurgeShellsCommand.class);
     }
 
-    public static void init() {
-    }
+    public static void init() {}
 
     private static <T extends Command> void register(Class<T> type) {
         COMMANDS.add(Activator.createInstance(type));

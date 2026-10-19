@@ -1,19 +1,20 @@
 package com.breakinblocks.neosync.common.item;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
 
 public class SyncCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, NeoSync.MOD_ID);
 
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> SYNC_TAB = CREATIVE_MODE_TABS.register("sync_tab",
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> SYNC_TAB = CREATIVE_MODE_TABS.register(
+            "sync_tab",
             () -> CreativeModeTab.builder()
                     .icon(() -> new ItemStack(SyncItems.SYNC_CORE.get()))
                     .title(Component.translatable("creativetab.neosync"))
@@ -28,6 +29,6 @@ public class SyncCreativeTabs {
                         if (GuideMeCompat.isLoaded()) {
                             output.accept(GuideMeCompat.createGuideItem());
                         }
-                    }).build()
-    );
+                    })
+                    .build());
 }

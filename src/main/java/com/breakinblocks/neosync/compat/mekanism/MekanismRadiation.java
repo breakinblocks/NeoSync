@@ -38,7 +38,7 @@ final class MekanismRadiation {
         if (radiation == null) {
             player.removeData(type);
         } else if (player.getData(type) instanceof Double) {
-            player.setData((AttachmentType<Double>)type, radiation);
+            player.setData((AttachmentType<Double>) type, radiation);
         }
     }
 
@@ -48,7 +48,9 @@ final class MekanismRadiation {
             resolved = true;
             attachment = NeoForgeRegistries.ATTACHMENT_TYPES.getValue(ATTACHMENT_ID);
             if (attachment == null) {
-                LOGGER.warn("Mekanism is loaded but its {} attachment is missing; shells will keep the radiation of the body they replace", ATTACHMENT_ID);
+                LOGGER.warn(
+                        "Mekanism is loaded but its {} attachment is missing; shells will keep the radiation of the body they replace",
+                        ATTACHMENT_ID);
             }
         }
         return attachment;

@@ -5,7 +5,8 @@ import com.breakinblocks.neosync.api.shell.ShellStateComponentFactoryRegistry;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
-public class MekanismShellStateComponentFactory implements ShellStateComponentFactoryRegistry.ShellStateComponentFactory {
+public class MekanismShellStateComponentFactory
+        implements ShellStateComponentFactoryRegistry.ShellStateComponentFactory {
     @Override
     public ShellStateComponent empty() {
         return new StoredRadiation();

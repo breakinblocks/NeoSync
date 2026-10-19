@@ -1,5 +1,7 @@
 package com.breakinblocks.neosync.common.block;
 
+import com.breakinblocks.neosync.client.ClientShellStorageInteraction;
+import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -16,8 +18,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.redstone.Orientation;
 import org.jetbrains.annotations.Nullable;
-import com.breakinblocks.neosync.client.ClientShellStorageInteraction;
-import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
 
 @SuppressWarnings("deprecation")
 public class ShellStorageBlock extends AbstractShellContainerBlock {
@@ -27,7 +27,11 @@ public class ShellStorageBlock extends AbstractShellContainerBlock {
 
     public ShellStorageBlock(Properties properties) {
         super(properties);
-        this.registerDefaultState(this.getStateDefinition().any().setValue(OPEN, false).setValue(ENABLED, false).setValue(POWERED, false));
+        this.registerDefaultState(this.getStateDefinition()
+                .any()
+                .setValue(OPEN, false)
+                .setValue(ENABLED, false)
+                .setValue(POWERED, false));
     }
 
     @Override
@@ -68,8 +72,13 @@ public class ShellStorageBlock extends AbstractShellContainerBlock {
     }
 
     @Override
-    protected void neighborChanged(BlockState state, Level world, BlockPos pos, Block block,
-            @Nullable Orientation orientation, boolean movedByPiston) {
+    protected void neighborChanged(
+            BlockState state,
+            Level world,
+            BlockPos pos,
+            Block block,
+            @Nullable Orientation orientation,
+            boolean movedByPiston) {
         if (!world.isClientSide()) {
             boolean enabled = state.getValue(ENABLED);
             boolean shouldBeEnabled = shouldBeEnabled(state, world, pos);
@@ -90,8 +99,13 @@ public class ShellStorageBlock extends AbstractShellContainerBlock {
     }
 
     @Override
-    protected void entityInside(BlockState state, Level world, BlockPos pos, Entity entity,
-            InsideBlockEffectApplier effectApplier, boolean isPrecise) {
+    protected void entityInside(
+            BlockState state,
+            Level world,
+            BlockPos pos,
+            Entity entity,
+            InsideBlockEffectApplier effectApplier,
+            boolean isPrecise) {
         if (world.isClientSide() && entity instanceof Player && isBottom(state)) {
             BlockEntity blockEntity = world.getBlockEntity(pos);
             if (blockEntity instanceof ShellStorageBlockEntity storage) {
@@ -108,6 +122,7 @@ public class ShellStorageBlock extends AbstractShellContainerBlock {
     }
 
     private static boolean shouldBeEnabled(BlockState state, Level world, BlockPos pos) {
-        return world.hasNeighborSignal(pos) || world.hasNeighborSignal(pos.relative(getDirectionTowardsAnotherPart(state)));
+        return world.hasNeighborSignal(pos)
+                || world.hasNeighborSignal(pos.relative(getDirectionTowardsAnotherPart(state)));
     }
 }

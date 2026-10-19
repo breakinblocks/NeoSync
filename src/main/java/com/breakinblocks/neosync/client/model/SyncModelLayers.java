@@ -1,7 +1,7 @@
 package com.breakinblocks.neosync.client.model;
 
-import net.minecraft.client.model.geom.ModelLayerLocation;
 import com.breakinblocks.neosync.NeoSync;
+import net.minecraft.client.model.geom.ModelLayerLocation;
 
 public final class SyncModelLayers {
     public static final ModelLayerLocation SHELL_STORAGE = create("shell_storage", "main");

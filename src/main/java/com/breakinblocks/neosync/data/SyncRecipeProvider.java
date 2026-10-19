@@ -1,5 +1,8 @@
 package com.breakinblocks.neosync.data;
 
+import com.breakinblocks.neosync.common.item.SyncItems;
+import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
+import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -13,10 +16,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.conditions.ModLoadedCondition;
-import com.breakinblocks.neosync.common.item.SyncItems;
-import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
-
-import java.util.concurrent.CompletableFuture;
 
 public final class SyncRecipeProvider extends RecipeProvider {
     private final HolderGetter<Item> items;
@@ -99,7 +98,9 @@ public final class SyncRecipeProvider extends RecipeProvider {
                     .requires(Items.BOOK)
                     .requires(Items.REDSTONE, 3)
                     .unlockedBy("has_book", has(Items.BOOK))
-                    .save(this.output.withConditions(new ModLoadedCondition("guideme")), ResourceKey.create(Registries.RECIPE, GuideMeCompat.GUIDE_ID));
+                    .save(
+                            this.output.withConditions(new ModLoadedCondition("guideme")),
+                            ResourceKey.create(Registries.RECIPE, GuideMeCompat.GUIDE_ID));
         }
     }
 

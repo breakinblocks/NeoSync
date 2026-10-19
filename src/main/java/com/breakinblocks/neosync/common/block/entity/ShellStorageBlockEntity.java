@@ -2,6 +2,7 @@ package com.breakinblocks.neosync.common.block.entity;
 
 import com.breakinblocks.neosync.common.block.ShellStorageBlock;
 import com.breakinblocks.neosync.common.config.SyncConfig;
+import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
@@ -19,7 +20,6 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.transfer.energy.EnergyHandler;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
-import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 
 public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity implements EnergyHandler {
     private EntityState entityState;
@@ -31,7 +31,8 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
         this(SyncBlockEntities.SHELL_STORAGE.get(), pos, state);
     }
 
-    protected ShellStorageBlockEntity(BlockEntityType<? extends ShellStorageBlockEntity> type, BlockPos pos, BlockState state) {
+    protected ShellStorageBlockEntity(
+            BlockEntityType<? extends ShellStorageBlockEntity> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         this.entityState = EntityState.NONE;
         this.connectorAnimator = new BooleanAnimator(false);
@@ -54,7 +55,9 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
     }
 
     public float getConnectorProgress(float tickDelta) {
-        return this.getBottomPart().map(x -> ((ShellStorageBlockEntity)x).connectorAnimator.getProgress(tickDelta)).orElse(0f);
+        return this.getBottomPart()
+                .map(x -> ((ShellStorageBlockEntity) x).connectorAnimator.getProgress(tickDelta))
+                .orElse(0f);
     }
 
     @Override
@@ -63,12 +66,12 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
 
         SyncConfig config = SyncConfig.getInstance();
         boolean infinitePower = !this.requiresPower() || config.shellStorageConsumption() == 0;
-        boolean isReceivingRedstonePower = !infinitePower
-                && config.shellStorageAcceptsRedstone()
-                && ShellStorageBlock.isEnabled(state);
+        boolean isReceivingRedstonePower =
+                !infinitePower && config.shellStorageAcceptsRedstone() && ShellStorageBlock.isEnabled(state);
         boolean hasEnergy = infinitePower ? true : this.storedEnergy > 0;
         boolean isPowered = infinitePower || isReceivingRedstonePower || hasEnergy;
-        boolean shouldBeOpen = this.shouldOpenDoors(world, pos, isPowered) && this.getBottomPart().map(x -> x.shell == null).orElse(true);
+        boolean shouldBeOpen = this.shouldOpenDoors(world, pos, isPowered)
+                && this.getBottomPart().map(x -> x.shell == null).orElse(true);
 
         ShellStorageBlock.setPowered(state, world, pos, isPowered);
         ShellStorageBlock.setOpen(state, world, pos, shouldBeOpen);
@@ -77,7 +80,7 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
             if (this.shell != null && !isPowered) {
                 ++this.ticksWithoutPower;
                 if (this.ticksWithoutPower >= config.shellStorageMaxUnpoweredLifespan()) {
-                    this.destroyShell((ServerLevel)world, pos);
+                    this.destroyShell((ServerLevel) world, pos);
                 }
             } else {
                 this.ticksWithoutPower = 0;
@@ -85,7 +88,8 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
         }
 
         if (!infinitePower && !isReceivingRedstonePower && hasEnergy && this.shell != null) {
-            this.storedEnergy = (int) Mth.clamp(this.storedEnergy - config.shellStorageConsumption(), 0, config.shellStorageCapacity());
+            this.storedEnergy = (int)
+                    Mth.clamp(this.storedEnergy - config.shellStorageConsumption(), 0, config.shellStorageCapacity());
         }
     }
 
@@ -126,18 +130,23 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
 
     @Override
     public long getAmountAsLong() {
-        return this.getBottomPart().map(x -> (long) ((ShellStorageBlockEntity) x).storedEnergy).orElse(0L);
+        return this.getBottomPart()
+                .map(x -> (long) ((ShellStorageBlockEntity) x).storedEnergy)
+                .orElse(0L);
     }
 
     @Override
     public long getCapacityAsLong() {
-        return !this.requiresPower() || SyncConfig.getInstance().shellStorageConsumption() == 0 ? 0L : SyncConfig.getInstance().shellStorageCapacity();
+        return !this.requiresPower() || SyncConfig.getInstance().shellStorageConsumption() == 0
+                ? 0L
+                : SyncConfig.getInstance().shellStorageCapacity();
     }
 
     @Override
     public int insert(int amount, TransactionContext transaction) {
         if (!this.requiresPower() || SyncConfig.getInstance().shellStorageConsumption() == 0) return 0;
-        ShellStorageBlockEntity bottom = (ShellStorageBlockEntity) this.getBottomPart().orElse(null);
+        ShellStorageBlockEntity bottom =
+                (ShellStorageBlockEntity) this.getBottomPart().orElse(null);
         if (bottom == null) return 0;
         int capacity = (int) this.getCapacityAsLong();
         int maxEnergy = Mth.clamp(capacity - bottom.storedEnergy, 0, capacity);
@@ -171,5 +180,4 @@ public class ShellStorageBlockEntity extends AbstractShellContainerBlockEntity i
         CHILLING,
         LEAVING
     }
-
 }

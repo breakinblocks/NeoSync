@@ -17,7 +17,7 @@ public final class ColorUtil {
         float r = ((packed >> 16) & 0xFF) / 255F;
         float g = ((packed >> 8) & 0xFF) / 255F;
         float b = (packed & 0xFF) / 255F;
-        return new float[] { r, g, b };
+        return new float[] {r, g, b};
     }
 
     public static int fromRGBA(float r, float g, float b, float a) {
@@ -30,7 +30,7 @@ public final class ColorUtil {
         float g = ((color >> 8) & 255) / 255F;
         float b = (color & 255) / 255F;
 
-        return new float[] { r, g, b, a };
+        return new float[] {r, g, b, a};
     }
 
     private static int clamp255(float v) {
@@ -40,6 +40,5 @@ public final class ColorUtil {
         return i;
     }
 
-    private ColorUtil() {
-    }
+    private ColorUtil() {}
 }
