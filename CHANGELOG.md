@@ -1,5 +1,12 @@
 # NeoSync Changelog
 
+## 1.7.2
+
+### Fixed
+
+- Other players no longer see you lying sideways after you die and sync into a shell in another dimension.
+- Mods that open nearby doors automatically, such as EyeMine, no longer right-click Shell Storages and Shell Constructors as you walk past. The blocks' door state is now `doors_open` instead of the vanilla `open`.
+
 ## 1.7.1
 
 ### Added

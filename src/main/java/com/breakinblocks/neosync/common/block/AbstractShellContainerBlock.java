@@ -41,7 +41,7 @@ import com.breakinblocks.neosync.common.utils.ItemUtil;
 public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
+    public static final BooleanProperty OPEN = BooleanProperty.create("doors_open");
     public static final EnumProperty<ComparatorOutputType> OUTPUT = EnumProperty.create("output", ComparatorOutputType.class);
 
     private static final VoxelShape SOLID_SHAPE_TOP;
