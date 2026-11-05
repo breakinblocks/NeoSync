@@ -4,6 +4,7 @@ import com.breakinblocks.neosync.client.render.SyncRenderers;
 import com.breakinblocks.neosync.common.block.SyncBlocks;
 import com.breakinblocks.neosync.common.block.entity.SyncBlockEntities;
 import com.breakinblocks.neosync.common.command.SyncCommands;
+import com.breakinblocks.neosync.common.config.SyncClientConfig;
 import com.breakinblocks.neosync.common.config.SyncConfig;
 import com.breakinblocks.neosync.common.item.SyncCreativeTabs;
 import com.breakinblocks.neosync.common.item.SyncItems;
@@ -25,6 +26,7 @@ public class NeoSync {
 
     public NeoSync(IEventBus modEventBus, ModContainer container, Dist dist) {
         container.registerConfig(ModConfig.Type.COMMON, SyncConfig.SPEC, MOD_ID + "-common.toml");
+        container.registerConfig(ModConfig.Type.CLIENT, SyncClientConfig.SPEC, MOD_ID + "-client.toml");
 
         SyncBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         SyncCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);

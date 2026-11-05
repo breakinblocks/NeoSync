@@ -1,5 +1,16 @@
 # NeoSync Changelog
 
+## 1.7.5
+
+### Added
+
+- A client config option, `syncCameraAnimation` in `neosync-client.toml`, turns off the camera flight when you sync or die, for players it makes motion sick. Set it to `false` to cut straight to the new shell (FTBTesting/Testing-Issues#4851).
+- Scrolling the mouse wheel in the shell selector switches between worlds, the same as the up and down arrows. Hold Shift while scrolling to switch pages when a world has more shells than fit on one (FTBTesting/Testing-Issues#4860).
+
+### Fixed
+
+- A long dimension name in the shell selector, such as a team base dimension, no longer runs across the shells beside it. It wraps onto a second line inside the ring and only gets smaller when two lines are not enough (FTBTesting/Testing-Issues#4852).
+
 ## 1.7.4
 
 ### Added

@@ -32,6 +32,7 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
 import org.joml.Matrix3x2f;
@@ -56,6 +57,9 @@ public class ShellSelectorGUI extends Screen {
     private static final int TEXT_COLOR = 0xFFFFFFFF;
     private static final int DISABLED_TEXT_COLOR = 0xFFAAAAAA;
     private static final int ARROW_HIT_SIZE = 22;
+    private static final int MAX_TITLE_LINES = 2;
+    private static final float MIN_TITLE_SCALE = 0.4F;
+    private static final float TITLE_WIDTH_RATIO = 1.6F;
 
     private final Runnable onCloseCallback;
     private final Runnable onRemovedCallback;
@@ -71,6 +75,8 @@ public class ShellSelectorGUI extends Screen {
     private int pageIndex;
     private int pageCount = 1;
     private boolean wasClosed;
+    private List<FormattedCharSequence> worldTitleLines = List.of();
+    private float worldTitleScale = 1F;
 
     private float centerX;
     private float centerY;
@@ -131,6 +137,23 @@ public class ShellSelectorGUI extends Screen {
         this.worldShells = shells;
         this.pageCount = Math.max(1, (shells.size() + SHELLS_PER_PAGE - 1) / SHELLS_PER_PAGE);
         this.selectPage(0);
+        this.layoutWorldTitle(world);
+    }
+
+    private void layoutWorldTitle(Identifier world) {
+        Component title = IdentifierUtil.prettifyAsText(world);
+        float scale = 1F;
+        List<FormattedCharSequence> lines = this.splitWorldTitle(title, scale);
+        while (lines.size() > MAX_TITLE_LINES && scale > MIN_TITLE_SCALE) {
+            scale *= 0.9F;
+            lines = this.splitWorldTitle(title, scale);
+        }
+        this.worldTitleLines = lines;
+        this.worldTitleScale = scale;
+    }
+
+    private List<FormattedCharSequence> splitWorldTitle(Component title, float scale) {
+        return this.font.split(title, Math.max(1, (int) (this.innerRadius * TITLE_WIDTH_RATIO / scale)));
     }
 
     private void selectPage(int index) {
@@ -271,8 +294,7 @@ public class ShellSelectorGUI extends Screen {
             return;
         }
 
-        Component world = IdentifierUtil.prettifyAsText(this.worlds.get(this.worldIndex));
-        graphics.centeredText(this.font, world, cx, cy - line - line / 2, TEXT_COLOR);
+        this.extractWorldTitle(graphics, cx, cy - line - line / 2 + this.font.lineHeight);
 
         Component pagination =
                 Component.translatable("gui.neosync.page_display.pagination", this.pageIndex + 1, this.pageCount);
@@ -287,6 +309,18 @@ public class ShellSelectorGUI extends Screen {
             ShellState shell = this.page.get(hovered);
             graphics.centeredText(this.font, shell.getDisplayName(), cx, cy + line + line / 2, TEXT_COLOR);
             graphics.centeredText(this.font, RENAME_PROMPT, cx, cy + line * 2 + line / 2, DISABLED_TEXT_COLOR);
+        }
+    }
+
+    private void extractWorldTitle(GuiGraphicsExtractor graphics, int cx, int bottom) {
+        float lineHeight = this.font.lineHeight * this.worldTitleScale;
+        float top = bottom - lineHeight * this.worldTitleLines.size();
+        for (int i = 0; i < this.worldTitleLines.size(); ++i) {
+            graphics.pose().pushMatrix();
+            graphics.pose().translate(cx, top + lineHeight * i);
+            graphics.pose().scale(this.worldTitleScale);
+            graphics.centeredText(this.font, this.worldTitleLines.get(i), 0, 0, TEXT_COLOR);
+            graphics.pose().popMatrix();
         }
     }
 
@@ -374,6 +408,28 @@ public class ShellSelectorGUI extends Screen {
         }
 
         return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (this.renaming != null || scrollY == 0) {
+            return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        }
+
+        int step = scrollY > 0 ? -1 : 1;
+        if (this.minecraft.hasShiftDown()) {
+            if (this.pageCount <= 1) {
+                return false;
+            }
+            this.selectPage(this.pageIndex + step);
+            return true;
+        }
+
+        if (this.worlds.size() <= 1) {
+            return false;
+        }
+        this.selectWorld(this.worldIndex + step);
+        return true;
     }
 
     @Override

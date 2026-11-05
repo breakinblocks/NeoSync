@@ -7,6 +7,7 @@ import com.breakinblocks.neosync.api.shell.ShellPriority;
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.client.gui.controller.DeathScreenController;
 import com.breakinblocks.neosync.client.gui.hud.HudController;
+import com.breakinblocks.neosync.common.config.SyncClientConfig;
 import com.breakinblocks.neosync.common.config.SyncConfig;
 import com.breakinblocks.neosync.common.entity.KillableEntity;
 import com.breakinblocks.neosync.common.entity.LookingEntity;
@@ -82,13 +83,18 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayer
         Direction facing = BlockPosUtil.getHorizontalFacing(pos, world)
                 .orElse(this.getDirection().getOpposite());
         SynchronizationRequestPacket request = new SynchronizationRequestPacket(state);
-        PersistentCameraEntityGoal cameraGoal = this.isDeadOrDying()
-                ? PersistentCameraEntityGoal.limbo(pos, facing, state.getPos(), __ -> request.send())
-                : PersistentCameraEntityGoal.stairwayToHeaven(pos, facing, state.getPos(), __ -> request.send());
 
         HudController.hide();
         DeathScreenController.suspend();
         this.minecraft.setScreen(null);
+        if (!SyncClientConfig.syncCameraAnimation()) {
+            request.send();
+            return null;
+        }
+
+        PersistentCameraEntityGoal cameraGoal = this.isDeadOrDying()
+                ? PersistentCameraEntityGoal.limbo(pos, facing, state.getPos(), __ -> request.send())
+                : PersistentCameraEntityGoal.stairwayToHeaven(pos, facing, state.getPos(), __ -> request.send());
         PersistentCameraEntity.setup(this.minecraft, cameraGoal);
         return null;
     }
@@ -133,7 +139,7 @@ public abstract class ClientPlayerEntityMixin extends AbstractClientPlayer
             }
         };
 
-        boolean enableCamera = Objects.equals(startWorld, targetWorld);
+        boolean enableCamera = SyncClientConfig.syncCameraAnimation() && Objects.equals(startWorld, targetWorld);
         if (enableCamera) {
             PersistentCameraEntityGoal cameraGoal = PersistentCameraEntityGoal.highwayToHell(
                     startPos, startFacing, targetPos, targetFacing, __ -> restore.run());
