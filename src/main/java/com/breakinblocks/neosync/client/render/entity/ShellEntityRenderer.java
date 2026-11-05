@@ -1,5 +1,9 @@
 package com.breakinblocks.neosync.client.render.entity;
 
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.client.model.ShellModel;
+import com.breakinblocks.neosync.common.block.entity.ShellEntity;
+import com.breakinblocks.neosync.compat.curios.CuriosClientCompat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -14,10 +18,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.client.model.ShellModel;
-import com.breakinblocks.neosync.common.block.entity.ShellEntity;
-import com.breakinblocks.neosync.compat.curios.CuriosClientCompat;
 
 @OnlyIn(Dist.CLIENT)
 public class ShellEntityRenderer extends PlayerRenderer {
@@ -29,14 +29,21 @@ public class ShellEntityRenderer extends PlayerRenderer {
         this.shadowRadius = 0;
         this.shadowStrength = 0;
 
-        RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> curiosLayer = CuriosClientCompat.createShellLayer(this);
+        RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> curiosLayer =
+                CuriosClientCompat.createShellLayer(this);
         if (curiosLayer != null) {
             this.addLayer(curiosLayer);
         }
     }
 
     @Override
-    public void render(AbstractClientPlayer player, float yaw, float partialTicks, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+    public void render(
+            AbstractClientPlayer player,
+            float yaw,
+            float partialTicks,
+            PoseStack poseStack,
+            MultiBufferSource bufferSource,
+            int packedLight) {
         poseStack.pushPose();
         try {
             poseStack.translate(0.5, 0, 0.5);
@@ -51,8 +58,13 @@ public class ShellEntityRenderer extends PlayerRenderer {
                 poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
 
                 this.applyStateToModel(this.shellModel, shell.getState());
-                VertexConsumer vertexConsumer = this.getVertexConsumerForPartiallyTexturedEntity(shell, progress, this.shellModel.getLayer(player.getSkin().texture()), bufferSource);
-                this.shellModel.renderToBuffer(poseStack, vertexConsumer, packedLight, getOverlayCoords(player, 0), 0xFFFFFFFF);
+                VertexConsumer vertexConsumer = this.getVertexConsumerForPartiallyTexturedEntity(
+                        shell,
+                        progress,
+                        this.shellModel.getLayer(player.getSkin().texture()),
+                        bufferSource);
+                this.shellModel.renderToBuffer(
+                        poseStack, vertexConsumer, packedLight, getOverlayCoords(player, 0), 0xFFFFFFFF);
 
                 if (progress >= ShellState.PROGRESS_DONE) {
                     for (RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> layer : this.layers) {
@@ -85,7 +97,8 @@ public class ShellEntityRenderer extends PlayerRenderer {
     }
 
     @SuppressWarnings("unused")
-    private VertexConsumer getVertexConsumerForPartiallyTexturedEntity(ShellEntity shell, float progress, RenderType baseLayer, MultiBufferSource bufferSource) {
+    private VertexConsumer getVertexConsumerForPartiallyTexturedEntity(
+            ShellEntity shell, float progress, RenderType baseLayer, MultiBufferSource bufferSource) {
         return bufferSource.getBuffer(baseLayer);
     }
 

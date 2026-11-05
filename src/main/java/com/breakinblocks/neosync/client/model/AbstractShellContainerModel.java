@@ -1,16 +1,15 @@
 package com.breakinblocks.neosync.client.model;
 
+import com.breakinblocks.neosync.common.utils.math.Radians;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import java.util.function.Function;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.common.utils.math.Radians;
-
-import java.util.function.Function;
 
 @OnlyIn(Dist.CLIENT)
 public abstract class AbstractShellContainerModel extends DoubleBlockModel {
@@ -47,7 +46,8 @@ public abstract class AbstractShellContainerModel extends DoubleBlockModel {
     }
 
     @Override
-    public void render(DoubleBlockHalf type, PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+    public void render(
+            DoubleBlockHalf type, PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
         this.doorLL.yRot = this.doorLU.yRot = Radians.R_PI_2 * this.doorOpenProgress;
         this.doorRL.yRot = this.doorRU.yRot = Radians.R_PI - Radians.R_PI_2 * this.doorOpenProgress;
 

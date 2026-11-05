@@ -1,12 +1,5 @@
 package com.breakinblocks.neosync.client.render.block.entity;
 
-import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.client.model.AbstractShellContainerModel;
@@ -15,17 +8,29 @@ import com.breakinblocks.neosync.client.texture.TrimTextureGenerator;
 import com.breakinblocks.neosync.common.block.AbstractShellContainerBlock;
 import com.breakinblocks.neosync.common.block.ManualShellStorageBlock;
 import com.breakinblocks.neosync.common.block.SyncBlocks;
-import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
 import com.breakinblocks.neosync.common.block.entity.ShellEntity;
+import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class ShellStorageBlockEntityRenderer extends AbstractShellContainerBlockEntityRenderer<ShellStorageBlockEntity> {
-    private static final ResourceLocation SHELL_STORAGE_TEXTURE_ID = ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "textures/block/shell_storage.png");
-    private static final ResourceLocation MANUAL_SHELL_STORAGE_TEXTURE_ID = ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "textures/block/manual_shell_storage.png");
+public class ShellStorageBlockEntityRenderer
+        extends AbstractShellContainerBlockEntityRenderer<ShellStorageBlockEntity> {
+    private static final ResourceLocation SHELL_STORAGE_TEXTURE_ID =
+            ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "textures/block/shell_storage.png");
+    private static final ResourceLocation MANUAL_SHELL_STORAGE_TEXTURE_ID =
+            ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "textures/block/manual_shell_storage.png");
     protected static final TrimTextureGenerator STORAGE_TRIM_TEXTURES = new TrimTextureGenerator(
             SHELL_STORAGE_TEXTURE_ID,
             ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "textures/block/zero_point_shell_storage.png"));
-    private static final BlockState DEFAULT_STATE = SyncBlocks.SHELL_STORAGE.get().defaultBlockState()
+    private static final BlockState DEFAULT_STATE = SyncBlocks.SHELL_STORAGE
+            .get()
+            .defaultBlockState()
             .setValue(AbstractShellContainerBlock.HALF, DoubleBlockHalf.LOWER)
             .setValue(AbstractShellContainerBlock.FACING, Direction.SOUTH)
             .setValue(AbstractShellContainerBlock.OPEN, false);
@@ -38,7 +43,8 @@ public class ShellStorageBlockEntityRenderer extends AbstractShellContainerBlock
     }
 
     @Override
-    protected AbstractShellContainerModel getShellContainerModel(ShellStorageBlockEntity blockEntity, BlockState blockState, float tickDelta) {
+    protected AbstractShellContainerModel getShellContainerModel(
+            ShellStorageBlockEntity blockEntity, BlockState blockState, float tickDelta) {
         this.model.ledColor = blockEntity.getIndicatorColor();
         this.model.connectorProgress = blockEntity.getConnectorProgress(tickDelta);
         return this.model;

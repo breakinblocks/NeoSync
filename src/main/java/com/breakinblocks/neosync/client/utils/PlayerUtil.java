@@ -1,6 +1,11 @@
 package com.breakinblocks.neosync.client.utils;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.common.utils.WorldUtil;
 import com.google.common.collect.Queues;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -11,17 +16,13 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.common.utils.WorldUtil;
-
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentMap;
 
 @OnlyIn(Dist.CLIENT)
 public final class PlayerUtil {
-    private static final ResourceLocation ANY_WORLD = ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "any_world");
-    private static final ConcurrentMap<ResourceLocation, ConcurrentLinkedQueue<PlayerUpdate>> UPDATES = new ConcurrentHashMap<>();
+    private static final ResourceLocation ANY_WORLD =
+            ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "any_world");
+    private static final ConcurrentMap<ResourceLocation, ConcurrentLinkedQueue<PlayerUpdate>> UPDATES =
+            new ConcurrentHashMap<>();
 
     static {
         NeoForge.EVENT_BUS.register(PlayerUtil.class);
@@ -38,7 +39,8 @@ public final class PlayerUtil {
         if (client != null && client.player != null && existsInTargetWorld(client.player, worldId)) {
             playerUpdate.onLoad(client.player, client.player.clientLevel, client);
         } else {
-            UPDATES.computeIfAbsent(worldId, id -> Queues.newConcurrentLinkedQueue()).add(playerUpdate);
+            UPDATES.computeIfAbsent(worldId, id -> Queues.newConcurrentLinkedQueue())
+                    .add(playerUpdate);
         }
     }
 
@@ -46,7 +48,8 @@ public final class PlayerUtil {
         return worldId == ANY_WORLD || WorldUtil.isOf(worldId, entity.level());
     }
 
-    private static void executeUpdates(LocalPlayer player, ClientLevel world, Minecraft client, ConcurrentLinkedQueue<PlayerUpdate> queue) {
+    private static void executeUpdates(
+            LocalPlayer player, ClientLevel world, Minecraft client, ConcurrentLinkedQueue<PlayerUpdate> queue) {
         if (queue == null) {
             return;
         }
@@ -72,6 +75,5 @@ public final class PlayerUtil {
         void onLoad(LocalPlayer player, ClientLevel world, Minecraft client);
     }
 
-    private PlayerUtil() {
-    }
+    private PlayerUtil() {}
 }

@@ -1,9 +1,8 @@
 package com.breakinblocks.neosync.client.gui.widget;
 
+import java.util.function.Consumer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-
-import java.util.function.Consumer;
 
 @OnlyIn(Dist.CLIENT)
 public abstract class AbstractButtonWidget extends AbstractWidget {

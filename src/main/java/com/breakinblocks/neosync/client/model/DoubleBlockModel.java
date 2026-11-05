@@ -2,6 +2,9 @@ package com.breakinblocks.neosync.client.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.RenderType;
@@ -10,10 +13,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @OnlyIn(Dist.CLIENT)
 public abstract class DoubleBlockModel extends Model {
@@ -32,21 +31,55 @@ public abstract class DoubleBlockModel extends Model {
         this.parts = new HashMap<>();
     }
 
-    protected ModelPart createCuboid(int textureOffsetU, int textureOffsetV, float x, float y, float z, float xSize, float ySize, float zSize) {
-        ModelPart.Cube cube = new ModelPart.Cube(textureOffsetU, textureOffsetV, 0, 0, 0, xSize, ySize, zSize, 0, 0, 0, true, this.textureWidth, this.textureHeight, Arrays.stream(Direction.values()).collect(Collectors.toSet()));
+    protected ModelPart createCuboid(
+            int textureOffsetU, int textureOffsetV, float x, float y, float z, float xSize, float ySize, float zSize) {
+        ModelPart.Cube cube = new ModelPart.Cube(
+                textureOffsetU,
+                textureOffsetV,
+                0,
+                0,
+                0,
+                xSize,
+                ySize,
+                zSize,
+                0,
+                0,
+                0,
+                true,
+                this.textureWidth,
+                this.textureHeight,
+                Arrays.stream(Direction.values()).collect(Collectors.toSet()));
         ModelPart part = new ModelPart(List.of(cube), Map.of());
         part.setPos(x, y, z);
         return part;
     }
 
-    protected ModelPart createCuboid(int textureOffsetU, int textureOffsetV, float x, float y, float z, float xSize, float ySize, float zSize, ModelPart template) {
+    protected ModelPart createCuboid(
+            int textureOffsetU,
+            int textureOffsetV,
+            float x,
+            float y,
+            float z,
+            float xSize,
+            float ySize,
+            float zSize,
+            ModelPart template) {
         ModelPart part = this.createCuboid(textureOffsetU, textureOffsetV, x, y, z, xSize, ySize, zSize);
         part.copyFrom(template);
         part.setPos(x, y, z);
         return part;
     }
 
-    protected ModelPart addCuboid(DoubleBlockHalf type, int textureOffsetU, int textureOffsetV, float x, float y, float z, float xSize, float ySize, float zSize) {
+    protected ModelPart addCuboid(
+            DoubleBlockHalf type,
+            int textureOffsetU,
+            int textureOffsetV,
+            float x,
+            float y,
+            float z,
+            float xSize,
+            float ySize,
+            float zSize) {
         ModelPart part = this.createCuboid(textureOffsetU, textureOffsetV, x, y, z, xSize, ySize, zSize);
         if (!this.parts.containsKey(type)) {
             this.parts.put(type, new ArrayList<>());
@@ -56,7 +89,17 @@ public abstract class DoubleBlockModel extends Model {
         return part;
     }
 
-    protected ModelPart addCuboid(DoubleBlockHalf type, int textureOffsetU, int textureOffsetV, float x, float y, float z, float xSize, float ySize, float zSize, ModelPart template) {
+    protected ModelPart addCuboid(
+            DoubleBlockHalf type,
+            int textureOffsetU,
+            int textureOffsetV,
+            float x,
+            float y,
+            float z,
+            float xSize,
+            float ySize,
+            float zSize,
+            ModelPart template) {
         ModelPart part = this.addCuboid(type, textureOffsetU, textureOffsetV, x, y, z, xSize, ySize, zSize);
         part.copyFrom(template);
         part.setPos(x, y, z);
@@ -88,7 +131,8 @@ public abstract class DoubleBlockModel extends Model {
         this.render(type, matrices, vertices, light, overlay, 0xFFFFFFFF);
     }
 
-    public void render(DoubleBlockHalf type, PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+    public void render(
+            DoubleBlockHalf type, PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
         List<ModelPart> currentParts = this.parts.get(type);
         if (currentParts == null) {
             return;

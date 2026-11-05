@@ -1,9 +1,5 @@
 package com.breakinblocks.neosync.networking;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.api.networking.OpenShellSelectorPacket;
 import com.breakinblocks.neosync.api.networking.PlayerIsAlivePacket;
@@ -13,6 +9,10 @@ import com.breakinblocks.neosync.api.networking.ShellStateUpdatePacket;
 import com.breakinblocks.neosync.api.networking.ShellUpdatePacket;
 import com.breakinblocks.neosync.api.networking.SynchronizationRequestPacket;
 import com.breakinblocks.neosync.api.networking.SynchronizationResponsePacket;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 @EventBusSubscriber(modid = NeoSync.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public final class SyncPackets {
@@ -29,39 +29,24 @@ public final class SyncPackets {
                 SynchronizationRequestPacket.STREAM_CODEC,
                 SynchronizationRequestPacket::handle);
 
-        registrar.playToServer(
-                ShellRenamePacket.TYPE,
-                ShellRenamePacket.STREAM_CODEC,
-                ShellRenamePacket::handle);
+        registrar.playToServer(ShellRenamePacket.TYPE, ShellRenamePacket.STREAM_CODEC, ShellRenamePacket::handle);
 
         registrar.playToClient(
                 SynchronizationResponsePacket.TYPE,
                 SynchronizationResponsePacket.STREAM_CODEC,
                 SynchronizationResponsePacket::handle);
 
-        registrar.playToClient(
-                ShellUpdatePacket.TYPE,
-                ShellUpdatePacket.STREAM_CODEC,
-                ShellUpdatePacket::handle);
+        registrar.playToClient(ShellUpdatePacket.TYPE, ShellUpdatePacket.STREAM_CODEC, ShellUpdatePacket::handle);
 
         registrar.playToClient(
-                ShellStateUpdatePacket.TYPE,
-                ShellStateUpdatePacket.STREAM_CODEC,
-                ShellStateUpdatePacket::handle);
+                ShellStateUpdatePacket.TYPE, ShellStateUpdatePacket.STREAM_CODEC, ShellStateUpdatePacket::handle);
+
+        registrar.playToClient(PlayerIsAlivePacket.TYPE, PlayerIsAlivePacket.STREAM_CODEC, PlayerIsAlivePacket::handle);
 
         registrar.playToClient(
-                PlayerIsAlivePacket.TYPE,
-                PlayerIsAlivePacket.STREAM_CODEC,
-                PlayerIsAlivePacket::handle);
+                OpenShellSelectorPacket.TYPE, OpenShellSelectorPacket.STREAM_CODEC, OpenShellSelectorPacket::handle);
 
         registrar.playToClient(
-                OpenShellSelectorPacket.TYPE,
-                OpenShellSelectorPacket.STREAM_CODEC,
-                OpenShellSelectorPacket::handle);
-
-        registrar.playToClient(
-                ShellDestroyedPacket.TYPE,
-                ShellDestroyedPacket.STREAM_CODEC,
-                ShellDestroyedPacket::handle);
+                ShellDestroyedPacket.TYPE, ShellDestroyedPacket.STREAM_CODEC, ShellDestroyedPacket::handle);
     }
 }

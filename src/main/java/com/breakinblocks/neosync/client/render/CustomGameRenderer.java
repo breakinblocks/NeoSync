@@ -1,24 +1,24 @@
 package com.breakinblocks.neosync.client.render;
 
+import com.breakinblocks.neosync.NeoSync;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import java.io.IOException;
+import javax.annotation.Nullable;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.event.RegisterShadersEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import com.breakinblocks.neosync.NeoSync;
+import net.neoforged.neoforge.client.event.RegisterShadersEvent;
 import org.joml.Matrix4f;
-
-import javax.annotation.Nullable;
-import java.io.IOException;
 
 @OnlyIn(Dist.CLIENT)
 @EventBusSubscriber(modid = NeoSync.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public final class CustomGameRenderer {
     @Nullable
     private static ShaderInstance renderTypeEntityTranslucentPartiallyTexturedShader;
+
     @Nullable
     private static ShaderInstance renderTypeVoxelShader;
 
@@ -27,17 +27,20 @@ public final class CustomGameRenderer {
 
     @SubscribeEvent
     public static void registerShaders(RegisterShadersEvent event) throws IOException {
-        event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "rendertype_entity_translucent_partially_textured"),
-                        DefaultVertexFormat.NEW_ENTITY
-                ),
-                shader -> renderTypeEntityTranslucentPartiallyTexturedShader = shader
-        );
+        event.registerShader(
+                new ShaderInstance(
+                        event.getResourceProvider(),
+                        ResourceLocation.fromNamespaceAndPath(
+                                NeoSync.MOD_ID, "rendertype_entity_translucent_partially_textured"),
+                        DefaultVertexFormat.NEW_ENTITY),
+                shader -> renderTypeEntityTranslucentPartiallyTexturedShader = shader);
 
-        event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "rendertype_voxel"),
-                        CustomVertexFormats.POSITION_COLOR_OVERLAY_LIGHT_NORMAL
-                ),
-                shader -> renderTypeVoxelShader = shader
-        );
+        event.registerShader(
+                new ShaderInstance(
+                        event.getResourceProvider(),
+                        ResourceLocation.fromNamespaceAndPath(NeoSync.MOD_ID, "rendertype_voxel"),
+                        CustomVertexFormats.POSITION_COLOR_OVERLAY_LIGHT_NORMAL),
+                shader -> renderTypeVoxelShader = shader);
     }
 
     public static void initRenderTypeEntityTranslucentPartiallyTexturedShader(float cutoutY, Matrix4f modelMatrix) {
@@ -67,6 +70,5 @@ public final class CustomGameRenderer {
         return renderTypeVoxelShader;
     }
 
-    public static void initClient() {
-    }
+    public static void initClient() {}
 }

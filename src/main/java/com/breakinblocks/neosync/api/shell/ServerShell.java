@@ -1,13 +1,12 @@
 package com.breakinblocks.neosync.api.shell;
 
-import com.mojang.datafixers.util.Either;
-import net.minecraft.server.MinecraftServer;
 import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
-import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.Nullable;
-
+import com.mojang.datafixers.util.Either;
 import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.server.MinecraftServer;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Server-side version of the {@link Shell}.
@@ -44,7 +43,6 @@ public interface ServerShell extends Shell {
         return null;
     }
 
-
     /**
      * Returns a shell with the given uuid.
      *
@@ -53,7 +51,7 @@ public interface ServerShell extends Shell {
      * @return Shell with the given uuid.
      */
     static Optional<ServerShell> getByUuid(MinecraftServer server, UUID uuid) {
-        return Optional.ofNullable((ServerShell)server.getPlayerList().getPlayer(uuid));
+        return Optional.ofNullable((ServerShell) server.getPlayerList().getPlayer(uuid));
     }
 
     /**
@@ -64,6 +62,6 @@ public interface ServerShell extends Shell {
      * @return Shell with the given name.
      */
     static Optional<ServerShell> getByName(MinecraftServer server, String name) {
-        return Optional.ofNullable((ServerShell)server.getPlayerList().getPlayerByName(name));
+        return Optional.ofNullable((ServerShell) server.getPlayerList().getPlayerByName(name));
     }
 }

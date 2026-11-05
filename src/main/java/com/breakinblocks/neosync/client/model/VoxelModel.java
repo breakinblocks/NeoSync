@@ -1,20 +1,10 @@
 package com.breakinblocks.neosync.client.model;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.model.AgeableListModel;
-import net.minecraft.client.model.Model;
-import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.core.Direction;
-import net.minecraft.util.Mth;
-import net.minecraft.util.Tuple;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.breakinblocks.neosync.client.render.CustomRenderLayer;
 import com.breakinblocks.neosync.client.utils.render.ModelUtil;
 import com.breakinblocks.neosync.common.utils.math.Voxel;
-import org.joml.Vector3f;
-
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +15,15 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import net.minecraft.client.model.AgeableListModel;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
+import net.minecraft.util.Tuple;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import org.joml.Vector3f;
 
 @OnlyIn(Dist.CLIENT)
 public class VoxelModel extends Model {
@@ -48,7 +47,24 @@ public class VoxelModel extends Model {
         this.completeness = 0;
         this.voxels = voxels.collect(Collectors.toList());
 
-        this.voxel = new ModelPart(List.of(new ModelPart.Cube(0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, true, 1, 1, Arrays.stream(Direction.values()).collect(Collectors.toSet()))), Map.of());
+        this.voxel = new ModelPart(
+                List.of(new ModelPart.Cube(
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        1,
+                        1,
+                        0,
+                        0,
+                        0,
+                        true,
+                        1,
+                        1,
+                        Arrays.stream(Direction.values()).collect(Collectors.toSet()))),
+                Map.of());
 
         Tuple<Vector3f, Vector3f> pivotAndSize = computePivotAndSize(isUpsideDown, this.voxels);
         Vector3f pivot = pivotAndSize.getA();
@@ -73,10 +89,11 @@ public class VoxelModel extends Model {
         }
     }
 
-    private void renderWithoutDestruction(PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+    private void renderWithoutDestruction(
+            PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
         ModelPart voxel = this.voxel;
         List<Voxel> voxels = this.voxels;
-        int size = Mth.clamp((int)(voxels.size() * this.completeness), 0, voxels.size());
+        int size = Mth.clamp((int) (voxels.size() * this.completeness), 0, voxels.size());
 
         for (int i = 0; i < size; ++i) {
             Voxel v = voxels.get(i);
@@ -89,7 +106,7 @@ public class VoxelModel extends Model {
         Random rand = this.random;
         ModelPart voxel = this.voxel;
         List<Voxel> voxels = this.voxels;
-        int size = Mth.clamp((int)(voxels.size() * this.completeness), 0, voxels.size());
+        int size = Mth.clamp((int) (voxels.size() * this.completeness), 0, voxels.size());
 
         float minY = this.pivotY;
         float maxY = this.pivotY + this.sizeY;
@@ -119,7 +136,8 @@ public class VoxelModel extends Model {
     }
 
     public static VoxelModel fromModel(AgeableListModel<?> model, Random random) {
-        Stream<Voxel> voxels = model instanceof VoxelProvider voxelProvider ? voxelProvider.getVoxels() : extractVoxels(model);
+        Stream<Voxel> voxels =
+                model instanceof VoxelProvider voxelProvider ? voxelProvider.getVoxels() : extractVoxels(model);
         boolean isUpsideDown = !(model instanceof VoxelProvider voxelProvider) || voxelProvider.isUpsideDown();
 
         Map<Float, List<Voxel>> voxelMap = new HashMap<>();
@@ -140,15 +158,19 @@ public class VoxelModel extends Model {
         }
 
         int sign = isUpsideDown ? -1 : 1;
-        Stream<Voxel> orderedVoxels = voxelMap.entrySet().stream().sorted((a, b) -> sign * (int)Math.signum(a.getKey() - b.getKey())).flatMap(x -> x.getValue().stream());
+        Stream<Voxel> orderedVoxels = voxelMap.entrySet().stream()
+                .sorted((a, b) -> sign * (int) Math.signum(a.getKey() - b.getKey()))
+                .flatMap(x -> x.getValue().stream());
         return new VoxelModel(orderedVoxels, isUpsideDown, random.nextLong());
     }
 
     private static Stream<Voxel> extractVoxels(AgeableListModel<?> model) {
         return Stream.concat(
-                StreamSupport.stream(invokeProtectedIterable(model, "headParts").spliterator(), false),
-                StreamSupport.stream(invokeProtectedIterable(model, "bodyParts").spliterator(), false)
-        ).flatMap(ModelUtil::asVoxels);
+                        StreamSupport.stream(
+                                invokeProtectedIterable(model, "headParts").spliterator(), false),
+                        StreamSupport.stream(
+                                invokeProtectedIterable(model, "bodyParts").spliterator(), false))
+                .flatMap(ModelUtil::asVoxels);
     }
 
     @SuppressWarnings("unchecked")
@@ -201,17 +223,9 @@ public class VoxelModel extends Model {
         int signX = isUpsideDown ? -1 : 1;
         int signY = isUpsideDown ? -1 : 1;
 
-        Vector3f pivot = new Vector3f(
-                signX == 1 ? minX : maxX,
-                signY == 1 ? minY : maxY,
-                minZ
-        );
+        Vector3f pivot = new Vector3f(signX == 1 ? minX : maxX, signY == 1 ? minY : maxY, minZ);
 
-        Vector3f size = new Vector3f(
-                signX * (maxX - minX + 1),
-                signY * (maxY - minY + 1),
-                (maxZ - minZ + 1)
-        );
+        Vector3f size = new Vector3f(signX * (maxX - minX + 1), signY * (maxY - minY + 1), (maxZ - minZ + 1));
 
         return new Tuple<>(pivot, size);
     }

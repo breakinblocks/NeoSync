@@ -4,6 +4,8 @@ import com.breakinblocks.neosync.common.block.entity.ShellEntity;
 import com.breakinblocks.neosync.compat.curios.CuriosShellStateComponent;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -18,9 +20,6 @@ import org.slf4j.Logger;
 import top.theillusivec4.curios.api.SlotContext;
 import top.theillusivec4.curios.api.client.CuriosRendererRegistry;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 @OnlyIn(Dist.CLIENT)
 public class ShellCuriosLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -34,8 +33,17 @@ public class ShellCuriosLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
     }
 
     @Override
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int light, AbstractClientPlayer player,
-                       float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+    public void render(
+            PoseStack poseStack,
+            MultiBufferSource bufferSource,
+            int light,
+            AbstractClientPlayer player,
+            float limbSwing,
+            float limbSwingAmount,
+            float partialTicks,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch) {
         if (!(player instanceof ShellEntity shell)) {
             return;
         }
@@ -52,10 +60,22 @@ public class ShellCuriosLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
 
             poseStack.pushPose();
             try {
-                SlotContext slotContext = new SlotContext(worn.identifier(), player, worn.index(), worn.cosmetic(), worn.renderable());
-                CuriosRendererRegistry.getRenderer(worn.stack().getItem()).ifPresent(renderer -> renderer.render(
-                        worn.stack(), slotContext, poseStack, this.parent, bufferSource, light,
-                        limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch));
+                SlotContext slotContext =
+                        new SlotContext(worn.identifier(), player, worn.index(), worn.cosmetic(), worn.renderable());
+                CuriosRendererRegistry.getRenderer(worn.stack().getItem())
+                        .ifPresent(renderer -> renderer.render(
+                                worn.stack(),
+                                slotContext,
+                                poseStack,
+                                this.parent,
+                                bufferSource,
+                                light,
+                                limbSwing,
+                                limbSwingAmount,
+                                partialTicks,
+                                ageInTicks,
+                                netHeadYaw,
+                                headPitch));
             } catch (Throwable t) {
                 this.reportBroken(worn.stack(), t);
             } finally {

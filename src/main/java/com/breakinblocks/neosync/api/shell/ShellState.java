@@ -1,14 +1,28 @@
 package com.breakinblocks.neosync.api.shell;
 
+import com.breakinblocks.neosync.common.block.entity.ShellEntity;
+import com.breakinblocks.neosync.common.item.SimpleInventory;
+import com.breakinblocks.neosync.common.utils.WorldUtil;
+import com.breakinblocks.neosync.common.utils.math.Radians;
+import com.breakinblocks.neosync.common.utils.nbt.NbtSerializer;
+import com.breakinblocks.neosync.common.utils.nbt.NbtSerializerFactory;
+import com.breakinblocks.neosync.common.utils.nbt.NbtSerializerFactoryBuilder;
+import com.breakinblocks.neosync.common.utils.nbt.SyncRegistries;
+import com.breakinblocks.neosync.compat.sable.SableCompat;
+import com.mojang.authlib.properties.Property;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.entity.Entity;
@@ -21,22 +35,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.common.block.entity.ShellEntity;
-import com.breakinblocks.neosync.common.item.SimpleInventory;
-import com.breakinblocks.neosync.common.utils.WorldUtil;
-import com.breakinblocks.neosync.compat.sable.SableCompat;
 import org.jetbrains.annotations.Nullable;
-import com.breakinblocks.neosync.common.utils.math.Radians;
-import com.breakinblocks.neosync.common.utils.nbt.NbtSerializer;
-import com.breakinblocks.neosync.common.utils.nbt.NbtSerializerFactory;
-import com.breakinblocks.neosync.common.utils.nbt.NbtSerializerFactoryBuilder;
-import com.breakinblocks.neosync.common.utils.nbt.SyncRegistries;
-import com.mojang.authlib.properties.Property;
-
-import java.util.Collection;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Stream;
 
 /**
  * A state that can be applied to a shell.
@@ -64,8 +63,7 @@ public class ShellState {
                 } finally {
                     SyncRegistries.pop();
                 }
-            }
-    );
+            });
 
     private static final NbtSerializerFactory<ShellState> NBT_SERIALIZER_FACTORY;
 
@@ -129,7 +127,8 @@ public class ShellState {
         }
         return this.pos == null
                 ? Component.empty()
-                : Component.translatable("gui.neosync.shell_selector.position", this.pos.getX(), this.pos.getY(), this.pos.getZ());
+                : Component.translatable(
+                        "gui.neosync.shell_selector.position", this.pos.getX(), this.pos.getY(), this.pos.getZ());
     }
 
     public DyeColor getColor() {
@@ -333,7 +332,7 @@ public class ShellState {
      * @return Shell that is a full copy of the specified player.
      */
     public static ShellState of(ServerPlayer player, BlockPos pos, DyeColor color) {
-        return create(player, pos, color, 1, ((Shell)player).isArtificial(), true);
+        return create(player, pos, color, 1, ((Shell) player).isArtificial(), true);
     }
 
     public static ShellState anchor(ServerPlayer player, ResourceLocation worldId, BlockPos pos) {
@@ -362,7 +361,13 @@ public class ShellState {
         return state;
     }
 
-    private static ShellState create(ServerPlayer player, BlockPos pos, DyeColor color, float progress, boolean isArtificial, boolean copyPlayerState) {
+    private static ShellState create(
+            ServerPlayer player,
+            BlockPos pos,
+            DyeColor color,
+            float progress,
+            boolean isArtificial,
+            boolean copyPlayerState) {
         ShellState shell = new ShellState();
 
         shell.uuid = UUID.randomUUID();
@@ -372,7 +377,9 @@ public class ShellState {
 
         shell.ownerUuid = player.getUUID();
         shell.ownerName = player.getName().getString();
-        Property textures = player.getGameProfile().getProperties().get("textures").stream().findFirst().orElse(null);
+        Property textures = player.getGameProfile().getProperties().get("textures").stream()
+                .findFirst()
+                .orElse(null);
         if (textures != null) {
             shell.textureValue = textures.value();
             shell.textureSignature = textures.signature();
@@ -412,14 +419,12 @@ public class ShellState {
         return shell;
     }
 
-
     public void dropInventory(ServerLevel world) {
         this.dropInventory(world, this.pos);
     }
 
     public void dropInventory(ServerLevel world, BlockPos pos) {
-        Stream
-                .of(this.inventory.main, this.inventory.armor, this.inventory.offHand, this.component.getItems())
+        Stream.of(this.inventory.main, this.inventory.armor, this.inventory.offHand, this.component.getItems())
                 .flatMap(Collection::stream)
                 .forEach(x -> this.dropItemStack(world, pos, x));
     }
@@ -463,7 +468,6 @@ public class ShellState {
         world.addFreshEntity(item);
     }
 
-
     public CompoundTag writeNbt(CompoundTag nbt) {
         return this.serializer.writeNbt(nbt);
     }
@@ -471,7 +475,6 @@ public class ShellState {
     public void readNbt(CompoundTag nbt) {
         this.serializer.readNbt(nbt);
     }
-
 
     @Override
     public boolean equals(Object o) {
@@ -482,7 +485,6 @@ public class ShellState {
     public int hashCode() {
         return Objects.hash(this.uuid);
     }
-
 
     @OnlyIn(Dist.CLIENT)
     private ShellEntity entityInstance;
@@ -519,34 +521,76 @@ public class ShellState {
         NBT_SERIALIZER_FACTORY = new NbtSerializerFactoryBuilder<ShellState>()
                 .add(UUID.class, "uuid", x -> x.uuid, (x, uuid) -> x.uuid = uuid)
                 .add(String.class, "name", x -> x.name, (x, name) -> x.name = name)
-                .add(Integer.class, "color", x -> x.color == null ? -1 : x.color.getId(), (x, color) -> x.color = color == -1 ? null : DyeColor.byId(color))
+                .add(
+                        Integer.class,
+                        "color",
+                        x -> x.color == null ? -1 : x.color.getId(),
+                        (x, color) -> x.color = color == -1 ? null : DyeColor.byId(color))
                 .add(Float.class, "progress", x -> x.progress, (x, progress) -> x.progress = progress)
-                .add(Boolean.class, "isArtificial", x -> x.isArtificial, (x, isArtificial) -> x.isArtificial = isArtificial)
+                .add(
+                        Boolean.class,
+                        "isArtificial",
+                        x -> x.isArtificial,
+                        (x, isArtificial) -> x.isArtificial = isArtificial)
                 .add(Boolean.class, "isVirtual", x -> x.isVirtual, (x, isVirtual) -> x.isVirtual = isVirtual)
-                .add(Boolean.class, "isTemporary", x -> x.isTemporary, (x, isTemporary) -> x.isTemporary = isTemporary != null && isTemporary)
-                .add(Boolean.class, "manualOnly", x -> x.manualOnly, (x, manualOnly) -> x.manualOnly = manualOnly != null && manualOnly)
-
+                .add(
+                        Boolean.class,
+                        "isTemporary",
+                        x -> x.isTemporary,
+                        (x, isTemporary) -> x.isTemporary = isTemporary != null && isTemporary)
+                .add(
+                        Boolean.class,
+                        "manualOnly",
+                        x -> x.manualOnly,
+                        (x, manualOnly) -> x.manualOnly = manualOnly != null && manualOnly)
                 .add(UUID.class, "ownerUuid", x -> x.ownerUuid, (x, ownerUuid) -> x.ownerUuid = ownerUuid)
                 .add(String.class, "ownerName", x -> x.ownerName, (x, ownerName) -> x.ownerName = ownerName)
                 .add(String.class, "textureValue", x -> x.textureValue, (x, v) -> x.textureValue = v)
                 .add(String.class, "textureSignature", x -> x.textureSignature, (x, v) -> x.textureSignature = v)
                 .add(Float.class, "health", x -> x.health, (x, health) -> x.health = health)
                 .add(Integer.class, "gameMode", x -> x.gameMode, (x, gameMode) -> x.gameMode = gameMode)
-                .add(ListTag.class, "inventory", x -> x.inventory.writeNbt(new ListTag()), (x, inventory) -> { x.inventory = new SimpleInventory(); if (inventory != null) { x.inventory.readNbt(inventory); } })
-                .add(CompoundTag.class, "components", x -> x.component.writeNbt(new CompoundTag()), (x, component) -> { x.component = ShellStateComponent.empty(); if (component != null) { x.component.readNbt(component); } })
-
+                .add(ListTag.class, "inventory", x -> x.inventory.writeNbt(new ListTag()), (x, inventory) -> {
+                    x.inventory = new SimpleInventory();
+                    if (inventory != null) {
+                        x.inventory.readNbt(inventory);
+                    }
+                })
+                .add(CompoundTag.class, "components", x -> x.component.writeNbt(new CompoundTag()), (x, component) -> {
+                    x.component = ShellStateComponent.empty();
+                    if (component != null) {
+                        x.component.readNbt(component);
+                    }
+                })
                 .add(Integer.class, "foodLevel", x -> x.foodLevel, (x, foodLevel) -> x.foodLevel = foodLevel)
-                .add(Float.class, "saturationLevel", x -> x.saturationLevel, (x, saturationLevel) -> x.saturationLevel = saturationLevel)
+                .add(
+                        Float.class,
+                        "saturationLevel",
+                        x -> x.saturationLevel,
+                        (x, saturationLevel) -> x.saturationLevel = saturationLevel)
                 .add(Float.class, "exhaustion", x -> x.exhaustion, (x, exhaustion) -> x.exhaustion = exhaustion)
-
-                .add(Integer.class, "experienceLevel", x -> x.experienceLevel, (x, experienceLevel) -> x.experienceLevel = experienceLevel)
-                .add(Float.class, "experienceProgress", x -> x.experienceProgress, (x, experienceProgress) -> x.experienceProgress = experienceProgress)
-                .add(Integer.class, "totalExperience", x -> x.totalExperience, (x, totalExperience) -> x.totalExperience = totalExperience)
-
+                .add(
+                        Integer.class,
+                        "experienceLevel",
+                        x -> x.experienceLevel,
+                        (x, experienceLevel) -> x.experienceLevel = experienceLevel)
+                .add(
+                        Float.class,
+                        "experienceProgress",
+                        x -> x.experienceProgress,
+                        (x, experienceProgress) -> x.experienceProgress = experienceProgress)
+                .add(
+                        Integer.class,
+                        "totalExperience",
+                        x -> x.totalExperience,
+                        (x, totalExperience) -> x.totalExperience = totalExperience)
                 .add(ResourceLocation.class, "world", x -> x.world, (x, world) -> x.world = world)
                 .add(BlockPos.class, "pos", x -> x.pos, (x, pos) -> x.pos = pos)
                 .add(UUID.class, "subLevelUuid", x -> x.subLevelUuid, (x, id) -> x.subLevelUuid = id)
-                .add(CompoundTag.class, "localOffset", x -> writeVec3(x.localOffset), (x, tag) -> x.localOffset = readVec3(tag))
+                .add(
+                        CompoundTag.class,
+                        "localOffset",
+                        x -> writeVec3(x.localOffset),
+                        (x, tag) -> x.localOffset = readVec3(tag))
                 .add(Float.class, "yawDelta", x -> x.yawDelta, (x, yawDelta) -> x.yawDelta = yawDelta)
                 .build();
     }

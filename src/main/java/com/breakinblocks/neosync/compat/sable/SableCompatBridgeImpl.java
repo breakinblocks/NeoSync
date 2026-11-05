@@ -8,6 +8,7 @@ import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import dev.ryanhcode.sable.sublevel.plot.LevelPlot;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -18,8 +19,6 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
-
-import java.util.UUID;
 
 final class SableCompatBridgeImpl implements SableCompatBridge {
     public SableCompatBridgeImpl() {}

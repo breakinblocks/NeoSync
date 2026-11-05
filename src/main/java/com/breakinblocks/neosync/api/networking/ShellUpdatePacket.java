@@ -1,5 +1,10 @@
 package com.breakinblocks.neosync.api.networking;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -8,25 +13,25 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.api.shell.ShellState;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-public record ShellUpdatePacket(ResourceLocation worldId, boolean isArtificial, boolean autoSyncOnDeath, List<ShellState> states) implements CustomPacketPayload {
+public record ShellUpdatePacket(
+        ResourceLocation worldId, boolean isArtificial, boolean autoSyncOnDeath, List<ShellState> states)
+        implements CustomPacketPayload {
     public static final Type<ShellUpdatePacket> TYPE = new Type<>(NeoSync.locate("shell/update"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ShellUpdatePacket> STREAM_CODEC = StreamCodec.composite(
-            ResourceLocation.STREAM_CODEC, ShellUpdatePacket::worldId,
-            ByteBufCodecs.BOOL, ShellUpdatePacket::isArtificial,
-            ByteBufCodecs.BOOL, ShellUpdatePacket::autoSyncOnDeath,
-            ShellState.STREAM_CODEC.apply(ByteBufCodecs.collection(ArrayList::new)), ShellUpdatePacket::states,
-            ShellUpdatePacket::new
-    );
+            ResourceLocation.STREAM_CODEC,
+            ShellUpdatePacket::worldId,
+            ByteBufCodecs.BOOL,
+            ShellUpdatePacket::isArtificial,
+            ByteBufCodecs.BOOL,
+            ShellUpdatePacket::autoSyncOnDeath,
+            ShellState.STREAM_CODEC.apply(ByteBufCodecs.collection(ArrayList::new)),
+            ShellUpdatePacket::states,
+            ShellUpdatePacket::new);
 
-    public ShellUpdatePacket(ResourceLocation worldId, boolean isArtificial, boolean autoSyncOnDeath, Collection<ShellState> states) {
+    public ShellUpdatePacket(
+            ResourceLocation worldId, boolean isArtificial, boolean autoSyncOnDeath, Collection<ShellState> states) {
         this(worldId, isArtificial, autoSyncOnDeath, states == null ? List.of() : List.copyOf(states));
     }
 

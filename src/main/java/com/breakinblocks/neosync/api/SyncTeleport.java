@@ -3,8 +3,7 @@ package com.breakinblocks.neosync.api;
 public final class SyncTeleport {
     private static final ThreadLocal<Integer> DEPTH = ThreadLocal.withInitial(() -> 0);
 
-    private SyncTeleport() {
-    }
+    private SyncTeleport() {}
 
     public static boolean isActive() {
         return DEPTH.get() > 0;

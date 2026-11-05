@@ -34,7 +34,9 @@ public final class TrimDyeHandler {
             return;
         }
 
-        if (!world.isClientSide && world.getBlockEntity(event.getPos()) instanceof AbstractShellContainerBlockEntity container && container.getColor() != dye.getDyeColor()) {
+        if (!world.isClientSide
+                && world.getBlockEntity(event.getPos()) instanceof AbstractShellContainerBlockEntity container
+                && container.getColor() != dye.getDyeColor()) {
             container.setColor(dye.getDyeColor());
             if (!player.getAbilities().instabuild) {
                 stack.shrink(1);

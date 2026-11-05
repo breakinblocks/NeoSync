@@ -1,6 +1,7 @@
 package com.breakinblocks.neosync.api.shell;
 
 import com.breakinblocks.neosync.compat.sable.SableCompat;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.DyeColor;
@@ -8,8 +9,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.UUID;
 
 /**
  * A container that can store player's shell.
@@ -42,7 +41,12 @@ public interface ShellStateContainer {
     }
 
     @Nullable
-    static ShellStateContainer findAt(Level world, BlockPos pos, @Nullable Vec3 localPos, @Nullable Entity sublevelContext, @Nullable UUID sublevelHint) {
+    static ShellStateContainer findAt(
+            Level world,
+            BlockPos pos,
+            @Nullable Vec3 localPos,
+            @Nullable Entity sublevelContext,
+            @Nullable UUID sublevelHint) {
         if (sublevelHint != null) {
             Object sublevel = SableCompat.findSublevelByUuid(world, sublevelHint);
             ShellStateContainer hit = lookupInSublevel(sublevel, pos, localPos);
@@ -57,7 +61,8 @@ public interface ShellStateContainer {
     }
 
     @Nullable
-    private static ShellStateContainer lookupInSublevel(@Nullable Object sublevel, BlockPos worldPos, @Nullable Vec3 localPos) {
+    private static ShellStateContainer lookupInSublevel(
+            @Nullable Object sublevel, BlockPos worldPos, @Nullable Vec3 localPos) {
         if (sublevel == null) return null;
         Vec3 local = localPos != null ? localPos : SableCompat.worldToLocal(sublevel, Vec3.atCenterOf(worldPos));
         BlockEntity be = SableCompat.getSublevelBlockEntity(sublevel, BlockPos.containing(local));

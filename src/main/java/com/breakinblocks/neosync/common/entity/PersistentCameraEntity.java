@@ -1,20 +1,19 @@
 package com.breakinblocks.neosync.common.entity;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.client.gui.controller.DeathScreenController;
+import com.breakinblocks.neosync.client.gui.hud.HudController;
+import java.util.Objects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.client.gui.controller.DeathScreenController;
-import com.breakinblocks.neosync.client.gui.hud.HudController;
-
-import java.util.Objects;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 @OnlyIn(Dist.CLIENT)
 @EventBusSubscriber(modid = NeoSync.MOD_ID, value = Dist.CLIENT)
@@ -77,7 +76,8 @@ public class PersistentCameraEntity extends LocalPlayer {
         this.setPos(newPos);
         this.setDeltaMovement(currentVelocity);
 
-        float factor = this.initialDistance <= 0 ? 1F : 1F - (float)(goal.pos.distanceTo(newPos) / this.initialDistance);
+        float factor =
+                this.initialDistance <= 0 ? 1F : 1F - (float) (goal.pos.distanceTo(newPos) / this.initialDistance);
         float newYaw = this.initialYaw + (goal.yaw - this.initialYaw) * factor;
         float newPitch = this.initialPitch + (goal.pitch - this.initialPitch) * factor;
         this.setYRot(newYaw);

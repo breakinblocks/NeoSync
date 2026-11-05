@@ -1,28 +1,28 @@
 package com.breakinblocks.neosync.mixins.client;
 
+import com.breakinblocks.neosync.client.model.VoxelProvider;
+import com.breakinblocks.neosync.client.utils.render.ModelUtil;
+import com.breakinblocks.neosync.common.utils.math.Voxel;
+import java.util.stream.Stream;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.client.model.VoxelProvider;
-import com.breakinblocks.neosync.client.utils.render.ModelUtil;
-import com.breakinblocks.neosync.common.utils.math.Voxel;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.util.stream.Stream;
-
 @OnlyIn(Dist.CLIENT)
 @Mixin(PlayerModel.class)
 abstract class PlayerEntityModelMixin implements VoxelProvider {
-    @Shadow @Final
+    @Shadow
+    @Final
     private boolean slim;
 
     @Override
     @SuppressWarnings("ConstantConditions")
     public Stream<Voxel> getVoxels() {
-        PlayerModel<?> model = (PlayerModel<?>)(Object)this;
+        PlayerModel<?> model = (PlayerModel<?>) (Object) this;
 
         float cX = -2;
         float cY = 0;

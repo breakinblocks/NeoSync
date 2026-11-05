@@ -1,21 +1,21 @@
 package com.breakinblocks.neosync.common.utils;
 
+import com.breakinblocks.neosync.common.config.SyncConfig;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.core.registries.BuiltInRegistries;
-import com.breakinblocks.neosync.common.config.SyncConfig;
 
 public final class ItemUtil {
-    private static final TagKey<Item> WRENCHES = ItemTags.create(ResourceLocation.fromNamespaceAndPath("c", "tools/wrench"));
+    private static final TagKey<Item> WRENCHES =
+            ItemTags.create(ResourceLocation.fromNamespaceAndPath("c", "tools/wrench"));
 
     public static boolean isWrench(ItemStack itemStack) {
         if (itemStack.is(WRENCHES)) {
@@ -23,7 +23,9 @@ public final class ItemUtil {
         }
 
         SyncConfig config = SyncConfig.getInstance();
-        ResourceLocation wrenchId = config.wrench() == null || config.wrench().isBlank() ? null : ResourceLocation.tryParse(config.wrench());
+        ResourceLocation wrenchId = config.wrench() == null || config.wrench().isBlank()
+                ? null
+                : ResourceLocation.tryParse(config.wrench());
         if (wrenchId == null) {
             return false;
         }
@@ -60,6 +62,5 @@ public final class ItemUtil {
         return getPreferredEquipmentSlot(new ItemStack(item));
     }
 
-    private ItemUtil() {
-    }
+    private ItemUtil() {}
 }

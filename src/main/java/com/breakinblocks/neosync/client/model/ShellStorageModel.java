@@ -148,7 +148,8 @@ public class ShellStorageModel extends AbstractShellContainerModel {
     }
 
     @Override
-    public void render(DoubleBlockHalf type, PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+    public void render(
+            DoubleBlockHalf type, PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
         this.headConnector.z = 10 - 5 * this.connectorProgress;
         super.render(type, matrices, vertices, light, overlay, color);
         if (type == BOTTOM) {

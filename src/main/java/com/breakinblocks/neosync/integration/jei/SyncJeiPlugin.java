@@ -1,5 +1,9 @@
 package com.breakinblocks.neosync.integration.jei;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.common.item.SyncItems;
+import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
+import java.util.List;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
@@ -12,11 +16,6 @@ import mezz.jei.api.registration.ISubtypeRegistration;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.common.item.SyncItems;
-import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
-
-import java.util.List;
 
 @JeiPlugin
 public class SyncJeiPlugin implements IModPlugin {
@@ -32,18 +31,19 @@ public class SyncJeiPlugin implements IModPlugin {
         if (!GuideMeCompat.isLoaded()) {
             return;
         }
-        registration.registerSubtypeInterpreter(GuideMeCompat.createGuideItem().getItem(), new ISubtypeInterpreter<ItemStack>() {
-            @Override
-            public Object getSubtypeData(ItemStack stack, UidContext context) {
-                return GuideMeCompat.getGuideId(stack);
-            }
+        registration.registerSubtypeInterpreter(
+                GuideMeCompat.createGuideItem().getItem(), new ISubtypeInterpreter<ItemStack>() {
+                    @Override
+                    public Object getSubtypeData(ItemStack stack, UidContext context) {
+                        return GuideMeCompat.getGuideId(stack);
+                    }
 
-            @Override
-            public String getLegacyStringSubtypeInfo(ItemStack stack, UidContext context) {
-                Object guideId = GuideMeCompat.getGuideId(stack);
-                return guideId == null ? "" : guideId.toString();
-            }
-        });
+                    @Override
+                    public String getLegacyStringSubtypeInfo(ItemStack stack, UidContext context) {
+                        Object guideId = GuideMeCompat.getGuideId(stack);
+                        return guideId == null ? "" : guideId.toString();
+                    }
+                });
     }
 
     @Override
@@ -51,40 +51,60 @@ public class SyncJeiPlugin implements IModPlugin {
         if (!GuideMeCompat.isLoaded()) {
             return;
         }
-        registration.addAliases(VanillaTypes.ITEM_STACK, GuideMeCompat.createGuideItem(), List.of("neosync", "neosync guide", "guide book", "manual"));
+        registration.addAliases(
+                VanillaTypes.ITEM_STACK,
+                GuideMeCompat.createGuideItem(),
+                List.of("neosync", "neosync guide", "guide book", "manual"));
     }
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
-        registration.addRecipeCategories(new TreadmillEnergyCategory(registration.getJeiHelpers().getGuiHelper()));
+        registration.addRecipeCategories(
+                new TreadmillEnergyCategory(registration.getJeiHelpers().getGuiHelper()));
     }
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         // Info descriptions for the core items — gives players a hint about what each block does
         // without needing to open the README.
-        registration.addIngredientInfo(new ItemStack(SyncItems.SYNC_CORE.get()), VanillaTypes.ITEM_STACK,
+        registration.addIngredientInfo(
+                new ItemStack(SyncItems.SYNC_CORE.get()),
+                VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.sync_core"));
 
-        registration.addIngredientInfo(new ItemStack(SyncItems.SHELL_CONSTRUCTOR.get()), VanillaTypes.ITEM_STACK,
+        registration.addIngredientInfo(
+                new ItemStack(SyncItems.SHELL_CONSTRUCTOR.get()),
+                VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.shell_constructor"));
 
-        registration.addIngredientInfo(new ItemStack(SyncItems.SHELL_STORAGE.get()), VanillaTypes.ITEM_STACK,
+        registration.addIngredientInfo(
+                new ItemStack(SyncItems.SHELL_STORAGE.get()),
+                VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.shell_storage"));
 
-        registration.addIngredientInfo(new ItemStack(SyncItems.ZERO_POINT_SHELL_CONSTRUCTOR.get()), VanillaTypes.ITEM_STACK,
+        registration.addIngredientInfo(
+                new ItemStack(SyncItems.ZERO_POINT_SHELL_CONSTRUCTOR.get()),
+                VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.zero_point_shell_constructor"));
 
-        registration.addIngredientInfo(new ItemStack(SyncItems.ZERO_POINT_SHELL_STORAGE.get()), VanillaTypes.ITEM_STACK,
+        registration.addIngredientInfo(
+                new ItemStack(SyncItems.ZERO_POINT_SHELL_STORAGE.get()),
+                VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.zero_point_shell_storage"));
-        registration.addIngredientInfo(new ItemStack(SyncItems.MANUAL_SHELL_STORAGE.get()), VanillaTypes.ITEM_STACK,
+        registration.addIngredientInfo(
+                new ItemStack(SyncItems.MANUAL_SHELL_STORAGE.get()),
+                VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.manual_shell_storage"));
 
-        registration.addIngredientInfo(new ItemStack(SyncItems.TREADMILL.get()), VanillaTypes.ITEM_STACK,
+        registration.addIngredientInfo(
+                new ItemStack(SyncItems.TREADMILL.get()),
+                VanillaTypes.ITEM_STACK,
                 Component.translatable("jei.neosync.info.treadmill"));
 
         if (GuideMeCompat.isLoaded()) {
-            registration.addIngredientInfo(GuideMeCompat.createGuideItem(), VanillaTypes.ITEM_STACK,
+            registration.addIngredientInfo(
+                    GuideMeCompat.createGuideItem(),
+                    VanillaTypes.ITEM_STACK,
                     Component.translatable("jei.neosync.info.guide"));
         }
 

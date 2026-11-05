@@ -1,10 +1,9 @@
 package com.breakinblocks.neosync.common.utils;
 
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 public final class IdentifierUtil {
     private static final Pattern FIRST_LETTER = Pattern.compile("^\\w|_\\w");
@@ -13,7 +12,9 @@ public final class IdentifierUtil {
         Matcher matcher = FIRST_LETTER.matcher(identifier.getPath());
         return matcher.replaceAll(x -> {
             String value = x.group(0);
-            return value.length() == 1 ? value.toUpperCase() : value.toUpperCase().replace('_', ' ');
+            return value.length() == 1
+                    ? value.toUpperCase()
+                    : value.toUpperCase().replace('_', ' ');
         });
     }
 

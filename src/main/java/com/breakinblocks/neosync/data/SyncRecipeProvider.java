@@ -1,5 +1,8 @@
 package com.breakinblocks.neosync.data;
 
+import com.breakinblocks.neosync.common.item.SyncItems;
+import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
+import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeCategory;
@@ -9,10 +12,6 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.conditions.ModLoadedCondition;
-import com.breakinblocks.neosync.common.item.SyncItems;
-import com.breakinblocks.neosync.compat.guideme.GuideMeCompat;
-
-import java.util.concurrent.CompletableFuture;
 
 public final class SyncRecipeProvider extends RecipeProvider {
     public SyncRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {

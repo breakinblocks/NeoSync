@@ -30,6 +30,8 @@ public class ZeroPointShellStorageBlockEntity extends ShellStorageBlockEntity {
 
     @Override
     protected boolean shouldOpenDoors(Level world, BlockPos pos, boolean isPowered) {
-        return isPowered && world.hasNearbyAlivePlayer(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, DOOR_ACTIVATION_RANGE);
+        return isPowered
+                && world.hasNearbyAlivePlayer(
+                        pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, DOOR_ACTIVATION_RANGE);
     }
 }

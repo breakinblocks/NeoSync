@@ -3,6 +3,11 @@ package com.breakinblocks.neosync.common.entity;
 import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.compat.sable.SableCompat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -13,12 +18,6 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * A sublevel does not finish settling on the tick a player arrives on it: the plot pose and the client's copy of it
@@ -35,8 +34,13 @@ public final class ShellArrival {
 
     private ShellArrival() {}
 
-    private record Pending(UUID playerUuid, ResourceKey<Level> level, UUID subLevelUuid, Vec3 localOffset,
-                           float yawDelta, long startTick) {}
+    private record Pending(
+            UUID playerUuid,
+            ResourceKey<Level> level,
+            UUID subLevelUuid,
+            Vec3 localOffset,
+            float yawDelta,
+            long startTick) {}
 
     public static void schedule(ServerPlayer player, ServerLevel level, ShellState state) {
         UUID subLevelUuid = state.getSubLevelUuid();
@@ -45,8 +49,13 @@ public final class ShellArrival {
             return;
         }
         MinecraftServer server = level.getServer();
-        PENDING.add(new Pending(player.getUUID(), level.dimension(), subLevelUuid, localOffset,
-                state.getYawDelta(), server.getTickCount()));
+        PENDING.add(new Pending(
+                player.getUUID(),
+                level.dimension(),
+                subLevelUuid,
+                localOffset,
+                state.getYawDelta(),
+                server.getTickCount()));
     }
 
     @SubscribeEvent
@@ -107,8 +116,14 @@ public final class ShellArrival {
         }
 
         float yaw = pending.yawDelta() + SableCompat.getSublevelYaw(sublevel);
-        player.teleportTo(level, expected.x, expected.y, expected.z,
-                Collections.<RelativeMovement>emptySet(), yaw, player.getXRot());
+        player.teleportTo(
+                level,
+                expected.x,
+                expected.y,
+                expected.z,
+                Collections.<RelativeMovement>emptySet(),
+                yaw,
+                player.getXRot());
         player.setDeltaMovement(Vec3.ZERO);
         player.hurtMarked = true;
         player.fallDistance = 0F;

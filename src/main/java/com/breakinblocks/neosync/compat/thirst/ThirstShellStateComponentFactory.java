@@ -51,7 +51,8 @@ public class ThirstShellStateComponentFactory implements ShellStateComponentFact
             ThirstData full = ThirstData.full();
             Levels target = levels != null ? levels : new Levels(full.thirst(), full.quenched(), full.exhaustion());
             boolean enabled = ThirstManager.get(this.player).enabled();
-            ThirstManager.set(this.player, new ThirstData(target.thirst(), target.quenched(), target.exhaustion(), enabled));
+            ThirstManager.set(
+                    this.player, new ThirstData(target.thirst(), target.quenched(), target.exhaustion(), enabled));
         }
     }
 }

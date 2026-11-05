@@ -4,12 +4,6 @@ import com.google.common.collect.Queues;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.Minecraft;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GL30C;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +11,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import net.minecraft.client.Minecraft;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL30C;
 
 @OnlyIn(Dist.CLIENT)
 public class MSAAFramebuffer extends RenderTarget {
@@ -25,7 +24,8 @@ public class MSAAFramebuffer extends RenderTarget {
 
     private static final Map<Integer, MSAAFramebuffer> INSTANCES = new HashMap<>();
     private static final List<MSAAFramebuffer> ACTIVE_INSTANCES = new ArrayList<>();
-    private static final ConcurrentMap<Integer, ConcurrentLinkedQueue<Runnable>> RENDER_CALLS = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Integer, ConcurrentLinkedQueue<Runnable>> RENDER_CALLS =
+            new ConcurrentHashMap<>();
 
     private final int samples;
     private int rboColor;
@@ -35,7 +35,8 @@ public class MSAAFramebuffer extends RenderTarget {
     private MSAAFramebuffer(int samples) {
         super(true);
         if (samples < MIN_SAMPLES || samples > MAX_SAMPLES) {
-            throw new IllegalArgumentException(String.format("The number of samples should be >= %s and <= %s.", MIN_SAMPLES, MAX_SAMPLES));
+            throw new IllegalArgumentException(
+                    String.format("The number of samples should be >= %s and <= %s.", MIN_SAMPLES, MAX_SAMPLES));
         }
         if ((samples & (samples - 1)) != 0) {
             throw new IllegalArgumentException("The number of samples must be a power of two.");
@@ -60,7 +61,17 @@ public class MSAAFramebuffer extends RenderTarget {
 
         GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, mainBuffer.frameBufferId);
         GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, msaaBuffer.frameBufferId);
-        GlStateManager._glBlitFrameBuffer(0, 0, msaaBuffer.width, msaaBuffer.height, 0, 0, msaaBuffer.width, msaaBuffer.height, GL30C.GL_COLOR_BUFFER_BIT, GL30C.GL_LINEAR);
+        GlStateManager._glBlitFrameBuffer(
+                0,
+                0,
+                msaaBuffer.width,
+                msaaBuffer.height,
+                0,
+                0,
+                msaaBuffer.width,
+                msaaBuffer.height,
+                GL30C.GL_COLOR_BUFFER_BIT,
+                GL30C.GL_LINEAR);
 
         msaaBuffer.bindWrite(true);
         drawAction.run();
@@ -68,7 +79,17 @@ public class MSAAFramebuffer extends RenderTarget {
 
         GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, msaaBuffer.frameBufferId);
         GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, mainBuffer.frameBufferId);
-        GlStateManager._glBlitFrameBuffer(0, 0, msaaBuffer.width, msaaBuffer.height, 0, 0, msaaBuffer.width, msaaBuffer.height, GL30C.GL_COLOR_BUFFER_BIT, GL30C.GL_LINEAR);
+        GlStateManager._glBlitFrameBuffer(
+                0,
+                0,
+                msaaBuffer.width,
+                msaaBuffer.height,
+                0,
+                0,
+                msaaBuffer.width,
+                msaaBuffer.height,
+                GL30C.GL_COLOR_BUFFER_BIT,
+                GL30C.GL_LINEAR);
 
         msaaBuffer.clear(true);
         mainBuffer.bindWrite(false);
@@ -78,7 +99,9 @@ public class MSAAFramebuffer extends RenderTarget {
 
     public static void renderAfterUsage(int samples, Runnable renderCall) {
         if (getInstance(samples).isInUse() || !RenderSystem.isOnRenderThreadOrInit()) {
-            RENDER_CALLS.computeIfAbsent(samples, x -> Queues.newConcurrentLinkedQueue()).add(renderCall);
+            RENDER_CALLS
+                    .computeIfAbsent(samples, x -> Queues.newConcurrentLinkedQueue())
+                    .add(renderCall);
             return;
         }
 
@@ -91,7 +114,9 @@ public class MSAAFramebuffer extends RenderTarget {
         }
 
         if (ACTIVE_INSTANCES.size() != 0) {
-            RENDER_CALLS.computeIfAbsent(ACTIVE_INSTANCES.get(0).samples, x -> Queues.newConcurrentLinkedQueue()).add(renderCall);
+            RENDER_CALLS
+                    .computeIfAbsent(ACTIVE_INSTANCES.get(0).samples, x -> Queues.newConcurrentLinkedQueue())
+                    .add(renderCall);
             return;
         }
 
@@ -101,7 +126,7 @@ public class MSAAFramebuffer extends RenderTarget {
     private static void executeDelayedRenderCalls(int samples) {
         RenderSystem.assertOnRenderThreadOrInit();
         ConcurrentLinkedQueue<Runnable> queue = RENDER_CALLS.getOrDefault(samples, Queues.newConcurrentLinkedQueue());
-        while(!queue.isEmpty()) {
+        while (!queue.isEmpty()) {
             queue.poll().run();
         }
     }
@@ -118,7 +143,8 @@ public class MSAAFramebuffer extends RenderTarget {
         RenderSystem.assertOnRenderThreadOrInit();
         int maxSize = RenderSystem.maxSupportedTextureSize();
         if (width <= 0 || width > maxSize || height <= 0 || height > maxSize) {
-            throw new IllegalArgumentException("Window " + width + "x" + height + " size out of bounds (max. size: " + maxSize + ")");
+            throw new IllegalArgumentException(
+                    "Window " + width + "x" + height + " size out of bounds (max. size: " + maxSize + ")");
         }
 
         this.viewWidth = width;
@@ -139,8 +165,10 @@ public class MSAAFramebuffer extends RenderTarget {
         GL30.glRenderbufferStorageMultisample(GL30C.GL_RENDERBUFFER, samples, GL30C.GL_DEPTH_COMPONENT, width, height);
         GlStateManager._glBindRenderbuffer(GL30C.GL_RENDERBUFFER, 0);
 
-        GL30.glFramebufferRenderbuffer(GL30C.GL_FRAMEBUFFER, GL30C.GL_COLOR_ATTACHMENT0, GL30C.GL_RENDERBUFFER, this.rboColor);
-        GL30.glFramebufferRenderbuffer(GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_RENDERBUFFER, this.rboDepth);
+        GL30.glFramebufferRenderbuffer(
+                GL30C.GL_FRAMEBUFFER, GL30C.GL_COLOR_ATTACHMENT0, GL30C.GL_RENDERBUFFER, this.rboColor);
+        GL30.glFramebufferRenderbuffer(
+                GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT, GL30C.GL_RENDERBUFFER, this.rboDepth);
 
         this.colorTextureId = Minecraft.getInstance().getMainRenderTarget().getColorTextureId();
         this.depthBufferId = Minecraft.getInstance().getMainRenderTarget().getDepthTextureId();

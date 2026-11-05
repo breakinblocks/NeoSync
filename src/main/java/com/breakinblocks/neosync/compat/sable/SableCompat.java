@@ -1,6 +1,7 @@
 package com.breakinblocks.neosync.compat.sable;
 
 import com.mojang.logging.LogUtils;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -10,8 +11,6 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
-
-import java.util.UUID;
 
 public final class SableCompat {
     private static final Logger LOGGER = LogUtils.getLogger();

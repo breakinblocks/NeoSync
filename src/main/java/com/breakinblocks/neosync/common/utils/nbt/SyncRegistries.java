@@ -1,5 +1,7 @@
 package com.breakinblocks.neosync.common.utils.nbt;
 
+import com.breakinblocks.neosync.client.utils.ClientRegistryHelper;
+import java.util.ArrayDeque;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -7,9 +9,6 @@ import net.minecraft.server.MinecraftServer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
-import com.breakinblocks.neosync.client.utils.ClientRegistryHelper;
-
-import java.util.ArrayDeque;
 
 public final class SyncRegistries {
     private static final ThreadLocal<ArrayDeque<HolderLookup.Provider>> STACK =

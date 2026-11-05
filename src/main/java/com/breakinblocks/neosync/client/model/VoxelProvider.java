@@ -1,10 +1,9 @@
 package com.breakinblocks.neosync.client.model;
 
+import com.breakinblocks.neosync.common.utils.math.Voxel;
+import java.util.stream.Stream;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.common.utils.math.Voxel;
-
-import java.util.stream.Stream;
 
 @OnlyIn(Dist.CLIENT)
 public interface VoxelProvider {

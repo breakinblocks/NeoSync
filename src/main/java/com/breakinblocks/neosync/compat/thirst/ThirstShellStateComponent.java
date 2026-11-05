@@ -33,9 +33,10 @@ public abstract class ThirstShellStateComponent extends ShellStateComponent {
 
     @Override
     protected void readComponentNbt(CompoundTag nbt) {
-        this.setLevels(nbt.contains(THIRST, Tag.TAG_INT)
-                ? new Levels(nbt.getInt(THIRST), nbt.getInt(QUENCHED), nbt.getFloat(EXHAUSTION))
-                : null);
+        this.setLevels(
+                nbt.contains(THIRST, Tag.TAG_INT)
+                        ? new Levels(nbt.getInt(THIRST), nbt.getInt(QUENCHED), nbt.getFloat(EXHAUSTION))
+                        : null);
     }
 
     @Override

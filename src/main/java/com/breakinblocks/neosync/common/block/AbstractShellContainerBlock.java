@@ -2,47 +2,48 @@ package com.breakinblocks.neosync.common.block;
 
 import com.breakinblocks.neosync.common.block.entity.AbstractShellContainerBlockEntity;
 import com.breakinblocks.neosync.common.block.entity.TickableBlockEntity;
-import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.pathfinder.PathComputationType;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.block.state.properties.EnumProperty;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.ItemInteractionResult;
+import com.breakinblocks.neosync.common.utils.ItemUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.common.utils.ItemUtil;
 
 @SuppressWarnings("deprecation")
 public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty OPEN = BooleanProperty.create("doors_open");
-    public static final EnumProperty<ComparatorOutputType> OUTPUT = EnumProperty.create("output", ComparatorOutputType.class);
+    public static final EnumProperty<ComparatorOutputType> OUTPUT =
+            EnumProperty.create("output", ComparatorOutputType.class);
 
     private static final VoxelShape SOLID_SHAPE_TOP;
     private static final VoxelShape SOLID_SHAPE_BOTTOM;
@@ -60,13 +61,12 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
 
     protected AbstractShellContainerBlock(Properties properties) {
         super(properties);
-        this.registerDefaultState(
-                this.getStateDefinition().any()
-                        .setValue(OPEN, false)
-                        .setValue(HALF, DoubleBlockHalf.LOWER)
-                        .setValue(FACING, Direction.NORTH)
-                        .setValue(OUTPUT, ComparatorOutputType.PROGRESS)
-        );
+        this.registerDefaultState(this.getStateDefinition()
+                .any()
+                .setValue(OPEN, false)
+                .setValue(HALF, DoubleBlockHalf.LOWER)
+                .setValue(FACING, Direction.NORTH)
+                .setValue(OUTPUT, ComparatorOutputType.PROGRESS));
     }
 
     public static void setOpen(BlockState state, Level world, BlockPos pos, boolean open) {
@@ -99,12 +99,25 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     }
 
     @Override
-    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor world, BlockPos pos, BlockPos neighborPos) {
+    public BlockState updateShape(
+            BlockState state,
+            Direction direction,
+            BlockState neighborState,
+            LevelAccessor world,
+            BlockPos pos,
+            BlockPos neighborPos) {
         DoubleBlockHalf doubleBlockHalf = state.getValue(HALF);
-        if (direction.getAxis() == Direction.Axis.Y && (doubleBlockHalf == DoubleBlockHalf.LOWER) == (direction == Direction.UP)) {
-            return neighborState.is(this) && neighborState.getValue(HALF) != doubleBlockHalf ? state.setValue(FACING, neighborState.getValue(FACING)) : Blocks.AIR.defaultBlockState();
+        if (direction.getAxis() == Direction.Axis.Y
+                && (doubleBlockHalf == DoubleBlockHalf.LOWER) == (direction == Direction.UP)) {
+            return neighborState.is(this) && neighborState.getValue(HALF) != doubleBlockHalf
+                    ? state.setValue(FACING, neighborState.getValue(FACING))
+                    : Blocks.AIR.defaultBlockState();
         } else {
-            return doubleBlockHalf == DoubleBlockHalf.LOWER && direction == Direction.DOWN && !state.canSurvive(world, pos) ? Blocks.AIR.defaultBlockState() : super.updateShape(state, direction, neighborState, world, pos, neighborPos);
+            return doubleBlockHalf == DoubleBlockHalf.LOWER
+                            && direction == Direction.DOWN
+                            && !state.canSurvive(world, pos)
+                    ? Blocks.AIR.defaultBlockState()
+                    : super.updateShape(state, direction, neighborState, world, pos, neighborPos);
         }
     }
 
@@ -112,8 +125,11 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         Level world = ctx.getLevel();
         BlockPos blockPos = ctx.getClickedPos();
-        if (blockPos.getY() < world.getMaxBuildHeight() - 1 && world.getBlockState(blockPos.above()).canBeReplaced(ctx)) {
-            return this.defaultBlockState().setValue(FACING, ctx.getHorizontalDirection()).setValue(HALF, DoubleBlockHalf.LOWER);
+        if (blockPos.getY() < world.getMaxBuildHeight() - 1
+                && world.getBlockState(blockPos.above()).canBeReplaced(ctx)) {
+            return this.defaultBlockState()
+                    .setValue(FACING, ctx.getHorizontalDirection())
+                    .setValue(HALF, DoubleBlockHalf.LOWER);
         }
 
         return null;
@@ -151,7 +167,8 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     @Override
     public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean moved) {
         if (!state.is(newState.getBlock())) {
-            if (isBottom(state) && world.getBlockEntity(pos) instanceof AbstractShellContainerBlockEntity shellContainer) {
+            if (isBottom(state)
+                    && world.getBlockEntity(pos) instanceof AbstractShellContainerBlockEntity shellContainer) {
                 shellContainer.onBreak(world, pos);
             }
             world.removeBlockEntity(pos);
@@ -159,7 +176,14 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    protected ItemInteractionResult useItemOn(
+            ItemStack stack,
+            BlockState state,
+            Level world,
+            BlockPos pos,
+            Player player,
+            InteractionHand hand,
+            BlockHitResult hit) {
         if (ItemUtil.isWrench(stack)) {
             if (!world.isClientSide) {
                 world.setBlock(pos, state.cycle(OUTPUT), 10);
@@ -183,7 +207,8 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
+    protected InteractionResult useWithoutItem(
+            BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
         BlockPos targetPos = isBottom(state) ? pos : pos.below();
         if (world.getBlockEntity(targetPos) instanceof AbstractShellContainerBlockEntity shellContainer) {
             return shellContainer.onUse(world, targetPos, player, InteractionHand.MAIN_HAND);
@@ -205,8 +230,8 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     public int getAnalogOutputSignal(BlockState state, Level world, BlockPos pos) {
         return world.getBlockEntity(pos) instanceof AbstractShellContainerBlockEntity shellContainer
                 ? state.getValue(OUTPUT) == ComparatorOutputType.PROGRESS
-                ? shellContainer.getProgressComparatorOutput()
-                : shellContainer.getInventoryComparatorOutput()
+                        ? shellContainer.getProgressComparatorOutput()
+                        : shellContainer.getInventoryComparatorOutput()
                 : 0;
     }
 
@@ -222,7 +247,10 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
 
     @OnlyIn(Dist.CLIENT)
     public long getSeed(BlockState state, BlockPos pos) {
-        return Mth.getSeed(pos.getX(), pos.below(state.getValue(HALF) == DoubleBlockHalf.LOWER ? 0 : 1).getY(), pos.getZ());
+        return Mth.getSeed(
+                pos.getX(),
+                pos.below(state.getValue(HALF) == DoubleBlockHalf.LOWER ? 0 : 1).getY(),
+                pos.getZ());
     }
 
     @Override
@@ -231,7 +259,8 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
     }
 
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state, BlockEntityType<T> type) {
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
+            Level world, BlockState state, BlockEntityType<T> type) {
         if (!isBottom(state)) {
             return null;
         }
@@ -301,20 +330,27 @@ public abstract class AbstractShellContainerBlock extends BaseEntityBlock {
         final VoxelShape EAST_WALL = Block.box(15, 0, 0, 16, 16, 16);
         final VoxelShape WEST_WALL = Block.box(0, 0, 0, 1, 16, 16);
 
-        final VoxelShape NORTH_SHAPE = Shapes.or(NORTH_WALL, EAST_WALL, WEST_WALL).optimize();
-        final VoxelShape SOUTH_SHAPE = Shapes.or(SOUTH_WALL, EAST_WALL, WEST_WALL).optimize();
-        final VoxelShape EAST_SHAPE = Shapes.or(NORTH_WALL, SOUTH_WALL, EAST_WALL).optimize();
-        final VoxelShape WEST_SHAPE = Shapes.or(NORTH_WALL, SOUTH_WALL, WEST_WALL).optimize();
+        final VoxelShape NORTH_SHAPE =
+                Shapes.or(NORTH_WALL, EAST_WALL, WEST_WALL).optimize();
+        final VoxelShape SOUTH_SHAPE =
+                Shapes.or(SOUTH_WALL, EAST_WALL, WEST_WALL).optimize();
+        final VoxelShape EAST_SHAPE =
+                Shapes.or(NORTH_WALL, SOUTH_WALL, EAST_WALL).optimize();
+        final VoxelShape WEST_SHAPE =
+                Shapes.or(NORTH_WALL, SOUTH_WALL, WEST_WALL).optimize();
 
-        SOLID_SHAPE_TOP = Shapes.or(NORTH_WALL, SOUTH_WALL, EAST_WALL, WEST_WALL, ROOF).optimize();
-        SOLID_SHAPE_BOTTOM = Shapes.or(NORTH_WALL, SOUTH_WALL, EAST_WALL, WEST_WALL, FLOOR).optimize();
+        SOLID_SHAPE_TOP =
+                Shapes.or(NORTH_WALL, SOUTH_WALL, EAST_WALL, WEST_WALL, ROOF).optimize();
+        SOLID_SHAPE_BOTTOM =
+                Shapes.or(NORTH_WALL, SOUTH_WALL, EAST_WALL, WEST_WALL, FLOOR).optimize();
         for (Direction direction : Direction.Plane.HORIZONTAL) {
-            VoxelShape back = switch (direction) {
-                case NORTH -> NORTH_WALL;
-                case SOUTH -> SOUTH_WALL;
-                case EAST -> EAST_WALL;
-                default -> WEST_WALL;
-            };
+            VoxelShape back =
+                    switch (direction) {
+                        case NORTH -> NORTH_WALL;
+                        case SOUTH -> SOUTH_WALL;
+                        case EAST -> EAST_WALL;
+                        default -> WEST_WALL;
+                    };
             int index = direction.get2DDataValue();
             OPEN_COLLISION_TOP[index] = Shapes.or(back, ROOF).optimize();
             OPEN_COLLISION_BOTTOM[index] = Shapes.or(back, FLOOR).optimize();

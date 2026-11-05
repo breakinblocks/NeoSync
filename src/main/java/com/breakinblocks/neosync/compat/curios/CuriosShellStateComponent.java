@@ -2,15 +2,14 @@ package com.breakinblocks.neosync.compat.curios;
 
 import com.breakinblocks.neosync.api.shell.ShellStateComponent;
 import com.breakinblocks.neosync.common.utils.nbt.SyncRegistries;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.ItemStackHandler;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 public abstract class CuriosShellStateComponent extends ShellStateComponent {
     public static final String IDENTIFIER = "Identifier";

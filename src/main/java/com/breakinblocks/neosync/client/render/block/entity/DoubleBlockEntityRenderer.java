@@ -1,5 +1,7 @@
 package com.breakinblocks.neosync.client.render.block.entity;
 
+import com.breakinblocks.neosync.client.model.DoubleBlockModel;
+import com.breakinblocks.neosync.common.block.entity.DoubleBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -13,11 +15,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.client.model.DoubleBlockModel;
-import com.breakinblocks.neosync.common.block.entity.DoubleBlockEntity;
 
 @OnlyIn(Dist.CLIENT)
-public abstract class DoubleBlockEntityRenderer<T extends BlockEntity & DoubleBlockEntity> implements BlockEntityRenderer<T> {
+public abstract class DoubleBlockEntityRenderer<T extends BlockEntity & DoubleBlockEntity>
+        implements BlockEntityRenderer<T> {
     protected final BlockEntityRendererProvider.Context context;
 
     public DoubleBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
@@ -25,7 +26,13 @@ public abstract class DoubleBlockEntityRenderer<T extends BlockEntity & DoubleBl
     }
 
     @Override
-    public void render(T blockEntity, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay) {
+    public void render(
+            T blockEntity,
+            float tickDelta,
+            PoseStack matrices,
+            MultiBufferSource vertexConsumers,
+            int light,
+            int overlay) {
         BlockState blockState = this.getBlockState(blockEntity);
 
         matrices.pushPose();

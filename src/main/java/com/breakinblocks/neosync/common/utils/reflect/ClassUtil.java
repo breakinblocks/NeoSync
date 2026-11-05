@@ -1,7 +1,6 @@
 package com.breakinblocks.neosync.common.utils.reflect;
 
 import com.breakinblocks.neosync.common.utils.function.FunctionUtil;
-
 import java.lang.reflect.Method;
 import java.util.Optional;
 
@@ -10,6 +9,5 @@ public final class ClassUtil {
         return FunctionUtil.tryInvoke(() -> type.getMethod(name, parameterTypes));
     }
 
-    private ClassUtil() {
-    }
+    private ClassUtil() {}
 }

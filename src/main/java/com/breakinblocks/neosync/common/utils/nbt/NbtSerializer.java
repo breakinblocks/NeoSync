@@ -1,15 +1,15 @@
 package com.breakinblocks.neosync.common.utils.nbt;
 
-import net.minecraft.nbt.CompoundTag;
-
 import java.util.function.BiConsumer;
+import net.minecraft.nbt.CompoundTag;
 
 public class NbtSerializer<T> {
     private final T target;
     private final Iterable<BiConsumer<T, CompoundTag>> readers;
     private final Iterable<BiConsumer<T, CompoundTag>> writers;
 
-    public NbtSerializer(T target, Iterable<BiConsumer<T, CompoundTag>> readers, Iterable<BiConsumer<T, CompoundTag>> writers) {
+    public NbtSerializer(
+            T target, Iterable<BiConsumer<T, CompoundTag>> readers, Iterable<BiConsumer<T, CompoundTag>> writers) {
         this.target = target;
         this.readers = readers;
         this.writers = writers;

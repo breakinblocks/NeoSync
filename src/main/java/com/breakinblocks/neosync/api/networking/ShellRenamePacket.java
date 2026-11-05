@@ -1,5 +1,11 @@
 package com.breakinblocks.neosync.api.networking;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.api.shell.ServerShell;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.api.shell.ShellStateContainer;
+import com.breakinblocks.neosync.common.utils.WorldUtil;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
@@ -11,22 +17,16 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.api.shell.ServerShell;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.api.shell.ShellStateContainer;
-import com.breakinblocks.neosync.common.utils.WorldUtil;
-
-import java.util.UUID;
 
 public record ShellRenamePacket(UUID shellUuid, String name) implements CustomPacketPayload {
     public static final Type<ShellRenamePacket> TYPE = new Type<>(NeoSync.locate("shell/rename"));
 
     public static final StreamCodec<FriendlyByteBuf, ShellRenamePacket> STREAM_CODEC = StreamCodec.composite(
-            UUIDUtil.STREAM_CODEC, ShellRenamePacket::shellUuid,
-            ByteBufCodecs.stringUtf8(ShellState.MAX_NAME_LENGTH), ShellRenamePacket::name,
-            ShellRenamePacket::new
-    );
+            UUIDUtil.STREAM_CODEC,
+            ShellRenamePacket::shellUuid,
+            ByteBufCodecs.stringUtf8(ShellState.MAX_NAME_LENGTH),
+            ShellRenamePacket::name,
+            ShellRenamePacket::new);
 
     public ShellRenamePacket(ShellState shell, String name) {
         this(shell.getUuid(), name == null ? "" : name);
@@ -63,7 +63,8 @@ public record ShellRenamePacket(UUID shellUuid, String name) implements CustomPa
             return state;
         }
 
-        ServerLevel world = WorldUtil.findWorld(player.level().getServer().getAllLevels(), state.getWorld()).orElse(null);
+        ServerLevel world = WorldUtil.findWorld(player.level().getServer().getAllLevels(), state.getWorld())
+                .orElse(null);
         if (world == null) {
             return state;
         }
@@ -73,7 +74,8 @@ public record ShellRenamePacket(UUID shellUuid, String name) implements CustomPa
             world.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
         }
 
-        ShellStateContainer container = ShellStateContainer.findAt(world, pos, state.getLocalOffset(), player, state.getSubLevelUuid());
+        ShellStateContainer container =
+                ShellStateContainer.findAt(world, pos, state.getLocalOffset(), player, state.getSubLevelUuid());
         ShellState stored = container == null ? null : container.getShellState();
         if (stored == null || !state.getUuid().equals(stored.getUuid())) {
             return state;

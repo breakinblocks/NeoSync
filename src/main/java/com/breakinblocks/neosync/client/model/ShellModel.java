@@ -1,17 +1,16 @@
 package com.breakinblocks.neosync.client.model;
 
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.client.render.CustomRenderLayer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import java.util.Random;
 import net.minecraft.client.model.AgeableListModel;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.client.render.CustomRenderLayer;
-
-import java.util.Random;
 
 @OnlyIn(Dist.CLIENT)
 public class ShellModel<T extends AgeableListModel<?>> extends Model {

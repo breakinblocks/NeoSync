@@ -1,11 +1,11 @@
 package com.breakinblocks.neosync.mixins.common;
 
+import com.breakinblocks.neosync.api.shell.Shell;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
-import com.breakinblocks.neosync.api.shell.Shell;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,8 +26,11 @@ abstract class PlayerEntityMixin extends LivingEntity {
 
     @Inject(method = "getBaseExperienceReward", at = @At("RETURN"), cancellable = true)
     private void forceDropXp(CallbackInfoReturnable<Integer> cir) {
-        if (cir.getReturnValue() == 0 && this instanceof Shell shell && shell.isArtificial() &&
-                !this.isSpectator() && this.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
+        if (cir.getReturnValue() == 0
+                && this instanceof Shell shell
+                && shell.isArtificial()
+                && !this.isSpectator()
+                && this.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
             cir.setReturnValue(Math.min(this.experienceLevel * 7, 100));
         }
     }

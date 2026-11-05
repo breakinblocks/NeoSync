@@ -1,10 +1,10 @@
 package com.breakinblocks.neosync.common.block;
 
+import com.breakinblocks.neosync.common.block.entity.ShellConstructorBlockEntity;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import com.breakinblocks.neosync.common.block.entity.ShellConstructorBlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 public class ShellConstructorBlock extends AbstractShellContainerBlock {

@@ -1,38 +1,36 @@
 package com.breakinblocks.neosync.client.gui.widget;
 
-import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.network.chat.CommonComponents;
-import com.breakinblocks.neosync.client.gl.MSAAFramebuffer;
-import com.breakinblocks.neosync.client.render.MatrixStackStorage;
+import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import com.breakinblocks.neosync.api.shell.ClientShell;
 import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.DyeColor;
-import net.minecraft.util.Mth;
-import com.mojang.math.Axis;
-import com.breakinblocks.neosync.common.block.entity.ShellEntity;
+import com.breakinblocks.neosync.client.gl.MSAAFramebuffer;
+import com.breakinblocks.neosync.client.render.MatrixStackStorage;
 import com.breakinblocks.neosync.client.utils.render.ColorUtil;
 import com.breakinblocks.neosync.client.utils.render.RenderSystemUtil;
+import com.breakinblocks.neosync.common.block.entity.ShellEntity;
 import com.breakinblocks.neosync.common.utils.math.Radians;
-import org.joml.Vector3f;
-
-import javax.annotation.Nullable;
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.DyeColor;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import org.joml.Vector3f;
 
 @OnlyIn(Dist.CLIENT)
 public class ShellSelectorButtonWidget extends AbstractWidget {
@@ -60,19 +58,75 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
     public ShellState shell;
     public Consumer<ShellState> onRename;
 
-    public ShellSelectorButtonWidget(double cX, double cY, double majorR, double minorR, double borderWidth, double from, double to) {
-        this(cX, cY, majorR, minorR, borderWidth, from, to, DEFAULT_STEP, DEFAULT_COLOR, DEFAULT_ALPHA, DEFAULT_HOVERED_ALPHA, DEFAULT_PRESSED_ALPHA);
+    public ShellSelectorButtonWidget(
+            double cX, double cY, double majorR, double minorR, double borderWidth, double from, double to) {
+        this(
+                cX,
+                cY,
+                majorR,
+                minorR,
+                borderWidth,
+                from,
+                to,
+                DEFAULT_STEP,
+                DEFAULT_COLOR,
+                DEFAULT_ALPHA,
+                DEFAULT_HOVERED_ALPHA,
+                DEFAULT_PRESSED_ALPHA);
     }
 
-    public ShellSelectorButtonWidget(double cX, double cY, double majorR, double minorR, double borderWidth, double from, double to, DyeColor color) {
-        this(cX, cY, majorR, minorR, borderWidth, from, to, DEFAULT_STEP, color, DEFAULT_ALPHA, DEFAULT_HOVERED_ALPHA, DEFAULT_PRESSED_ALPHA);
+    public ShellSelectorButtonWidget(
+            double cX,
+            double cY,
+            double majorR,
+            double minorR,
+            double borderWidth,
+            double from,
+            double to,
+            DyeColor color) {
+        this(
+                cX,
+                cY,
+                majorR,
+                minorR,
+                borderWidth,
+                from,
+                to,
+                DEFAULT_STEP,
+                color,
+                DEFAULT_ALPHA,
+                DEFAULT_HOVERED_ALPHA,
+                DEFAULT_PRESSED_ALPHA);
     }
 
-    public ShellSelectorButtonWidget(double cX, double cY, double majorR, double minorR, double borderWidth, double from, double to, DyeColor color, float alpha, float hoveredAlpha, float pressedAlpha) {
+    public ShellSelectorButtonWidget(
+            double cX,
+            double cY,
+            double majorR,
+            double minorR,
+            double borderWidth,
+            double from,
+            double to,
+            DyeColor color,
+            float alpha,
+            float hoveredAlpha,
+            float pressedAlpha) {
         this(cX, cY, majorR, minorR, borderWidth, from, to, DEFAULT_STEP, color, alpha, hoveredAlpha, pressedAlpha);
     }
 
-    public ShellSelectorButtonWidget(double cX, double cY, double majorR, double minorR, double borderWidth, double from, double to, double step, DyeColor color, float alpha, float hoveredAlpha, float pressedAlpha) {
+    public ShellSelectorButtonWidget(
+            double cX,
+            double cY,
+            double majorR,
+            double minorR,
+            double borderWidth,
+            double from,
+            double to,
+            double step,
+            DyeColor color,
+            float alpha,
+            float hoveredAlpha,
+            float pressedAlpha) {
         boolean isFullCircle = Math.abs(Radians.R_2_PI - to + from) < step;
         if (isFullCircle) {
             double tmp = from;
@@ -107,26 +161,30 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
         if (isFullCircle) {
             this.belongsToSectorPredicate = (x, y) -> true;
         } else if (from < Radians.R_PI_2 && to > Radians.R_PI_2) {
-            this.belongsToSectorPredicate = (x, y) -> liesOnOrAboveLine(x, y, a0, b0) && liesOnOrAboveLine(x, y, a1, b1);
+            this.belongsToSectorPredicate =
+                    (x, y) -> liesOnOrAboveLine(x, y, a0, b0) && liesOnOrAboveLine(x, y, a1, b1);
         } else if (from < Radians.R_3_PI_2 && to > Radians.R_3_PI_2) {
-            this.belongsToSectorPredicate = (x, y) -> liesOnOrBelowLine(x, y, a0, b0) && liesOnOrBelowLine(x, y, a1, b1);
+            this.belongsToSectorPredicate =
+                    (x, y) -> liesOnOrBelowLine(x, y, a0, b0) && liesOnOrBelowLine(x, y, a1, b1);
         } else if (y1 > y0) {
-            this.belongsToSectorPredicate = (x, y) -> liesOnOrAboveLine(x, y, a0, b0) && liesOnOrBelowLine(x, y, a1, b1);
+            this.belongsToSectorPredicate =
+                    (x, y) -> liesOnOrAboveLine(x, y, a0, b0) && liesOnOrBelowLine(x, y, a1, b1);
         } else {
-            this.belongsToSectorPredicate = (x, y) -> liesOnOrBelowLine(x, y, a0, b0) && liesOnOrAboveLine(x, y, a1, b1);
+            this.belongsToSectorPredicate =
+                    (x, y) -> liesOnOrBelowLine(x, y, a0, b0) && liesOnOrAboveLine(x, y, a1, b1);
         }
     }
 
-
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
-        return this.shell != null && liesOnCircle(mouseX, mouseY, this.cX, this.cY, this.majorR) && !liesOnCircle(mouseX, mouseY, this.cX, this.cY, this.minorR) && this.belongsToSectorPredicate.test(mouseX, mouseY);
+        return this.shell != null
+                && liesOnCircle(mouseX, mouseY, this.cX, this.cY, this.majorR)
+                && !liesOnCircle(mouseX, mouseY, this.cX, this.cY, this.minorR)
+                && this.belongsToSectorPredicate.test(mouseX, mouseY);
     }
 
     @Override
-    public void setFocused(boolean focused) {
-
-    }
+    public void setFocused(boolean focused) {}
 
     @Override
     public boolean isFocused() {
@@ -178,19 +236,44 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
         DyeColor borderColor = this.shell == null ? null : this.shell.getColor();
         DyeColor color = borderColor != null && (this.isHovered() || this.isPressed()) ? borderColor : this.color;
         float[] rgb = ColorUtil.toFloatRgb(color);
-        RenderSystemUtil.drawAnnulusSector(matrices, this.cX, this.cY, this.majorR, this.minorR, this.from, this.to, this.step, rgb[0], rgb[1], rgb[2], alpha);
+        RenderSystemUtil.drawAnnulusSector(
+                matrices,
+                this.cX,
+                this.cY,
+                this.majorR,
+                this.minorR,
+                this.from,
+                this.to,
+                this.step,
+                rgb[0],
+                rgb[1],
+                rgb[2],
+                alpha);
 
         if (borderColor != null) {
             rgb = ColorUtil.toFloatRgb(borderColor);
-            RenderSystemUtil.drawAnnulusSector(matrices, this.cX, this.cY, this.majorR, this.minorRBorder, this.from, this.to, this.step, rgb[0], rgb[1], rgb[2], 1F);
+            RenderSystemUtil.drawAnnulusSector(
+                    matrices,
+                    this.cX,
+                    this.cY,
+                    this.majorR,
+                    this.minorRBorder,
+                    this.from,
+                    this.to,
+                    this.step,
+                    rgb[0],
+                    rgb[1],
+                    rgb[2],
+                    1F);
         }
     }
 
     private void renderShellAndProgress(GuiGraphics guiGraphics) {
         this.renderShell(guiGraphics);
         if (this.shell.getProgress() < ShellState.PROGRESS_DONE) {
-            int progress = (int)Math.floor(this.shell.getProgress() * 100);
-            this.renderBadge(guiGraphics, Component.translatable("gui.neosync.shell_selector.progress_percent", progress));
+            int progress = (int) Math.floor(this.shell.getProgress() * 100);
+            this.renderBadge(
+                    guiGraphics, Component.translatable("gui.neosync.shell_selector.progress_percent", progress));
         } else if (this.shell.isManualOnly()) {
             this.renderBadge(guiGraphics, Component.translatable("gui.neosync.shell_selector.manual"));
         }
@@ -201,22 +284,28 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
         final float FONT_SCALE = 0.13F;
 
         Font font = RenderSystemUtil.getTextRenderer();
-        float fontHeight = (float)this.diffR * FONT_SCALE;
+        float fontHeight = (float) this.diffR * FONT_SCALE;
         float fontScale = fontHeight / font.lineHeight;
         double r = this.majorR - fontHeight;
         double tAngle = (this.to + this.from) / 2;
-        float labelX = (float)(r * Math.cos(tAngle) + this.cX);
-        float labelY = (float)(r * Math.sin(tAngle) + this.cY);
+        float labelX = (float) (r * Math.cos(tAngle) + this.cX);
+        float labelY = (float) (r * Math.sin(tAngle) + this.cY);
         double chord = 2 * r * Math.sin(Math.min(this.to - this.from, Radians.R_PI) / 2);
-        int maxWidth = (int)(Math.min(chord, this.majorR) / fontScale);
+        int maxWidth = (int) (Math.min(chord, this.majorR) / fontScale);
 
         PoseStack matrices = guiGraphics.pose();
 
         matrices.pushPose();
         try {
             matrices.translate(0, 0, this.majorR * 2);
-            RenderSystemUtil.drawCenteredText(guiGraphics, truncate(font, this.shell.getDisplayName().getString(), maxWidth),
-                    labelX, labelY, fontScale, ColorUtil.fromDyeColor(DyeColor.WHITE), true);
+            RenderSystemUtil.drawCenteredText(
+                    guiGraphics,
+                    truncate(font, this.shell.getDisplayName().getString(), maxWidth),
+                    labelX,
+                    labelY,
+                    fontScale,
+                    ColorUtil.fromDyeColor(DyeColor.WHITE),
+                    true);
         } finally {
             matrices.popPose();
         }
@@ -244,7 +333,7 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
         double shellCY = r * Math.sin(tAngle) + this.cY;
         double tX = shellCX - this.diffR * SHELL_WIDTH_HALF;
         double tY = shellCY + this.diffR * SHELL_HEIGHT_HALF;
-        float scale = (float)this.diffR * SHELL_SCALE;
+        float scale = (float) this.diffR * SHELL_SCALE;
 
         PoseStack matrices = guiGraphics.pose();
 
@@ -255,7 +344,8 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
             matrices.mulPose(Axis.XP.rotationDegrees(15));
             matrices.mulPose(Axis.YP.rotationDegrees(40));
 
-            RenderSystem.setupGui3DDiffuseLighting(new Vector3f((float)this.cX * 2, (float)this.cY * 2, -1), new Vector3f(0, 0, 1));
+            RenderSystem.setupGui3DDiffuseLighting(
+                    new Vector3f((float) this.cX * 2, (float) this.cY * 2, -1), new Vector3f(0, 0, 1));
             MatrixStackStorage.saveModelMatrixStack(matrices);
             MultiBufferSource.BufferSource immediate = RenderSystemUtil.getEntityVertexConsumerProvider();
             EntityRenderDispatcher renderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
@@ -273,9 +363,9 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
         Font font = RenderSystemUtil.getTextRenderer();
         double r = this.minorR + this.diffR / 2;
         double tAngle = (this.to + this.from) / 2;
-        float shellCX = (float)(r * Math.cos(tAngle) + this.cX);
-        float shellCY = (float)(r * Math.sin(tAngle) + this.cY);
-        float fontHeight = (float)this.diffR * FONT_SCALE;
+        float shellCX = (float) (r * Math.cos(tAngle) + this.cX);
+        float shellCY = (float) (r * Math.sin(tAngle) + this.cY);
+        float fontHeight = (float) this.diffR * FONT_SCALE;
         float fontScale = fontHeight / font.lineHeight;
 
         float boxHeight = fontHeight * BOX_SCALE;
@@ -289,8 +379,22 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
         matrices.pushPose();
         try {
             matrices.translate(0, 0, this.majorR * 2);
-            RenderSystemUtil.drawRectangle(matrices, boxLeft, boxTop, boxWidth, boxHeight, boxHeight * 0.25F, 1F, 0, (float)this.step, 0F, 0F, 0F, 0.8F);
-            RenderSystemUtil.drawCenteredText(guiGraphics, text, shellCX, shellCY, fontScale, ColorUtil.fromDyeColor(DyeColor.WHITE), true);
+            RenderSystemUtil.drawRectangle(
+                    matrices,
+                    boxLeft,
+                    boxTop,
+                    boxWidth,
+                    boxHeight,
+                    boxHeight * 0.25F,
+                    1F,
+                    0,
+                    (float) this.step,
+                    0F,
+                    0F,
+                    0F,
+                    0.8F);
+            RenderSystemUtil.drawCenteredText(
+                    guiGraphics, text, shellCX, shellCY, fontScale, ColorUtil.fromDyeColor(DyeColor.WHITE), true);
         } finally {
             matrices.popPose();
         }
@@ -307,9 +411,12 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
             return null;
         }
 
-        return this.shell.getDisplayName().copy()
+        return this.shell
+                .getDisplayName()
+                .copy()
                 .append(CommonComponents.SPACE)
-                .append(Component.translatable("gui.neosync.shell_selector.rename.prompt").withStyle(ChatFormatting.DARK_GRAY));
+                .append(Component.translatable("gui.neosync.shell_selector.rename.prompt")
+                        .withStyle(ChatFormatting.DARK_GRAY));
     }
 
     private static boolean liesOnCircle(double x, double y, double cX, double cY, double r) {

@@ -1,5 +1,7 @@
 package com.breakinblocks.neosync.api.networking;
 
+import com.breakinblocks.neosync.NeoSync;
+import java.util.UUID;
 import net.minecraft.Util;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
@@ -10,17 +12,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import com.breakinblocks.neosync.NeoSync;
-
-import java.util.UUID;
 
 public record PlayerIsAlivePacket(UUID playerUuid) implements CustomPacketPayload {
     public static final Type<PlayerIsAlivePacket> TYPE = new Type<>(NeoSync.locate("shell/alive"));
 
-    public static final StreamCodec<FriendlyByteBuf, PlayerIsAlivePacket> STREAM_CODEC = StreamCodec.composite(
-            UUIDUtil.STREAM_CODEC, PlayerIsAlivePacket::playerUuid,
-            PlayerIsAlivePacket::new
-    );
+    public static final StreamCodec<FriendlyByteBuf, PlayerIsAlivePacket> STREAM_CODEC =
+            StreamCodec.composite(UUIDUtil.STREAM_CODEC, PlayerIsAlivePacket::playerUuid, PlayerIsAlivePacket::new);
 
     public PlayerIsAlivePacket {
         if (playerUuid == null) {

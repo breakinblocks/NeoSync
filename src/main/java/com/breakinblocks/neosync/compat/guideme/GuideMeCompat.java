@@ -11,7 +11,8 @@ import org.jetbrains.annotations.Nullable;
 
 public final class GuideMeCompat {
     public static final ResourceLocation GUIDE_ID = NeoSync.locate("guide");
-    private static final ResourceLocation GUIDE_ID_COMPONENT = ResourceLocation.fromNamespaceAndPath("guideme", "guide_id");
+    private static final ResourceLocation GUIDE_ID_COMPONENT =
+            ResourceLocation.fromNamespaceAndPath("guideme", "guide_id");
     private static final boolean LOADED = ModList.get().isLoaded("guideme");
 
     private GuideMeCompat() {}

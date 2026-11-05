@@ -9,7 +9,7 @@ public interface KillableEntity {
      * Called when this killable entity dies.
      * Can be used to trigger special death effects or cleanup.
      */
-    default void onKillableEntityDeath() { }
+    default void onKillableEntityDeath() {}
 
     /**
      * Called to update the entity after death.

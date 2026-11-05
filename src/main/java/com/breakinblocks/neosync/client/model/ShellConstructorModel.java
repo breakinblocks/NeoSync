@@ -1,12 +1,12 @@
 package com.breakinblocks.neosync.client.model;
 
+import com.breakinblocks.neosync.api.shell.ShellState;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.api.shell.ShellState;
 
 @OnlyIn(Dist.CLIENT)
 public class ShellConstructorModel extends AbstractShellContainerModel {
@@ -101,7 +101,8 @@ public class ShellConstructorModel extends AbstractShellContainerModel {
     }
 
     @Override
-    public void render(DoubleBlockHalf type, PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+    public void render(
+            DoubleBlockHalf type, PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
         super.render(type, matrices, vertices, light, overlay, color);
         if (type != BOTTOM || !this.showInnerParts) {
             return;
@@ -118,8 +119,16 @@ public class ShellConstructorModel extends AbstractShellContainerModel {
         float printingProgress = this.buildProgress / ShellState.PROGRESS_PRINTING;
         float paintingProgress = (this.buildProgress - ShellState.PROGRESS_PRINTING) / ShellState.PROGRESS_PAINTING;
 
-        float printerY = MIN_PRINTER_Y + PRINTER_HEIGHT * (printingProgress <= 1F ? printingProgress : (1F - paintingProgress));
-        float sprayerY = MIN_SPRAYER_Y + SPRAYER_HEIGHT * (printingProgress < SPRAYER_ACTIVATION_STAGE ? 0 : printingProgress <= 1F ? ((printingProgress - SPRAYER_ACTIVATION_STAGE) / (1F - SPRAYER_ACTIVATION_STAGE)) : (1F - paintingProgress));
+        float printerY =
+                MIN_PRINTER_Y + PRINTER_HEIGHT * (printingProgress <= 1F ? printingProgress : (1F - paintingProgress));
+        float sprayerY = MIN_SPRAYER_Y
+                + SPRAYER_HEIGHT
+                        * (printingProgress < SPRAYER_ACTIVATION_STAGE
+                                ? 0
+                                : printingProgress <= 1F
+                                        ? ((printingProgress - SPRAYER_ACTIVATION_STAGE)
+                                                / (1F - SPRAYER_ACTIVATION_STAGE))
+                                        : (1F - paintingProgress));
 
         this.renderPrinter(printerY, matrices, vertices, light, overlay, color);
         this.renderSprayer(sprayerY, true, matrices, vertices, light, overlay, color);
@@ -129,7 +138,14 @@ public class ShellConstructorModel extends AbstractShellContainerModel {
         }
     }
 
-    private void renderSprayer(float y, boolean isFullyVisible, PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+    private void renderSprayer(
+            float y,
+            boolean isFullyVisible,
+            PoseStack matrices,
+            VertexConsumer vertices,
+            int light,
+            int overlay,
+            int color) {
         this.sprayerRMast.y = y;
         this.sprayerGMast.y = y;
         this.sprayerBMast.y = y;
@@ -152,7 +168,8 @@ public class ShellConstructorModel extends AbstractShellContainerModel {
         this.sprayerB.render(matrices, vertices, light, overlay, color);
     }
 
-    private void renderPrinter(float y, PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+    private void renderPrinter(
+            float y, PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
         this.printerL.y = y;
         this.printerR.y = y;
 

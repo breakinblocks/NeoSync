@@ -16,9 +16,7 @@ public class Voxel {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Voxel voxel = (Voxel) obj;
-        return Float.compare(voxel.x, x) == 0 &&
-                Float.compare(voxel.y, y) == 0 &&
-                Float.compare(voxel.z, z) == 0;
+        return Float.compare(voxel.x, x) == 0 && Float.compare(voxel.y, y) == 0 && Float.compare(voxel.z, z) == 0;
     }
 
     @Override

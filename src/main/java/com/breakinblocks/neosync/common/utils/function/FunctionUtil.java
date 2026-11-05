@@ -31,6 +31,5 @@ public final class FunctionUtil {
         }
     }
 
-    private FunctionUtil() {
-    }
+    private FunctionUtil() {}
 }

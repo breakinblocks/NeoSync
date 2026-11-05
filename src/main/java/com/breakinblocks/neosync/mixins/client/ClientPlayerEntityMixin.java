@@ -1,18 +1,5 @@
 package com.breakinblocks.neosync.mixins.client;
 
-import com.mojang.authlib.GameProfile;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.DeathScreen;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
 import com.breakinblocks.neosync.api.networking.SynchronizationRequestPacket;
 import com.breakinblocks.neosync.api.shell.ClientShell;
@@ -28,6 +15,27 @@ import com.breakinblocks.neosync.common.entity.PersistentCameraEntityGoal;
 import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import com.breakinblocks.neosync.common.utils.WorldUtil;
 import com.breakinblocks.neosync.compat.sable.SableCompat;
+import com.mojang.authlib.GameProfile;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.DeathScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -37,18 +45,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 @OnlyIn(Dist.CLIENT)
 @Mixin(LocalPlayer.class)
-public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer implements ClientShell, KillableEntity, LookingEntity {
+public abstract class ClientPlayerEntityMixin extends AbstractClientPlayer
+        implements ClientShell, KillableEntity, LookingEntity {
     @Final
     @Shadow
     protected Minecraft minecraft;
@@ -85,7 +85,8 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
         PlayerSyncEvents.START_SYNCING.invoker().onStartSyncing(this, state);
 
         BlockPos pos = this.blockPosition();
-        Direction facing = BlockPosUtil.getHorizontalFacing(pos, world).orElse(this.getDirection().getOpposite());
+        Direction facing = BlockPosUtil.getHorizontalFacing(pos, world)
+                .orElse(this.getDirection().getOpposite());
         SynchronizationRequestPacket request = new SynchronizationRequestPacket(state);
         PersistentCameraEntityGoal cameraGoal = this.isDeadOrDying()
                 ? PersistentCameraEntityGoal.limbo(pos, facing, state.getPos(), __ -> request.send())
@@ -99,8 +100,15 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
     }
 
     @Override
-    public void endSync(ResourceLocation startWorld, BlockPos startPos, Direction startFacing, ResourceLocation targetWorld, BlockPos targetPos, Direction targetFacing, @Nullable ShellState storedState) {
-        LocalPlayer player = (LocalPlayer)(Object)this;
+    public void endSync(
+            ResourceLocation startWorld,
+            BlockPos startPos,
+            Direction startFacing,
+            ResourceLocation targetWorld,
+            BlockPos targetPos,
+            Direction targetFacing,
+            @Nullable ShellState storedState) {
+        LocalPlayer player = (LocalPlayer) (Object) this;
         boolean syncFailed = Objects.equals(startPos, targetPos);
 
         if (!syncFailed) {
@@ -137,7 +145,8 @@ public abstract class  ClientPlayerEntityMixin extends AbstractClientPlayer impl
                 && !this.sync$isOnSublevel(targetPos)
                 && SableCompat.getTrackingSublevel(player) == null;
         if (enableCamera) {
-            PersistentCameraEntityGoal cameraGoal = PersistentCameraEntityGoal.highwayToHell(startPos, startFacing, targetPos, targetFacing, __ -> restore.run());
+            PersistentCameraEntityGoal cameraGoal = PersistentCameraEntityGoal.highwayToHell(
+                    startPos, startFacing, targetPos, targetFacing, __ -> restore.run());
             PersistentCameraEntity.setup(this.minecraft, cameraGoal);
         } else {
             restore.run();

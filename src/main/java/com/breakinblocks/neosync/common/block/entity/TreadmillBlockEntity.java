@@ -1,5 +1,12 @@
 package com.breakinblocks.neosync.common.block.entity;
 
+import com.breakinblocks.neosync.api.event.EntityFitnessEvents;
+import com.breakinblocks.neosync.common.block.TreadmillBlock;
+import com.breakinblocks.neosync.common.config.SyncConfig;
+import com.breakinblocks.neosync.compat.sable.SableCompat;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -21,16 +28,9 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
-import com.breakinblocks.neosync.api.event.EntityFitnessEvents;
-import com.breakinblocks.neosync.common.block.TreadmillBlock;
-import com.breakinblocks.neosync.common.config.SyncConfig;
-import com.breakinblocks.neosync.compat.sable.SableCompat;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEntity, TickableBlockEntity, IEnergyStorage {
+public class TreadmillBlockEntity extends BlockEntity
+        implements DoubleBlockEntity, TickableBlockEntity, IEnergyStorage {
     private static final int MAX_RUNNING_TIME = 20 * 60 * 15;
     private static final double MAX_SQUARED_DISTANCE = 0.5;
     private static final Map<EntityType<? extends Entity>, Long> ENERGY_MAP;
@@ -120,7 +120,8 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
         Direction face = state.getValue(TreadmillBlock.FACING);
         Vec3 localAnchor = computeTreadmillPivot(pos, face);
         Object sublevel = SableCompat.getContainingSublevel(this);
-        Vec3 runnerLocalPos = sublevel != null ? SableCompat.worldToLocal(sublevel, this.runner.position()) : this.runner.position();
+        Vec3 runnerLocalPos =
+                sublevel != null ? SableCompat.worldToLocal(sublevel, this.runner.position()) : this.runner.position();
         if (!isValidEntity(this.runner) || !isEntityNear(runnerLocalPos, localAnchor)) {
             this.setRunner(null);
             return;
@@ -141,7 +142,8 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
         if (this.runner instanceof LivingEntity livingEntity) {
             livingEntity.setSpeed(0.15F);
             Vec3 localMotion = HORIZONTAL_MOTION[face.ordinal()];
-            Vec3 worldMotion = sublevel != null ? SableCompat.transformDirectionToWorld(sublevel, localMotion) : localMotion;
+            Vec3 worldMotion =
+                    sublevel != null ? SableCompat.transformDirectionToWorld(sublevel, localMotion) : localMotion;
             livingEntity.setDeltaMovement(worldMotion);
 
             if (livingEntity instanceof Mob mob) {
@@ -152,7 +154,7 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
 
             livingEntity.setNoActionTime(0);
         }
-        this.storedEnergy = this.producibleEnergyQuantity * (long)(1.0 + 0.5 * this.runningTime / MAX_RUNNING_TIME);
+        this.storedEnergy = this.producibleEnergyQuantity * (long) (1.0 + 0.5 * this.runningTime / MAX_RUNNING_TIME);
         this.transferEnergy(world, pos);
         if (this.runningTime < MAX_RUNNING_TIME) {
             ++this.runningTime;
@@ -166,7 +168,8 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
     public void onSteppedOn(BlockPos pos, BlockState state, Entity entity) {
         Vec3 localAnchor = computeTreadmillPivot(pos, state.getValue(TreadmillBlock.FACING));
         Object sublevel = SableCompat.getContainingSublevel(this);
-        Vec3 entityLocalPos = sublevel != null ? SableCompat.worldToLocal(sublevel, entity.position()) : entity.position();
+        Vec3 entityLocalPos =
+                sublevel != null ? SableCompat.worldToLocal(sublevel, entity.position()) : entity.position();
         if (this.runner != null || !isEntityNear(entityLocalPos, localAnchor)) {
             return;
         }
@@ -235,7 +238,8 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
         for (int i = 0; i < 2; ++i) {
             for (Direction direction : Direction.values()) {
                 BlockPos neighborPos = pos.relative(direction);
-                IEnergyStorage storage = world.getCapability(Capabilities.EnergyStorage.BLOCK, neighborPos, direction.getOpposite());
+                IEnergyStorage storage =
+                        world.getCapability(Capabilities.EnergyStorage.BLOCK, neighborPos, direction.getOpposite());
                 if (storage != null && storage.canReceive()) {
                     int transferred = storage.receiveEnergy((int) back.storedEnergy, false);
                     back.storedEnergy -= transferred;
@@ -262,7 +266,8 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
         if (TreadmillBlock.isBack(this.getBlockState())) {
             this.cachedBackPart = this;
         } else {
-            BlockPos backPartPos = this.worldPosition.relative(this.getBlockState().getValue(TreadmillBlock.FACING).getOpposite());
+            BlockPos backPartPos = this.worldPosition.relative(
+                    this.getBlockState().getValue(TreadmillBlock.FACING).getOpposite());
             BlockEntity be = this.level.getBlockEntity(backPartPos);
             this.cachedBackPart = be instanceof TreadmillBlockEntity ? (TreadmillBlockEntity) be : null;
         }
@@ -307,7 +312,8 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
     @Override
     protected void saveAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
         super.saveAdditional(nbt, registries);
-        UUID runnerUuid = this.runnerUUID == null ? this.runner == null ? null : this.runner.getUUID() : this.runnerUUID;
+        UUID runnerUuid =
+                this.runnerUUID == null ? this.runner == null ? null : this.runner.getUUID() : this.runnerUUID;
         if (runnerUuid != null) {
             nbt.putUUID("runner", runnerUuid);
         }
@@ -320,7 +326,9 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
     }
 
     private static Long getOutputEnergyQuantityForEntity(Entity entity, IEnergyStorage energyStorage) {
-        return EntityFitnessEvents.MODIFY_OUTPUT_ENERGY_QUANTITY.invoker().modifyOutputEnergyQuantity(entity, energyStorage, ENERGY_MAP.get(entity.getType()));
+        return EntityFitnessEvents.MODIFY_OUTPUT_ENERGY_QUANTITY
+                .invoker()
+                .modifyOutputEnergyQuantity(entity, energyStorage, ENERGY_MAP.get(entity.getType()));
     }
 
     private static boolean isValidEntity(Entity entity) {
@@ -328,12 +336,13 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
             return false;
         }
 
-        return (
-                !entity.isSpectator() && !entity.isCrouching() && !entity.isInWater() &&
-                        (!(entity instanceof LivingEntity livingEntity) || livingEntity.hurtTime <= 0 && !livingEntity.isBaby()) &&
-                        (!(entity instanceof Mob mobEntity) || !mobEntity.isLeashed()) &&
-                        (!(entity instanceof TamableAnimal tameableEntity) || !tameableEntity.isOrderedToSit())
-        );
+        return (!entity.isSpectator()
+                && !entity.isCrouching()
+                && !entity.isInWater()
+                && (!(entity instanceof LivingEntity livingEntity)
+                        || livingEntity.hurtTime <= 0 && !livingEntity.isBaby())
+                && (!(entity instanceof Mob mobEntity) || !mobEntity.isLeashed())
+                && (!(entity instanceof TamableAnimal tameableEntity) || !tameableEntity.isOrderedToSit()));
     }
 
     private static boolean isEntityNear(Vec3 entityEffectivePos, Vec3 pos) {
@@ -341,17 +350,19 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
     }
 
     private static Vec3 computeTreadmillPivot(BlockPos pos, Direction face) {
-        double x = switch (face) {
-            case WEST -> pos.getX();
-            case EAST -> pos.getX() + 1;
-            default -> pos.getX() + 0.5D;
-        };
+        double x =
+                switch (face) {
+                    case WEST -> pos.getX();
+                    case EAST -> pos.getX() + 1;
+                    default -> pos.getX() + 0.5D;
+                };
         double y = pos.getY() + 0.175;
-        double z = switch (face) {
-            case SOUTH -> pos.getZ() + 1;
-            case NORTH -> pos.getZ();
-            default -> pos.getZ() + 0.5D;
-        };
+        double z =
+                switch (face) {
+                    case SOUTH -> pos.getZ() + 1;
+                    case NORTH -> pos.getZ();
+                    default -> pos.getZ() + 0.5D;
+                };
         return new Vec3(x, y, z);
     }
 
@@ -360,7 +371,6 @@ public class TreadmillBlockEntity extends BlockEntity implements DoubleBlockEnti
                 .collect(Collectors.toUnmodifiableMap(
                         SyncConfig.EnergyMapEntry::getEntityType,
                         SyncConfig.EnergyMapEntry::outputEnergyQuantity,
-                        (a, b) -> a
-                ));
+                        (a, b) -> a));
     }
 }

@@ -1,19 +1,19 @@
 package com.breakinblocks.neosync.common.block;
 
+import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
-import com.breakinblocks.neosync.common.block.entity.ShellStorageBlockEntity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
 @SuppressWarnings("deprecation")
 public class ShellStorageBlock extends AbstractShellContainerBlock {
@@ -23,7 +23,11 @@ public class ShellStorageBlock extends AbstractShellContainerBlock {
 
     public ShellStorageBlock(Properties properties) {
         super(properties);
-        this.registerDefaultState(this.getStateDefinition().any().setValue(OPEN, false).setValue(ENABLED, false).setValue(POWERED, false));
+        this.registerDefaultState(this.getStateDefinition()
+                .any()
+                .setValue(OPEN, false)
+                .setValue(ENABLED, false)
+                .setValue(POWERED, false));
     }
 
     @Override
@@ -57,7 +61,8 @@ public class ShellStorageBlock extends AbstractShellContainerBlock {
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level world, BlockPos pos, Block block, BlockPos fromPos, boolean notify) {
+    public void neighborChanged(
+            BlockState state, Level world, BlockPos pos, Block block, BlockPos fromPos, boolean notify) {
         if (!world.isClientSide) {
             boolean enabled = state.getValue(ENABLED);
             boolean shouldBeEnabled = shouldBeEnabled(state, world, pos);
@@ -90,7 +95,7 @@ public class ShellStorageBlock extends AbstractShellContainerBlock {
         if (world.isClientSide && entity instanceof Player && isBottom(state)) {
             BlockEntity blockEntity = world.getBlockEntity(pos);
             if (blockEntity instanceof ShellStorageBlockEntity) {
-                ((ShellStorageBlockEntity)blockEntity).onEntityCollisionClient(entity, state);
+                ((ShellStorageBlockEntity) blockEntity).onEntityCollisionClient(entity, state);
             }
         }
     }
@@ -103,6 +108,7 @@ public class ShellStorageBlock extends AbstractShellContainerBlock {
     }
 
     private static boolean shouldBeEnabled(BlockState state, Level world, BlockPos pos) {
-        return world.hasNeighborSignal(pos) || world.hasNeighborSignal(pos.relative(getDirectionTowardsAnotherPart(state)));
+        return world.hasNeighborSignal(pos)
+                || world.hasNeighborSignal(pos.relative(getDirectionTowardsAnotherPart(state)));
     }
 }

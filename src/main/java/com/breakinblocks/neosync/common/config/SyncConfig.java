@@ -1,21 +1,10 @@
 package com.breakinblocks.neosync.common.config;
 
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.event.config.ModConfigEvent;
-import net.neoforged.neoforge.common.ModConfigSpec;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
+import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.api.networking.ShellUpdatePacket;
 import com.breakinblocks.neosync.api.shell.Shell;
-import com.breakinblocks.neosync.common.utils.WorldUtil;
-import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.api.shell.ShellPriority;
-
+import com.breakinblocks.neosync.common.utils.WorldUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,6 +13,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 @EventBusSubscriber(modid = NeoSync.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class SyncConfig {
@@ -78,64 +77,56 @@ public class SyncConfig {
     static {
         BUILDER.comment("General settings").push("general");
 
-        ENABLE_INSTANT_SHELL_CONSTRUCTION = BUILDER
-                .comment("Enable instant shell construction (creative mode)")
+        ENABLE_INSTANT_SHELL_CONSTRUCTION = BUILDER.comment("Enable instant shell construction (creative mode)")
                 .define("enableInstantShellConstruction", false);
 
-        WARN_PLAYER_INSTEAD_OF_KILLING = BUILDER
-                .comment("Warn player instead of killing them when they don't have enough health")
+        WARN_PLAYER_INSTEAD_OF_KILLING = BUILDER.comment(
+                        "Warn player instead of killing them when they don't have enough health")
                 .define("warnPlayerInsteadOfKilling", false);
 
         BUILDER.pop();
 
         BUILDER.comment("Damage settings").push("damage");
 
-        FINGERSTICK_DAMAGE = BUILDER
-                .comment("Damage dealt when creating a shell (in half hearts)")
+        FINGERSTICK_DAMAGE = BUILDER.comment("Damage dealt when creating a shell (in half hearts)")
                 .defineInRange("fingerstickDamage", 20.0, 0.0, 40.0);
 
-        HARDCORE_FINGERSTICK_DAMAGE = BUILDER
-                .comment("Damage dealt when creating a shell in hardcore mode")
+        HARDCORE_FINGERSTICK_DAMAGE = BUILDER.comment("Damage dealt when creating a shell in hardcore mode")
                 .defineInRange("hardcoreFingerstickDamage", 40.0, 0.0, 80.0);
 
         BUILDER.pop();
 
         BUILDER.comment("Energy settings").push("energy");
 
-        SHELL_CONSTRUCTOR_CAPACITY = BUILDER
-                .comment("Energy capacity/requirement for shell constructor")
+        SHELL_CONSTRUCTOR_CAPACITY = BUILDER.comment("Energy capacity/requirement for shell constructor")
                 .defineInRange("shellConstructorCapacity", 256000L, 1000L, Long.MAX_VALUE);
 
-        SHELL_CONSTRUCTION_SPEED = BUILDER
-                .comment("How fast shells are built. The constructor needs shellConstructorCapacity divided by this many FE to finish a shell, so 2.0 builds twice as fast as 1.0")
+        SHELL_CONSTRUCTION_SPEED = BUILDER.comment(
+                        "How fast shells are built. The constructor needs shellConstructorCapacity divided by this many FE to finish a shell, so 2.0 builds twice as fast as 1.0")
                 .defineInRange("shellConstructionSpeed", 2.5D, 0.01D, 1000D);
 
-        SHELL_STORAGE_CAPACITY = BUILDER
-                .comment("Energy capacity of shell storage")
+        SHELL_STORAGE_CAPACITY = BUILDER.comment("Energy capacity of shell storage")
                 .defineInRange("shellStorageCapacity", 320L, 0L, Long.MAX_VALUE);
 
-        SHELL_STORAGE_CONSUMPTION = BUILDER
-                .comment("Energy consumption per tick for shell storage")
+        SHELL_STORAGE_CONSUMPTION = BUILDER.comment("Energy consumption per tick for shell storage")
                 .defineInRange("shellStorageConsumption", 16L, 0L, 1000L);
 
         BUILDER.pop();
 
         BUILDER.comment("Shell Storage settings").push("shellStorage");
 
-        SHELL_STORAGE_ACCEPTS_REDSTONE = BUILDER
-                .comment("Whether shell storage accepts redstone power")
-                .define("acceptsRedstone", true);
+        SHELL_STORAGE_ACCEPTS_REDSTONE =
+                BUILDER.comment("Whether shell storage accepts redstone power").define("acceptsRedstone", true);
 
-        SHELL_STORAGE_MAX_UNPOWERED_LIFESPAN = BUILDER
-                .comment("Maximum time (in ticks) shell storage can run without power")
+        SHELL_STORAGE_MAX_UNPOWERED_LIFESPAN = BUILDER.comment(
+                        "Maximum time (in ticks) shell storage can run without power")
                 .defineInRange("maxUnpoweredLifespan", 20, 0, 6000);
 
         BUILDER.pop();
 
         BUILDER.comment("Energy production settings").push("energyProduction");
 
-        ENERGY_MAP = BUILDER
-                .comment("Entity energy production map (format: 'entity_id:energy_per_tick')")
+        ENERGY_MAP = BUILDER.comment("Entity energy production map (format: 'entity_id:energy_per_tick')")
                 .defineListAllowEmpty(
                         "energyMap",
                         () -> Arrays.asList(
@@ -145,83 +136,67 @@ public class SyncConfig {
                                 "minecraft:villager:25",
                                 "minecraft:wolf:22",
                                 "minecraft:creeper:80",
-                                "minecraft:enderman:160"
-                        ),
+                                "minecraft:enderman:160"),
                         () -> "minecraft:pig:16",
-                        obj -> obj instanceof String && ((String) obj).contains(":")
-                );
+                        obj -> obj instanceof String && ((String) obj).contains(":"));
 
         BUILDER.pop();
 
         BUILDER.comment("Synchronization settings").push("sync");
 
-        SYNC_PRIORITY = BUILDER
-                .comment("Shell priority order for automatic synchronization",
+        SYNC_PRIORITY = BUILDER.comment(
+                        "Shell priority order for automatic synchronization",
                         "Valid values: WHITE, ORANGE, MAGENTA, LIGHT_BLUE, YELLOW, LIME, PINK, GRAY,",
                         "LIGHT_GRAY, CYAN, PURPLE, BLUE, BROWN, GREEN, RED, BLACK, NEAREST, NATURAL")
                 .defineListAllowEmpty(
                         "syncPriority",
                         () -> Collections.singletonList("NATURAL"),
                         () -> "NATURAL",
-                        obj -> obj instanceof String && isValidPriority((String) obj)
-                );
+                        obj -> obj instanceof String && isValidPriority((String) obj));
 
-        PRESERVE_ORIGINS = BUILDER
-                .comment("If enabled, all shells share the same origins")
-                .define("preserveOrigins", false);
+        PRESERVE_ORIGINS =
+                BUILDER.comment("If enabled, all shells share the same origins").define("preserveOrigins", false);
 
-        AUTO_SYNC_ON_DEATH = BUILDER
-                .comment("If enabled, dying in an artificial body automatically syncs into another finished shell")
+        AUTO_SYNC_ON_DEATH = BUILDER.comment(
+                        "If enabled, dying in an artificial body automatically syncs into another finished shell")
                 .define("autoSyncOnDeath", true);
 
         BUILDER.pop();
 
         BUILDER.comment("Tool settings").push("tools");
 
-        WRENCH = BUILDER
-                .comment("Item ID to use as wrench")
-                .define("wrench", "minecraft:stick");
+        WRENCH = BUILDER.comment("Item ID to use as wrench").define("wrench", "minecraft:stick");
 
         BUILDER.pop();
 
         BUILDER.comment("Miscellaneous settings").push("misc");
 
-        UPDATE_TRANSLATIONS_AUTOMATICALLY = BUILDER
-                .comment("Update translations automatically on game launch")
+        UPDATE_TRANSLATIONS_AUTOMATICALLY = BUILDER.comment("Update translations automatically on game launch")
                 .define("updateTranslationsAutomatically", false);
 
         BUILDER.pop();
 
         BUILDER.comment("Easter egg settings").push("easterEggs");
 
-        ENABLE_TECHNOBLADE_EASTER_EGG = BUILDER
-                .comment("Enable Technoblade easter egg")
-                .define("enableTechnobladeEasterEgg", true);
+        ENABLE_TECHNOBLADE_EASTER_EGG =
+                BUILDER.comment("Enable Technoblade easter egg").define("enableTechnobladeEasterEgg", true);
 
-        RENDER_TECHNOBLADE_CAPE = BUILDER
-                .comment("Render Technoblade's cape")
-                .define("renderTechnobladeCape", false);
+        RENDER_TECHNOBLADE_CAPE = BUILDER.comment("Render Technoblade's cape").define("renderTechnobladeCape", false);
 
-        ALLOW_TECHNOBLADE_ANNOUNCEMENTS = BUILDER
-                .comment("Allow Technoblade announcements")
-                .define("allowTechnobladeAnnouncements", true);
+        ALLOW_TECHNOBLADE_ANNOUNCEMENTS =
+                BUILDER.comment("Allow Technoblade announcements").define("allowTechnobladeAnnouncements", true);
 
-        ALLOW_TECHNOBLADE_QUOTES = BUILDER
-                .comment("Allow Technoblade quotes")
-                .define("allowTechnobladeQuotes", true);
+        ALLOW_TECHNOBLADE_QUOTES = BUILDER.comment("Allow Technoblade quotes").define("allowTechnobladeQuotes", true);
 
-        TECHNOBLADE_QUOTE_DELAY = BUILDER
-                .comment("Delay between Technoblade quotes (in ticks)")
+        TECHNOBLADE_QUOTE_DELAY = BUILDER.comment("Delay between Technoblade quotes (in ticks)")
                 .defineInRange("technobladeQuoteDelay", 1800, 200, 72000);
 
-        TECHNOBLADE_UUIDS = BUILDER
-                .comment("UUIDs of players to treat as Technoblade")
+        TECHNOBLADE_UUIDS = BUILDER.comment("UUIDs of players to treat as Technoblade")
                 .defineListAllowEmpty(
                         "technobladeUuids",
                         Collections::emptyList,
                         () -> "00000000-0000-0000-0000-000000000000",
-                        obj -> obj instanceof String && isValidUuid((String) obj)
-                );
+                        obj -> obj instanceof String && isValidUuid((String) obj));
 
         BUILDER.pop();
 
@@ -265,7 +240,12 @@ public class SyncConfig {
         server.execute(() -> {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 Shell shell = (Shell) player;
-                new ShellUpdatePacket(WorldUtil.getId(player.level()), shell.isArtificial(), autoSyncOnDeath, shell.getAvailableShellStates().toList()).send(player);
+                new ShellUpdatePacket(
+                                WorldUtil.getId(player.level()),
+                                shell.isArtificial(),
+                                autoSyncOnDeath,
+                                shell.getAvailableShellStates().toList())
+                        .send(player);
             }
         });
     }

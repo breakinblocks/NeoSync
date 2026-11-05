@@ -1,8 +1,6 @@
 package com.breakinblocks.neosync.client.gui.widget;
 
 import com.breakinblocks.neosync.client.gui.TooltipProvider;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -12,9 +10,12 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public abstract class AbstractWidget extends AbstractContainerEventHandler implements Renderable, NarratableEntry, TooltipProvider, GuiEventListener {
+public abstract class AbstractWidget extends AbstractContainerEventHandler
+        implements Renderable, NarratableEntry, TooltipProvider, GuiEventListener {
     public boolean visible = true;
     private boolean isHovered = false;
     private boolean isPressed = false;
@@ -70,11 +71,13 @@ public abstract class AbstractWidget extends AbstractContainerEventHandler imple
         return false;
     }
 
-    protected void onMouseClick(double mouseX, double mouseY, int button) { }
+    protected void onMouseClick(double mouseX, double mouseY, int button) {}
 
     @Override
     public NarrationPriority narrationPriority() {
-        return this.isPressed() ? NarrationPriority.FOCUSED : this.isHovered() ? NarrationPriority.HOVERED : NarrationPriority.NONE;
+        return this.isPressed()
+                ? NarrationPriority.FOCUSED
+                : this.isHovered() ? NarrationPriority.HOVERED : NarrationPriority.NONE;
     }
 
     @Override

@@ -1,9 +1,12 @@
 package com.breakinblocks.neosync.common.block.entity;
 
+import com.breakinblocks.neosync.api.shell.ShellState;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -15,10 +18,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.api.shell.ShellState;
-
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @OnlyIn(Dist.CLIENT)
 public class ShellEntity extends RemotePlayer {
@@ -41,7 +40,12 @@ public class ShellEntity extends RemotePlayer {
         this.state = state;
         state.getInventory().copyTo(this.getInventory());
         this.playerEntry = getPlayerEntry(state);
-        this.moveTo(state.getPos().getX() + 0.5, state.getPos().getY(), state.getPos().getZ() + 0.5, 0, 0);
+        this.moveTo(
+                state.getPos().getX() + 0.5,
+                state.getPos().getY(),
+                state.getPos().getZ() + 0.5,
+                0,
+                0);
 
         // Initialize cape position
         this.xCloakO = this.xCloak = getX();

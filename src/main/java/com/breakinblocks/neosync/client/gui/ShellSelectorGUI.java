@@ -1,39 +1,34 @@
 package com.breakinblocks.neosync.client.gui;
 
-import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import com.breakinblocks.neosync.api.networking.ShellRenamePacket;
-import com.breakinblocks.neosync.api.shell.ShellStateContainer;
+import com.breakinblocks.neosync.api.shell.Shell;
+import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.client.gl.MSAAFramebuffer;
 import com.breakinblocks.neosync.client.gui.hud.HudController;
 import com.breakinblocks.neosync.client.gui.widget.ArrowButtonWidget;
 import com.breakinblocks.neosync.client.gui.widget.CrossButtonWidget;
 import com.breakinblocks.neosync.client.gui.widget.PageDisplayWidget;
 import com.breakinblocks.neosync.client.gui.widget.ShellSelectorButtonWidget;
-import com.breakinblocks.neosync.api.shell.Shell;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import com.breakinblocks.neosync.client.utils.render.ColorUtil;
+import com.breakinblocks.neosync.common.utils.IdentifierUtil;
+import com.breakinblocks.neosync.common.utils.math.Radians;
+import com.mojang.blaze3d.platform.InputConstants;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.resources.ResourceLocation;
-import com.breakinblocks.neosync.client.utils.render.ColorUtil;
-import com.breakinblocks.neosync.common.utils.IdentifierUtil;
-import com.breakinblocks.neosync.common.utils.math.Radians;
-
-import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import net.minecraft.world.item.DyeColor;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 @SuppressWarnings("FieldCanBeLocal")
 @OnlyIn(Dist.CLIENT)
@@ -44,8 +39,13 @@ public class ShellSelectorGUI extends Screen {
     private static final Component TITLE = Component.translatable("gui.neosync.default.cross_button.title");
     private static final Component RENAME_TITLE = Component.translatable("gui.neosync.shell_selector.rename.title");
     private static final Component RENAME_HINT = Component.translatable("gui.neosync.shell_selector.rename.hint");
-    private static final Component RENAME_PLACEHOLDER = Component.translatable("gui.neosync.shell_selector.rename.placeholder");
-    private static final Collection<Component> ARROW_TITLES = List.of(Component.translatable("gui.neosync.shell_selector.up.title"), Component.translatable("gui.neosync.shell_selector.right.title"), Component.translatable("gui.neosync.shell_selector.down.title"), Component.translatable("gui.neosync.shell_selector.left.title"));
+    private static final Component RENAME_PLACEHOLDER =
+            Component.translatable("gui.neosync.shell_selector.rename.placeholder");
+    private static final Collection<Component> ARROW_TITLES = List.of(
+            Component.translatable("gui.neosync.shell_selector.up.title"),
+            Component.translatable("gui.neosync.shell_selector.right.title"),
+            Component.translatable("gui.neosync.shell_selector.down.title"),
+            Component.translatable("gui.neosync.shell_selector.left.title"));
 
     private final Runnable onCloseCallback;
     private final Runnable onRemovedCallback;
@@ -72,13 +72,20 @@ public class ShellSelectorGUI extends Screen {
         }
         ResourceLocation selectedWorld = player.level().dimension().location();
 
-        List<ShellState> shellStates = ((Shell)player).getAvailableShellStates().collect(Collectors.toList());
+        List<ShellState> shellStates =
+                ((Shell) player).getAvailableShellStates().collect(Collectors.toList());
 
         this.wasClosed = false;
-        this.arrowButtons = createArrowButtons(this.width, this.height, ARROW_TITLES, List.of(this::previousSection, this::nextPage, this::nextSection, this::previousPage));
+        this.arrowButtons = createArrowButtons(
+                this.width,
+                this.height,
+                ARROW_TITLES,
+                List.of(this::previousSection, this::nextPage, this::nextSection, this::previousPage));
         this.crossButton = createCrossButton(this.width, this.height, this::onClose);
-        this.pageDisplay = createPageDisplay(this.width, this.height, shellStates.stream(), selectedWorld, MAX_SLOTS, this::onPageChange);
-        Stream.concat(this.arrowButtons.stream(), Stream.of(this.crossButton, this.pageDisplay)).forEach(this::addRenderableWidget);
+        this.pageDisplay = createPageDisplay(
+                this.width, this.height, shellStates.stream(), selectedWorld, MAX_SLOTS, this::onPageChange);
+        Stream.concat(this.arrowButtons.stream(), Stream.of(this.crossButton, this.pageDisplay))
+                .forEach(this::addRenderableWidget);
 
         HudController.hide();
     }
@@ -99,7 +106,8 @@ public class ShellSelectorGUI extends Screen {
         List<ShellSelectorButtonWidget> shellButtons = new ArrayList<>();
 
         for (int i = 0; i < count; ++i) {
-            ShellSelectorButtonWidget button = new ShellSelectorButtonWidget(cX, cY, majorR, minorR, borderWidth, pos, pos + sector);
+            ShellSelectorButtonWidget button =
+                    new ShellSelectorButtonWidget(cX, cY, majorR, minorR, borderWidth, pos, pos + sector);
             pos += sector + spacing;
             shellButtons.add(button);
         }
@@ -107,17 +115,36 @@ public class ShellSelectorGUI extends Screen {
         return shellButtons;
     }
 
-    private static PageDisplayWidget<ResourceLocation, ShellState> createPageDisplay(int screenWidth, int screenHeight, Stream<ShellState> data, ResourceLocation defaultPage, int entriesPerPage, BiConsumer<PageDisplayWidget<ResourceLocation, ShellState>, PageDisplayWidget<ResourceLocation, ShellState>.Page> onChange) {
+    private static PageDisplayWidget<ResourceLocation, ShellState> createPageDisplay(
+            int screenWidth,
+            int screenHeight,
+            Stream<ShellState> data,
+            ResourceLocation defaultPage,
+            int entriesPerPage,
+            BiConsumer<
+                            PageDisplayWidget<ResourceLocation, ShellState>,
+                            PageDisplayWidget<ResourceLocation, ShellState>.Page>
+                    onChange) {
         final float FONT_HEIGHT = 1 / 30F;
 
         float cX = screenWidth / 2F;
         float cY = screenHeight / 2F;
         float scale = screenHeight * FONT_HEIGHT / Minecraft.getInstance().font.lineHeight;
 
-        return new PageDisplayWidget<ResourceLocation, ShellState>(cX, cY, scale, data, ShellState::getWorld, IdentifierUtil::prettifyAsText, defaultPage, entriesPerPage, onChange);
+        return new PageDisplayWidget<ResourceLocation, ShellState>(
+                cX,
+                cY,
+                scale,
+                data,
+                ShellState::getWorld,
+                IdentifierUtil::prettifyAsText,
+                defaultPage,
+                entriesPerPage,
+                onChange);
     }
 
-    private static List<ArrowButtonWidget> createArrowButtons(int screenWidth, int screenHeight, Iterable<Component> arrowTitles, Iterable<Runnable> arrowActions) {
+    private static List<ArrowButtonWidget> createArrowButtons(
+            int screenWidth, int screenHeight, Iterable<Component> arrowTitles, Iterable<Runnable> arrowActions) {
         final float ARROW_HEIGHT = 2 / 75F;
         final float ARROW_WIDTH = 57 / 32F;
         final float ARROW_THICKNESS = 1 / 240F;
@@ -125,7 +152,7 @@ public class ShellSelectorGUI extends Screen {
 
         float cX = screenWidth / 2F;
         float cY = screenHeight / 2F;
-        float r = screenHeight * (float)MENU_RADIUS * (1F + ARROW_SPACING);
+        float r = screenHeight * (float) MENU_RADIUS * (1F + ARROW_SPACING);
         float arrowHeight = screenHeight * ARROW_HEIGHT;
         float arrowWidth = arrowHeight * ARROW_WIDTH;
         float thickness = screenHeight * ARROW_THICKNESS;
@@ -143,7 +170,8 @@ public class ShellSelectorGUI extends Screen {
                 x = cX + r * (arrowType.isRight() ? 1 : -1) + (arrowType.isRight() ? 0 : -arrowHeight);
                 y = screenHeight / 2F - arrowWidth / 2F;
             }
-            arrowButtons.add(new ArrowButtonWidget(x, y, arrowWidth, arrowHeight, arrowType, thickness, descriptions.next(), actions.next()));
+            arrowButtons.add(new ArrowButtonWidget(
+                    x, y, arrowWidth, arrowHeight, arrowType, thickness, descriptions.next(), actions.next()));
         }
 
         return arrowButtons;
@@ -178,10 +206,18 @@ public class ShellSelectorGUI extends Screen {
         MSAAFramebuffer.use(MSAAFramebuffer.MAX_SAMPLES, () -> super.render(guiGraphics, mouseX, mouseY, delta));
 
         if (this.nameField != null) {
-            guiGraphics.drawCenteredString(this.font, RENAME_TITLE, this.width / 2,
-                    this.nameField.getY() - this.font.lineHeight - 4, 0xFFFFFFFF);
-            guiGraphics.drawCenteredString(this.font, RENAME_HINT, this.width / 2,
-                    this.nameField.getY() + this.nameField.getHeight() + 4, 0xFFAAAAAA);
+            guiGraphics.drawCenteredString(
+                    this.font,
+                    RENAME_TITLE,
+                    this.width / 2,
+                    this.nameField.getY() - this.font.lineHeight - 4,
+                    0xFFFFFFFF);
+            guiGraphics.drawCenteredString(
+                    this.font,
+                    RENAME_HINT,
+                    this.width / 2,
+                    this.nameField.getY() + this.nameField.getHeight() + 4,
+                    0xFFAAAAAA);
         }
 
         this.renderTooltips(guiGraphics, mouseX, mouseY);
@@ -189,8 +225,10 @@ public class ShellSelectorGUI extends Screen {
 
     protected void renderTooltips(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         for (GuiEventListener child : this.children()) {
-            if (child instanceof NarratableEntry narratableEntry && narratableEntry.narrationPriority() != NarratableEntry.NarrationPriority.NONE) {
-                Component tooltipText = child instanceof TooltipProvider tooltipProvider ? tooltipProvider.getTooltip() : null;
+            if (child instanceof NarratableEntry narratableEntry
+                    && narratableEntry.narrationPriority() != NarratableEntry.NarrationPriority.NONE) {
+                Component tooltipText =
+                        child instanceof TooltipProvider tooltipProvider ? tooltipProvider.getTooltip() : null;
                 if (tooltipText != null) {
                     guiGraphics.renderTooltip(font, tooltipText, mouseX, mouseY);
                 }
@@ -250,7 +288,9 @@ public class ShellSelectorGUI extends Screen {
         return false;
     }
 
-    private void onPageChange(PageDisplayWidget<ResourceLocation, ShellState> pageDisplay, PageDisplayWidget<ResourceLocation, ShellState>.Page page) {
+    private void onPageChange(
+            PageDisplayWidget<ResourceLocation, ShellState> pageDisplay,
+            PageDisplayWidget<ResourceLocation, ShellState>.Page page) {
         for (ArrowButtonWidget arrow : this.arrowButtons) {
             arrow.visible = arrow.type.isVertical() ? pageDisplay.hasMoreSections() : pageDisplay.hasMorePages();
         }
@@ -275,11 +315,16 @@ public class ShellSelectorGUI extends Screen {
             this.endRename();
         }
 
-        int fieldWidth = (int)(this.height * MENU_RADIUS * 1.1);
+        int fieldWidth = (int) (this.height * MENU_RADIUS * 1.1);
         int fieldHeight = this.font.lineHeight + 8;
         this.renaming = shell;
-        this.nameField = new EditBox(this.font, (this.width - fieldWidth) / 2, (this.height - fieldHeight) / 2,
-                fieldWidth, fieldHeight, RENAME_TITLE);
+        this.nameField = new EditBox(
+                this.font,
+                (this.width - fieldWidth) / 2,
+                (this.height - fieldHeight) / 2,
+                fieldWidth,
+                fieldHeight,
+                RENAME_TITLE);
         this.nameField.setMaxLength(ShellState.MAX_NAME_LENGTH);
         this.nameField.setHint(RENAME_PLACEHOLDER);
         this.nameField.setValue(shell.getName() == null ? "" : shell.getName());

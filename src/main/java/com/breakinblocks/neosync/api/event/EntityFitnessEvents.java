@@ -1,11 +1,10 @@
 package com.breakinblocks.neosync.api.event;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Events about the workout of {@linkplain Entity entities}.
@@ -28,50 +27,43 @@ public final class EntityFitnessEvents {
     /**
      * An event that is called when an entity starts treadmill running.
      */
-    public static final Event<StartRunning> START_RUNNING = new Event<>(
-            startRunningListeners,
-            new StartRunning() {
-                @Override
-                public void onStartRunning(Entity entity, IEnergyStorage energyStorage) {
-                    for (StartRunning callback : startRunningListeners) {
-                        callback.onStartRunning(entity, energyStorage);
-                    }
-                }
+    public static final Event<StartRunning> START_RUNNING = new Event<>(startRunningListeners, new StartRunning() {
+        @Override
+        public void onStartRunning(Entity entity, IEnergyStorage energyStorage) {
+            for (StartRunning callback : startRunningListeners) {
+                callback.onStartRunning(entity, energyStorage);
             }
-    );
+        }
+    });
 
     /**
      * An event that is called when an entity stops treadmill running.
      */
-    public static final Event<StopRunning> STOP_RUNNING = new Event<>(
-            stopRunningListeners,
-            new StopRunning() {
-                @Override
-                public void onStopRunning(Entity entity, IEnergyStorage energyStorage) {
-                    for (StopRunning callback : stopRunningListeners) {
-                        callback.onStopRunning(entity, energyStorage);
-                    }
-                }
+    public static final Event<StopRunning> STOP_RUNNING = new Event<>(stopRunningListeners, new StopRunning() {
+        @Override
+        public void onStopRunning(Entity entity, IEnergyStorage energyStorage) {
+            for (StopRunning callback : stopRunningListeners) {
+                callback.onStopRunning(entity, energyStorage);
             }
-    );
+        }
+    });
 
     /**
      * An event that can be used to provide amount of energy being produced by an entity if missing.
      */
-    public static final Event<ModifyOutputEnergyQuantity> MODIFY_OUTPUT_ENERGY_QUANTITY = new Event<>(
-            modifyEnergyListeners,
-            new ModifyOutputEnergyQuantity() {
+    public static final Event<ModifyOutputEnergyQuantity> MODIFY_OUTPUT_ENERGY_QUANTITY =
+            new Event<>(modifyEnergyListeners, new ModifyOutputEnergyQuantity() {
                 @Override
                 @Nullable
-                public Long modifyOutputEnergyQuantity(Entity entity, IEnergyStorage energyStorage, @Nullable Long outputEnergyQuantity) {
+                public Long modifyOutputEnergyQuantity(
+                        Entity entity, IEnergyStorage energyStorage, @Nullable Long outputEnergyQuantity) {
                     Long result = outputEnergyQuantity;
                     for (ModifyOutputEnergyQuantity callback : modifyEnergyListeners) {
                         result = callback.modifyOutputEnergyQuantity(entity, energyStorage, result);
                     }
                     return result;
                 }
-            }
-    );
+            });
 
     @FunctionalInterface
     public interface ModifyOutputEnergyQuantity {
@@ -84,7 +76,8 @@ public final class EntityFitnessEvents {
          * @return Amount of energy that will be produced by the entity every tick, or null if the given entity cannot use treadmills.
          */
         @Nullable
-        Long modifyOutputEnergyQuantity(Entity entity, IEnergyStorage energyStorage, @Nullable Long outputEnergyQuantity);
+        Long modifyOutputEnergyQuantity(
+                Entity entity, IEnergyStorage energyStorage, @Nullable Long outputEnergyQuantity);
     }
 
     @FunctionalInterface
@@ -130,6 +123,5 @@ public final class EntityFitnessEvents {
         }
     }
 
-    private EntityFitnessEvents() {
-    }
+    private EntityFitnessEvents() {}
 }

@@ -1,5 +1,11 @@
 package com.breakinblocks.neosync.common.block.entity;
 
+import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.common.block.ShellConstructorBlock;
+import com.breakinblocks.neosync.common.config.SyncConfig;
+import com.breakinblocks.neosync.common.entity.damage.FingerstickDamageSource;
+import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -7,15 +13,9 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.energy.IEnergyStorage;
-import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.common.block.ShellConstructorBlock;
-import com.breakinblocks.neosync.common.config.SyncConfig;
-import com.breakinblocks.neosync.common.entity.damage.FingerstickDamageSource;
-import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import org.jetbrains.annotations.Nullable;
 
 public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEntity implements IEnergyStorage {
@@ -23,7 +23,8 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
         this(SyncBlockEntities.SHELL_CONSTRUCTOR.get(), pos, state);
     }
 
-    protected ShellConstructorBlockEntity(BlockEntityType<? extends ShellConstructorBlockEntity> type, BlockPos pos, BlockState state) {
+    protected ShellConstructorBlockEntity(
+            BlockEntityType<? extends ShellConstructorBlockEntity> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
@@ -58,11 +59,13 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
         if (player instanceof ServerPlayer serverPlayer) {
             SyncConfig config = SyncConfig.getInstance();
 
-            float damage = serverPlayer.server.isHardcore() ? config.hardcoreFingerstickDamage() : config.fingerstickDamage();
+            float damage =
+                    serverPlayer.server.isHardcore() ? config.hardcoreFingerstickDamage() : config.fingerstickDamage();
 
             boolean isCreative = !serverPlayer.gameMode.isSurvival();
             boolean isLowOnHealth = (player.getHealth() + player.getAbsorptionAmount()) <= damage;
-            boolean hasTotemOfUndying = player.getMainHandItem().is(Items.TOTEM_OF_UNDYING) || player.getOffhandItem().is(Items.TOTEM_OF_UNDYING);
+            boolean hasTotemOfUndying = player.getMainHandItem().is(Items.TOTEM_OF_UNDYING)
+                    || player.getOffhandItem().is(Items.TOTEM_OF_UNDYING);
             if (isLowOnHealth && !isCreative && !hasTotemOfUndying && config.warnPlayerInsteadOfKilling()) {
                 return PlayerSyncEvents.ShellConstructionFailureReason.NOT_ENOUGH_HEALTH;
             }
@@ -81,7 +84,8 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
 
     @Override
     public int receiveEnergy(int maxReceive, boolean simulate) {
-        ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
+        ShellConstructorBlockEntity bottom =
+                (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
         if (bottom == null || bottom.shell == null || bottom.shell.getProgress() >= ShellState.PROGRESS_DONE) {
             return 0;
         }
@@ -106,7 +110,8 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
 
     @Override
     public int getEnergyStored() {
-        ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
+        ShellConstructorBlockEntity bottom =
+                (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
         if (bottom == null || bottom.shell == null) {
             return 0;
         }
@@ -116,7 +121,8 @@ public class ShellConstructorBlockEntity extends AbstractShellContainerBlockEnti
 
     @Override
     public int getMaxEnergyStored() {
-        ShellConstructorBlockEntity bottom = (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
+        ShellConstructorBlockEntity bottom =
+                (ShellConstructorBlockEntity) this.getBottomPart().orElse(null);
         return bottom != null && bottom.shell != null
                 ? (int) SyncConfig.getInstance().shellConstructorEnergyRequirement()
                 : 0;

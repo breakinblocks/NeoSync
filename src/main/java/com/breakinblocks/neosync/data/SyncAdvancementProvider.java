@@ -3,6 +3,7 @@ package com.breakinblocks.neosync.data;
 import com.breakinblocks.neosync.NeoSync;
 import com.breakinblocks.neosync.common.block.SyncBlocks;
 import com.breakinblocks.neosync.common.item.SyncItems;
+import java.util.function.Consumer;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementRequirements;
@@ -18,11 +19,12 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.data.AdvancementProvider.AdvancementGenerator;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
-import java.util.function.Consumer;
-
 public final class SyncAdvancementProvider implements AdvancementGenerator {
     @Override
-    public void generate(HolderLookup.Provider registries, Consumer<AdvancementHolder> saver, ExistingFileHelper existingFileHelper) {
+    public void generate(
+            HolderLookup.Provider registries,
+            Consumer<AdvancementHolder> saver,
+            ExistingFileHelper existingFileHelper) {
         AdvancementHolder root = Advancement.Builder.advancement()
                 .display(
                         new ItemStack(SyncItems.SYNC_CORE.get()),
@@ -30,8 +32,11 @@ public final class SyncAdvancementProvider implements AdvancementGenerator {
                         Component.translatable("advancements.neosync.root.description"),
                         ResourceLocation.withDefaultNamespace("textures/block/gray_concrete.png"),
                         AdvancementType.TASK,
-                        true, true, false)
-                .addCriterion("has_sync_core", InventoryChangeTrigger.TriggerInstance.hasItems(SyncItems.SYNC_CORE.get()))
+                        true,
+                        true,
+                        false)
+                .addCriterion(
+                        "has_sync_core", InventoryChangeTrigger.TriggerInstance.hasItems(SyncItems.SYNC_CORE.get()))
                 .save(saver, NeoSync.locate("main/root"), existingFileHelper);
 
         Advancement.Builder.advancement()
@@ -42,9 +47,16 @@ public final class SyncAdvancementProvider implements AdvancementGenerator {
                         Component.translatable("advancements.neosync.place_constructor.description"),
                         null,
                         AdvancementType.TASK,
-                        true, true, false)
-                .addCriterion("placed_constructor", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.SHELL_CONSTRUCTOR.get()))
-                .addCriterion("placed_zero_point_constructor", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get()))
+                        true,
+                        true,
+                        false)
+                .addCriterion(
+                        "placed_constructor",
+                        ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.SHELL_CONSTRUCTOR.get()))
+                .addCriterion(
+                        "placed_zero_point_constructor",
+                        ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(
+                                SyncBlocks.ZERO_POINT_SHELL_CONSTRUCTOR.get()))
                 .requirements(AdvancementRequirements.Strategy.OR)
                 .save(saver, NeoSync.locate("main/place_constructor"), existingFileHelper);
 
@@ -56,10 +68,19 @@ public final class SyncAdvancementProvider implements AdvancementGenerator {
                         Component.translatable("advancements.neosync.place_storage.description"),
                         null,
                         AdvancementType.TASK,
-                        true, true, false)
-                .addCriterion("placed_storage", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.SHELL_STORAGE.get()))
-                .addCriterion("placed_zero_point_storage", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.ZERO_POINT_SHELL_STORAGE.get()))
-                .addCriterion("placed_manual_storage", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.MANUAL_SHELL_STORAGE.get()))
+                        true,
+                        true,
+                        false)
+                .addCriterion(
+                        "placed_storage",
+                        ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.SHELL_STORAGE.get()))
+                .addCriterion(
+                        "placed_zero_point_storage",
+                        ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(
+                                SyncBlocks.ZERO_POINT_SHELL_STORAGE.get()))
+                .addCriterion(
+                        "placed_manual_storage",
+                        ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.MANUAL_SHELL_STORAGE.get()))
                 .requirements(AdvancementRequirements.Strategy.OR)
                 .save(saver, NeoSync.locate("main/place_storage"), existingFileHelper);
 
@@ -71,8 +92,12 @@ public final class SyncAdvancementProvider implements AdvancementGenerator {
                         Component.translatable("advancements.neosync.place_treadmill.description"),
                         null,
                         AdvancementType.TASK,
-                        true, true, false)
-                .addCriterion("placed_treadmill", ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.TREADMILL.get()))
+                        true,
+                        true,
+                        false)
+                .addCriterion(
+                        "placed_treadmill",
+                        ItemUsedOnLocationTrigger.TriggerInstance.placedBlock(SyncBlocks.TREADMILL.get()))
                 .save(saver, NeoSync.locate("main/place_treadmill"), existingFileHelper);
 
         AdvancementHolder firstSync = Advancement.Builder.advancement()
@@ -83,7 +108,9 @@ public final class SyncAdvancementProvider implements AdvancementGenerator {
                         Component.translatable("advancements.neosync.first_sync.description"),
                         null,
                         AdvancementType.TASK,
-                        true, true, false)
+                        true,
+                        true,
+                        false)
                 .addCriterion("synced", CriterionBuilder.impossible())
                 .save(saver, NeoSync.locate("main/first_sync"), existingFileHelper);
 
@@ -95,7 +122,9 @@ public final class SyncAdvancementProvider implements AdvancementGenerator {
                         Component.translatable("advancements.neosync.cross_dim_sync.description"),
                         null,
                         AdvancementType.GOAL,
-                        true, true, false)
+                        true,
+                        true,
+                        false)
                 .addCriterion("synced_cross_dim", CriterionBuilder.impossible())
                 .save(saver, NeoSync.locate("main/cross_dim_sync"), existingFileHelper);
     }

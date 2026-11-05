@@ -1,12 +1,20 @@
 package com.breakinblocks.neosync.api.networking;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
+import com.breakinblocks.neosync.api.shell.ServerShell;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.common.utils.BlockPosUtil;
+import com.breakinblocks.neosync.common.utils.WorldUtil;
 import com.mojang.datafixers.util.Either;
+import java.util.Optional;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -14,23 +22,15 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.api.event.PlayerSyncEvents;
-import com.breakinblocks.neosync.api.shell.ServerShell;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.common.utils.BlockPosUtil;
-import com.breakinblocks.neosync.common.utils.WorldUtil;
-
-import java.util.Optional;
-import java.util.UUID;
 
 public record SynchronizationRequestPacket(Optional<UUID> shellUuid) implements CustomPacketPayload {
-    public static final Type<SynchronizationRequestPacket> TYPE = new Type<>(NeoSync.locate("shell/synchronization/request"));
+    public static final Type<SynchronizationRequestPacket> TYPE =
+            new Type<>(NeoSync.locate("shell/synchronization/request"));
 
     public static final StreamCodec<FriendlyByteBuf, SynchronizationRequestPacket> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.optional(UUIDUtil.STREAM_CODEC), SynchronizationRequestPacket::shellUuid,
-            SynchronizationRequestPacket::new
-    );
+            ByteBufCodecs.optional(UUIDUtil.STREAM_CODEC),
+            SynchronizationRequestPacket::shellUuid,
+            SynchronizationRequestPacket::new);
 
     public SynchronizationRequestPacket(ShellState shell) {
         this(shell == null ? Optional.empty() : Optional.of(shell.getUuid()));
@@ -64,26 +64,39 @@ public record SynchronizationRequestPacket(Optional<UUID> shellUuid) implements 
             }
 
             result.ifLeft(storedState -> {
-                if (state == null) {
-                    return;
-                }
-                ResourceLocation targetWorldId = state.getWorld();
-                BlockPos targetPos = state.getPos();
-                Direction targetFacing = player.getDirection().getOpposite();
-                PacketDistributor.sendToPlayer(player, new SynchronizationResponsePacket(
-                        currentWorldId, currentPos, currentFacing,
-                        targetWorldId, targetPos, targetFacing,
-                        Optional.ofNullable(storedState)));
-            }).ifRight(failureReason -> {
-                Component failureText = failureReason.toText();
-                if (failureText != null) {
-                    player.sendSystemMessage(failureText);
-                }
-                PacketDistributor.sendToPlayer(player, new SynchronizationResponsePacket(
-                        currentWorldId, currentPos, currentFacing,
-                        currentWorldId, currentPos, currentFacing,
-                        Optional.empty()));
-            });
+                        if (state == null) {
+                            return;
+                        }
+                        ResourceLocation targetWorldId = state.getWorld();
+                        BlockPos targetPos = state.getPos();
+                        Direction targetFacing = player.getDirection().getOpposite();
+                        PacketDistributor.sendToPlayer(
+                                player,
+                                new SynchronizationResponsePacket(
+                                        currentWorldId,
+                                        currentPos,
+                                        currentFacing,
+                                        targetWorldId,
+                                        targetPos,
+                                        targetFacing,
+                                        Optional.ofNullable(storedState)));
+                    })
+                    .ifRight(failureReason -> {
+                        Component failureText = failureReason.toText();
+                        if (failureText != null) {
+                            player.sendSystemMessage(failureText);
+                        }
+                        PacketDistributor.sendToPlayer(
+                                player,
+                                new SynchronizationResponsePacket(
+                                        currentWorldId,
+                                        currentPos,
+                                        currentFacing,
+                                        currentWorldId,
+                                        currentPos,
+                                        currentFacing,
+                                        Optional.empty()));
+                    });
         });
     }
 }

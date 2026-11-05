@@ -1,11 +1,11 @@
 package com.breakinblocks.neosync.client.model;
 
+import com.breakinblocks.neosync.common.utils.math.Radians;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import com.breakinblocks.neosync.common.utils.math.Radians;
 
 @OnlyIn(Dist.CLIENT)
 public class TreadmillModel extends DoubleBlockModel {

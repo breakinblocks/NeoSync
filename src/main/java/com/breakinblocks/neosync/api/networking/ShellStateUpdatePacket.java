@@ -1,5 +1,9 @@
 package com.breakinblocks.neosync.api.networking;
 
+import com.breakinblocks.neosync.NeoSync;
+import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.api.shell.ShellStateUpdateType;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -9,12 +13,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import com.breakinblocks.neosync.NeoSync;
-import com.breakinblocks.neosync.api.shell.ShellState;
-import com.breakinblocks.neosync.api.shell.ShellStateUpdateType;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.UUID;
 
 public record ShellStateUpdatePacket(
         ShellStateUpdateType kind,
@@ -24,23 +23,24 @@ public record ShellStateUpdatePacket(
         @Nullable DyeColor color,
         @Nullable BlockPos pos,
         @Nullable String name,
-        boolean manualOnly
-) implements CustomPacketPayload {
+        boolean manualOnly)
+        implements CustomPacketPayload {
 
     public static final Type<ShellStateUpdatePacket> TYPE = new Type<>(NeoSync.locate("shell/state/update"));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, ShellStateUpdatePacket> STREAM_CODEC = StreamCodec.of(
-            ShellStateUpdatePacket::encode,
-            ShellStateUpdatePacket::decode
-    );
+    public static final StreamCodec<RegistryFriendlyByteBuf, ShellStateUpdatePacket> STREAM_CODEC =
+            StreamCodec.of(ShellStateUpdatePacket::encode, ShellStateUpdatePacket::decode);
 
     public ShellStateUpdatePacket(ShellStateUpdateType kind, ShellState state) {
-        this(kind, adoptedState(kind, state), state == null ? null : state.getUuid(),
-             state == null ? 0F : state.getProgress(),
-             state == null ? null : state.getColor(),
-             state == null ? null : state.getPos(),
-             state == null ? null : state.getName(),
-             state != null && state.isManualOnly());
+        this(
+                kind,
+                adoptedState(kind, state),
+                state == null ? null : state.getUuid(),
+                state == null ? 0F : state.getProgress(),
+                state == null ? null : state.getColor(),
+                state == null ? null : state.getPos(),
+                state == null ? null : state.getName(),
+                state != null && state.isManualOnly());
         if (state == null && kind != ShellStateUpdateType.NONE) {
             throw new IllegalStateException("ShellStateUpdatePacket requires a non-null state for kind " + kind);
         }
@@ -85,14 +85,16 @@ public record ShellStateUpdatePacket(
                 buf.writeUtf(payload.name == null ? "" : payload.name, ShellState.MAX_NAME_LENGTH);
                 buf.writeBoolean(payload.manualOnly);
             }
-            case NONE -> { }
+            case NONE -> {}
         }
     }
 
     private static ShellStateUpdatePacket decode(RegistryFriendlyByteBuf buf) {
         ShellStateUpdateType kind = buf.readEnum(ShellStateUpdateType.class);
         return switch (kind) {
-            case ADD -> new ShellStateUpdatePacket(kind, ShellState.STREAM_CODEC.decode(buf), null, 0F, null, null, null, false);
+            case ADD ->
+                new ShellStateUpdatePacket(
+                        kind, ShellState.STREAM_CODEC.decode(buf), null, 0F, null, null, null, false);
             case REMOVE -> new ShellStateUpdatePacket(kind, null, buf.readUUID(), 0F, null, null, null, false);
             case UPDATE -> {
                 UUID uuid = buf.readUUID();
@@ -102,7 +104,8 @@ public record ShellStateUpdatePacket(
                 BlockPos pos = buf.readBlockPos();
                 String name = buf.readUtf(ShellState.MAX_NAME_LENGTH);
                 boolean manualOnly = buf.readBoolean();
-                yield new ShellStateUpdatePacket(kind, null, uuid, progress, color, pos, name.isEmpty() ? null : name, manualOnly);
+                yield new ShellStateUpdatePacket(
+                        kind, null, uuid, progress, color, pos, name.isEmpty() ? null : name, manualOnly);
             }
             case NONE -> new ShellStateUpdatePacket(kind, null, null, 0F, null, null, null, false);
         };

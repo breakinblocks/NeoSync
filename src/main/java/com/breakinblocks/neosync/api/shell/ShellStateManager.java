@@ -1,11 +1,10 @@
 package com.breakinblocks.neosync.api.shell;
 
-import net.minecraft.util.Tuple;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.Collection;
 import java.util.UUID;
 import java.util.stream.Stream;
+import net.minecraft.util.Tuple;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The shell state manager is an interface that allows applications

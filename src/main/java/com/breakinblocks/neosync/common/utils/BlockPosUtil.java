@@ -1,5 +1,6 @@
 package com.breakinblocks.neosync.common.utils;
 
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
@@ -9,8 +10,6 @@ import net.minecraft.world.level.EntityGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
-
-import java.util.Optional;
 
 public final class BlockPosUtil {
     public static Optional<Direction> getHorizontalFacing(BlockPos pos, BlockGetter blockView) {
