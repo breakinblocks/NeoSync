@@ -5,6 +5,7 @@
 ### Added
 
 - A client config option, `syncCameraAnimation` in `neosync-client.toml`, turns off the camera flight when you sync or die, for players it makes motion sick. Set it to `false` to cut straight to the new shell (FTBTesting/Testing-Issues#4851).
+- Scrolling the mouse wheel in the shell selector switches between worlds, the same as the up and down arrows. Hold Shift while scrolling to switch pages when a world has more shells than fit on one (FTBTesting/Testing-Issues#4860).
 
 ### Fixed
 

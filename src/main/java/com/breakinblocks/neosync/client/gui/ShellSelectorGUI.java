@@ -280,6 +280,35 @@ public class ShellSelectorGUI extends Screen {
     }
 
     @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (this.nameField != null || this.pageDisplay == null || scrollY == 0) {
+            return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        }
+
+        if (hasShiftDown()) {
+            if (!this.pageDisplay.hasMorePages()) {
+                return false;
+            }
+            if (scrollY > 0) {
+                this.previousPage();
+            } else {
+                this.nextPage();
+            }
+            return true;
+        }
+
+        if (!this.pageDisplay.hasMoreSections()) {
+            return false;
+        }
+        if (scrollY > 0) {
+            this.previousSection();
+        } else {
+            this.nextSection();
+        }
+        return true;
+    }
+
+    @Override
     public boolean shouldCloseOnEsc() {
         return true;
     }
