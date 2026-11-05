@@ -17,6 +17,7 @@ import com.breakinblocks.neosync.common.config.SyncConfig;
 import com.breakinblocks.neosync.common.entity.KillableEntity;
 import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import com.breakinblocks.neosync.common.utils.WorldUtil;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
@@ -189,6 +190,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         if (isDead && !this.undead) {
             this.pendingSyncTarget = requestedUuid;
+            this.dropBodyKeptByGameRule();
             sendEmptyDeathMessageInChat(player);
             return Either.right(PlayerSyncEvents.SyncFailureReason.OTHER_PROBLEM);
         }
@@ -482,6 +484,38 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         return original.call(rules, rule);
     }
 
+    @WrapMethod(method = "die")
+    private void dropBodyThatIsBeingReplaced(DamageSource source, Operation<Void> original) {
+        if (this.pendingSyncTarget != null || this.isArtificial && this.hasAutoSyncTarget()) {
+            this.ignoringKeepInventory(() -> original.call(source));
+        } else {
+            original.call(source);
+        }
+    }
+
+    @Unique
+    private void dropBodyKeptByGameRule() {
+        ServerLevel level = ((ServerPlayer) (Object) this).level();
+        if (!this.isSpectator() && level.getGameRules().get(GameRules.KEEP_INVENTORY)) {
+            DamageSource lastDamage = this.getLastDamageSource();
+            DamageSource source =
+                    lastDamage != null ? lastDamage : this.damageSources().genericKill();
+            this.ignoringKeepInventory(() -> this.dropAllDeathLoot(level, source));
+        }
+    }
+
+    @Unique
+    private void ignoringKeepInventory(Runnable action) {
+        GameRules rules = ((ServerPlayer) (Object) this).level().getGameRules();
+        boolean previous = rules.get(GameRules.KEEP_INVENTORY);
+        rules.set(GameRules.KEEP_INVENTORY, false, null);
+        try {
+            action.run();
+        } finally {
+            rules.set(GameRules.KEEP_INVENTORY, previous, null);
+        }
+    }
+
     @Inject(method = "die", at = @At("HEAD"), cancellable = true)
     private void onDeath(DamageSource source, CallbackInfo ci) {
         if (!this.isArtificial || this.pendingSyncTarget != null) {
@@ -512,8 +546,6 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         if (!this.isSpectator()) {
             this.dropAllDeathLoot(player.level(), source);
-            this.destroyVanishingCursedItems();
-            player.getInventory().dropAll();
         }
 
         this.undead = true;

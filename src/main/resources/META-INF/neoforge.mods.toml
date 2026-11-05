@@ -59,6 +59,13 @@ ordering="AFTER"
 side="BOTH"
 
 [[dependencies.neosync]]
+modId="thirstwastaken2"
+type="optional"
+versionRange="[1.0,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.neosync]]
 modId="guideme"
 type="optional"
 versionRange="[26.1,)"

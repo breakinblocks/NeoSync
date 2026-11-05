@@ -1,5 +1,15 @@
 # NeoSync Changelog
 
+## 1.7.4
+
+### Added
+
+- Thirst from Thirst Was Taken 2 now stays with each body, so the shell you wake up in no longer inherits the thirst of the one you left.
+
+### Fixed
+
+- With keepInventory on, a body you leave behind by dying or syncing now leaves its items in a grave or on the ground instead of deleting them.
+
 ## 1.7.3
 
 ### Fixed

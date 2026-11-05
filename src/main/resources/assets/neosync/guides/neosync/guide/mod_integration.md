@@ -31,6 +31,11 @@ Curio slots belong to the body. Each shell keeps its own curios, and they stay b
 Radiation belongs to the body too. A shell keeps the dose it absorbed while you were in it, a freshly built shell starts clean, and syncing does not carry radiation with you.
 
 ***
+## <Color id="gold">Thirst Was Taken 2</Color>
+
+Thirst belongs to the body as well. A shell keeps the thirst it had when you left it, a freshly built shell starts fully hydrated, and syncing does not carry thirst with you.
+
+***
 ## <Color id="gold">Sable and Create Aeronautics</Color>
 
 Shell storages, constructors and treadmills all work on a moving or rotated airship. Walking into a storage on deck opens the selector, syncing into a shell parked on another airship works, and animals on a treadmill run in place relative to the ship. Each shell remembers which airship it is on.

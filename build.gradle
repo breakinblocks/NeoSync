@@ -96,6 +96,8 @@ dependencies {
     compileOnly "top.theillusivec4.curios:curios-neoforge:${project.curios_version}:api"
     localRuntime "top.theillusivec4.curios:curios-neoforge:${project.curios_version}"
 
+    compileOnly "maven.modrinth:thirst-was-taken-2:${project.thirst_was_taken_version}"
+
     compileOnly "org.appliedenergistics:guideme:${project.guideme_version}"
     localRuntime "org.appliedenergistics:guideme:${project.guideme_version}"
 }
