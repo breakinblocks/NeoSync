@@ -12,6 +12,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
 
@@ -20,6 +21,8 @@ public class PageDisplayWidget<TKey, UData> extends AbstractWidget {
     private static final int DEFAULT_BACKGROUND_COLOR = ColorUtil.fromDyeColor(DyeColor.BLACK, 0.6F);
     private static final float DEFAULT_SCALE = 1F;
     private static final float DEFAULT_STEP = Radians.R_PI_32;
+    private static final int MAX_TITLE_LINES = 2;
+    private static final float MIN_TITLE_SCALE = 0.4F;
 
     private final float cX;
     private final float cY;
@@ -37,6 +40,9 @@ public class PageDisplayWidget<TKey, UData> extends AbstractWidget {
     private int selectedPageIndex;
     private Component selectedKeyAsText;
     private int selectedSectionPageCount;
+    private float maxTitleWidth = Float.MAX_VALUE;
+    private List<Component> titleLines;
+    private float titleScale;
 
     public PageDisplayWidget(
             float cX,
@@ -187,10 +193,60 @@ public class PageDisplayWidget<TKey, UData> extends AbstractWidget {
         this.selectedKeyIndex = section;
         this.selectedPageIndex = page;
         this.selectedKeyAsText = this.keyTransformer.apply(key);
+        this.titleLines = null;
         this.selectedSectionPageCount = pages;
 
         if (this.onSelectionChange != null) {
             this.onSelectionChange.accept(this, new Page(key, section, page, pages, content));
+        }
+    }
+
+    public PageDisplayWidget<TKey, UData> withMaxTitleWidth(float maxTitleWidth) {
+        this.maxTitleWidth = maxTitleWidth;
+        this.titleLines = null;
+        return this;
+    }
+
+    private void layoutTitle(Font font) {
+        if (this.titleLines != null) {
+            return;
+        }
+
+        float scale = this.scale;
+        List<FormattedText> lines = this.splitTitle(font, scale);
+        while (lines.size() > MAX_TITLE_LINES && scale > this.scale * MIN_TITLE_SCALE) {
+            scale *= 0.9F;
+            lines = this.splitTitle(font, scale);
+        }
+
+        this.titleScale = scale;
+        this.titleLines = lines.stream()
+                .map(line ->
+                        (Component) Component.literal(line.getString()).withStyle(this.selectedKeyAsText.getStyle()))
+                .toList();
+    }
+
+    private List<FormattedText> splitTitle(Font font, float scale) {
+        int width = Math.max(1, (int) (this.maxTitleWidth / scale));
+        List<FormattedText> lines =
+                font.getSplitter().splitLines(this.selectedKeyAsText, width, this.selectedKeyAsText.getStyle());
+        return lines.isEmpty() ? List.of(this.selectedKeyAsText) : lines;
+    }
+
+    private void drawTitle(GuiGraphics guiGraphics, float centerY) {
+        Font font = RenderSystemUtil.getTextRenderer();
+        this.layoutTitle(font);
+        float lineHeight = font.lineHeight * this.titleScale;
+        float top = centerY - lineHeight * this.titleLines.size() / 2F;
+        for (int i = 0; i < this.titleLines.size(); ++i) {
+            RenderSystemUtil.drawCenteredText(
+                    guiGraphics,
+                    this.titleLines.get(i),
+                    this.cX,
+                    top + lineHeight * (i + 0.5F),
+                    this.titleScale,
+                    this.textColor,
+                    true);
         }
     }
 
@@ -236,8 +292,7 @@ public class PageDisplayWidget<TKey, UData> extends AbstractWidget {
     }
 
     private void renderTitle(GuiGraphics guiGraphics) {
-        RenderSystemUtil.drawCenteredText(
-                guiGraphics, this.selectedKeyAsText, this.cX, this.cY, this.scale, this.textColor, true);
+        this.drawTitle(guiGraphics, this.cY);
     }
 
     private void renderTitleAndPagination(GuiGraphics guiGraphics) {
@@ -269,8 +324,9 @@ public class PageDisplayWidget<TKey, UData> extends AbstractWidget {
                 backgroundColor[2],
                 backgroundColor[3]);
 
-        RenderSystemUtil.drawCenteredText(
-                guiGraphics, this.selectedKeyAsText, this.cX, top + titleHeight, this.scale, this.textColor, true);
+        this.layoutTitle(font);
+        float titleBlockHeight = font.lineHeight * this.titleScale * this.titleLines.size();
+        this.drawTitle(guiGraphics, top + 1.5F * titleHeight - titleBlockHeight / 2F);
         RenderSystemUtil.drawCenteredText(
                 guiGraphics,
                 paginationText,

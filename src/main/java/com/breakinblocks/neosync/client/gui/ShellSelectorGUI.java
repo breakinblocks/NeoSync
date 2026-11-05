@@ -132,15 +132,16 @@ public class ShellSelectorGUI extends Screen {
         float scale = screenHeight * FONT_HEIGHT / Minecraft.getInstance().font.lineHeight;
 
         return new PageDisplayWidget<ResourceLocation, ShellState>(
-                cX,
-                cY,
-                scale,
-                data,
-                ShellState::getWorld,
-                IdentifierUtil::prettifyAsText,
-                defaultPage,
-                entriesPerPage,
-                onChange);
+                        cX,
+                        cY,
+                        scale,
+                        data,
+                        ShellState::getWorld,
+                        IdentifierUtil::prettifyAsText,
+                        defaultPage,
+                        entriesPerPage,
+                        onChange)
+                .withMaxTitleWidth(screenHeight * (float) MENU_RADIUS * 1.08F);
     }
 
     private static List<ArrowButtonWidget> createArrowButtons(
