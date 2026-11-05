@@ -25,6 +25,8 @@ Walk into an open <ItemLink id="shell_storage"/> and the shell selector opens. I
 
 Click a shell to sync. Your current body stays where it is with everything it carries, and you wake up in the shell you picked. Every shell keeps its own inventory, experience level and game mode.
 
+If you sync while away from a storage, there is nowhere to leave your current body, so it dies and drops what it carries, even with `keepInventory` on.
+
 Syncing works across dimensions, including custom ones. The Astral Projection advancement is yours the first time you do it.
 
 ***
@@ -32,7 +34,7 @@ Syncing works across dimensions, including custom ones. The Astral Projection ad
 
 Dying in a shell does not count towards your death counter. What happens next depends on where you are:
 
-* <Color id="aqua">In a shell, with another finished shell available:</Color> you sync straight into the next body. The dead shell drops its inventory where it died, so grave mods pick it up.
+* <Color id="aqua">In a shell, with another finished shell available:</Color> you sync straight into the next body. The dead shell drops its inventory where it died, even with `keepInventory` on, so grave mods pick it up.
 * <Color id="aqua">In a shell, with nowhere to go:</Color> a normal death. You respawn as usual.
 * <Color id="aqua">In your original body:</Color> a normal death. Shells are never picked for you when your first body dies.
 

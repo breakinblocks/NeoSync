@@ -10,6 +10,7 @@ import com.breakinblocks.neosync.common.item.SyncCreativeTabs;
 import com.breakinblocks.neosync.common.item.SyncItems;
 import com.breakinblocks.neosync.compat.curios.CuriosCompat;
 import com.breakinblocks.neosync.compat.mekanism.MekanismCompat;
+import com.breakinblocks.neosync.compat.thirst.ThirstCompat;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -34,6 +35,7 @@ public class NeoSync {
         SyncCommands.init();
         CuriosCompat.init();
         MekanismCompat.init();
+        ThirstCompat.init();
 
         if (dist.isClient()) {
             modEventBus.addListener(this::onClientSetup);
