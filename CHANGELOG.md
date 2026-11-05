@@ -1,5 +1,11 @@
 # NeoSync Changelog
 
+## 1.7.4
+
+### Added
+
+- A client config option, `syncCameraAnimation` in `neosync-client.toml`, turns off the camera flight when you sync or die, for players it makes motion sick. Set it to `false` to cut straight to the new shell (FTBTesting/Testing-Issues#4851).
+
 ## 1.7.3
 
 ### Added

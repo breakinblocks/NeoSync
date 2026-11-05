@@ -29,4 +29,6 @@ The config file is `config/neosync-common.toml`. The options players ask about m
 
 The default `energyMap` is chicken 2, pig 16, player 20, wolf 22, villager 25, creeper 80 and enderman 160. Entries take the form `entity_id:energy_per_tick`, so `minecraft:horse:30` adds horses at 30 FE per tick.
 
+Each player also has `config/neosync-client.toml`. Set `syncCameraAnimation` to `false` there to skip the camera flight between your body and the shell when you sync or die, and cut straight to the new shell.
+
 `syncPriority` accepts `NATURAL`, `NEAREST` or any dye color name in capitals, such as `RED` or `LIGHT_BLUE`. See [Syncing](syncing.md) for how the order is used.
