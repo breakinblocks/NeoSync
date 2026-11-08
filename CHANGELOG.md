@@ -1,5 +1,11 @@
 # NeoSync Changelog
 
+## 1.7.6
+
+### Added
+
+- A damage type in the `neosync:no_death_sync` tag is a real death: dying to it never syncs you into another shell, even with `autoSyncOnDeath` on.
+
 ## 1.7.5
 
 ### Added
@@ -9,6 +15,7 @@
 
 ### Fixed
 
+- A shell you named keeps its name after you sync out of it and back into it. Leaving a shell used to store your body as a new, unnamed shell.
 - A long dimension name in the shell selector, such as a team base dimension, no longer runs across the shells beside it. It wraps onto a second line inside the ring and only gets smaller when two lines are not enough (FTBTesting/Testing-Issues#4852).
 
 ## 1.7.4
