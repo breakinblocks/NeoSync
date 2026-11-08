@@ -10,6 +10,7 @@ import com.breakinblocks.neosync.api.shell.*;
 import com.breakinblocks.neosync.common.config.SyncConfig;
 import com.breakinblocks.neosync.common.entity.KillableEntity;
 import com.breakinblocks.neosync.common.entity.ShellArrival;
+import com.breakinblocks.neosync.common.entity.damage.SyncDamageTypeTags;
 import com.breakinblocks.neosync.common.utils.BlockPosUtil;
 import com.breakinblocks.neosync.common.utils.WorldUtil;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
@@ -82,7 +83,13 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     private boolean isArtificial = false;
 
     @Unique
+    private String shellName = null;
+
+    @Unique
     private boolean shellDirty = false;
+
+    @Unique
+    private boolean deathSkipsSync = false;
 
     @Unique
     private boolean undead = false;
@@ -123,7 +130,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         ServerPlayer player = (ServerPlayer) (Object) this;
         BlockPos currentPos = this.blockPosition();
 
-        if (this.pendingSyncTarget != null) {
+        if (this.pendingSyncTarget != null || this.deathSkipsSync && this.isDeadOrDying()) {
             return Either.right(PlayerSyncEvents.SyncFailureReason.OTHER_PROBLEM);
         }
 
@@ -186,6 +193,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         ShellState storedState = null;
         if (currentShellContainer != null) {
             storedState = ShellState.of(player, currentPos, currentShellContainer.getColor());
+            storedState.setName(this.shellName);
             currentShellContainer.setShellState(storedState);
             if (currentShellContainer.isRemotelyAccessible()) {
                 this.add(storedState);
@@ -341,6 +349,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             SyncTeleport.end();
         }
         this.isArtificial = state.isArtificial();
+        this.shellName = state.getName();
 
         Inventory inventory = this.getInventory();
         int selectedSlot = inventory.selected;
@@ -398,7 +407,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
     @Override
     public boolean isDeathSyncEnabled() {
-        return SyncConfig.getInstance().autoSyncOnDeath();
+        return SyncConfig.getInstance().autoSyncOnDeath() && !this.deathSkipsSync;
     }
 
     @Override
@@ -445,7 +454,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             new ShellUpdatePacket(
                             WorldUtil.getId(this.level()),
                             this.isArtificial,
-                            SyncConfig.getInstance().autoSyncOnDeath(),
+                            this.isDeathSyncEnabled(),
                             this.shellsById.values())
                     .send(player);
         }
@@ -470,6 +479,11 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
     @WrapMethod(method = "die")
     private void dropBodyThatIsBeingReplaced(DamageSource source, Operation<Void> original) {
+        if (!this.deathSkipsSync && source.is(SyncDamageTypeTags.NO_DEATH_SYNC)) {
+            this.deathSkipsSync = true;
+            new ShellUpdatePacket(WorldUtil.getId(this.level()), this.isArtificial, false, this.shellsById.values())
+                    .send((ServerPlayer) (Object) this);
+        }
         if (this.pendingSyncTarget != null || this.isArtificial && this.hasAutoSyncTarget()) {
             this.ignoringKeepInventory(() -> original.call(source));
         } else {
@@ -591,6 +605,9 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
                 .forEach(shellList::add);
 
         nbt.putBoolean("IsArtificial", this.isArtificial);
+        if (this.shellName != null) {
+            nbt.putString("ShellName", this.shellName);
+        }
         nbt.put("Shells", shellList);
         if (this.pendingSyncTarget != null) {
             nbt.putUUID("PendingSyncTarget", this.pendingSyncTarget);
@@ -600,6 +617,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
     private void readCustomDataFromNbt(CompoundTag nbt, CallbackInfo ci) {
         this.isArtificial = nbt.getBoolean("IsArtificial");
+        this.shellName = nbt.contains("ShellName", Tag.TAG_STRING) ? nbt.getString("ShellName") : null;
         this.pendingSyncTarget = nbt.hasUUID("PendingSyncTarget") ? nbt.getUUID("PendingSyncTarget") : null;
         this.shellsById = nbt.getList("Shells", Tag.TAG_COMPOUND).stream()
                 .map(x -> ShellState.fromNbt((CompoundTag) x))
@@ -627,6 +645,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     private void copyFrom(ServerPlayer oldPlayer, boolean alive, CallbackInfo ci) {
         Shell shell = (Shell) oldPlayer;
         this.isArtificial = alive && shell.isArtificial();
+        this.shellName = alive ? ((ServerPlayerEntityMixin) (Object) oldPlayer).shellName : null;
         this.pendingSyncTarget = ((ServerShell) oldPlayer).getPendingSyncTarget();
         this.shellsById =
                 shell.getAvailableShellStates().collect(Collectors.toConcurrentMap(ShellState::getUuid, x -> x));
