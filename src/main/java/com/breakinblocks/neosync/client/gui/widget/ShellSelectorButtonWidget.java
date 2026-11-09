@@ -26,6 +26,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
 import net.neoforged.api.distmarker.Dist;
@@ -411,9 +412,12 @@ public class ShellSelectorButtonWidget extends AbstractWidget {
             return null;
         }
 
-        return this.shell
-                .getDisplayName()
-                .copy()
+        MutableComponent description = this.shell.getDisplayName().copy();
+        Component location = this.shell.getLocationText();
+        if (location != null) {
+            description.append(CommonComponents.SPACE).append(location.copy().withStyle(ChatFormatting.GRAY));
+        }
+        return description
                 .append(CommonComponents.SPACE)
                 .append(Component.translatable("gui.neosync.shell_selector.rename.prompt")
                         .withStyle(ChatFormatting.DARK_GRAY));

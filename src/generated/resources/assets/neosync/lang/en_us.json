@@ -47,6 +47,7 @@
   "gui.neosync.page_display.pagination": "%s / %s",
   "gui.neosync.shell_selector.down.title": "Next world",
   "gui.neosync.shell_selector.left.title": "Previous page",
+  "gui.neosync.shell_selector.location": "%s (%s)",
   "gui.neosync.shell_selector.manual": "Manual",
   "gui.neosync.shell_selector.position": "%s, %s, %s",
   "gui.neosync.shell_selector.progress_percent": "%s%%",

@@ -46,6 +46,7 @@ public class ShellState {
     public static final float PROGRESS_PRINTING = 0.75F;
     public static final float PROGRESS_PAINTING = PROGRESS_DONE - PROGRESS_PRINTING;
     public static final int MAX_NAME_LENGTH = 32;
+    public static final int MAX_CONTAINER_NAME_LENGTH = 50;
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ShellState> STREAM_CODEC = StreamCodec.of(
             (buf, state) -> {
@@ -69,6 +70,7 @@ public class ShellState {
 
     private UUID uuid;
     private String name;
+    private String containerName;
     private float progress;
     private DyeColor color;
     private boolean isArtificial;
@@ -121,14 +123,46 @@ public class ShellState {
         return this.name != null;
     }
 
+    @Nullable
+    public String getContainerName() {
+        return this.containerName;
+    }
+
+    public void setContainerName(@Nullable String containerName) {
+        this.containerName = containerName == null || containerName.isEmpty() ? null : containerName;
+    }
+
+    public boolean hasContainerName() {
+        return this.containerName != null;
+    }
+
     public Component getDisplayName() {
         if (this.name != null) {
             return Component.literal(this.name);
         }
+        if (this.containerName != null) {
+            return Component.literal(this.containerName);
+        }
+        return this.getPositionText();
+    }
+
+    public Component getPositionText() {
         return this.pos == null
                 ? Component.empty()
                 : Component.translatable(
                         "gui.neosync.shell_selector.position", this.pos.getX(), this.pos.getY(), this.pos.getZ());
+    }
+
+    @Nullable
+    public Component getLocationText() {
+        if (this.name != null && this.containerName != null) {
+            return Component.translatable(
+                    "gui.neosync.shell_selector.location", this.containerName, this.getPositionText());
+        }
+        if (this.name != null || this.containerName != null) {
+            return this.getPositionText();
+        }
+        return null;
     }
 
     public DyeColor getColor() {
@@ -521,6 +555,11 @@ public class ShellState {
         NBT_SERIALIZER_FACTORY = new NbtSerializerFactoryBuilder<ShellState>()
                 .add(UUID.class, "uuid", x -> x.uuid, (x, uuid) -> x.uuid = uuid)
                 .add(String.class, "name", x -> x.name, (x, name) -> x.name = name)
+                .add(
+                        String.class,
+                        "containerName",
+                        x -> x.containerName,
+                        (x, containerName) -> x.setContainerName(containerName))
                 .add(
                         Integer.class,
                         "color",
