@@ -307,8 +307,17 @@ public class ShellSelectorGUI extends Screen {
 
         if (hovered >= 0 && hovered < this.page.size()) {
             ShellState shell = this.page.get(hovered);
-            graphics.centeredText(this.font, shell.getDisplayName(), cx, cy + line + line / 2, TEXT_COLOR);
-            graphics.centeredText(this.font, RENAME_PROMPT, cx, cy + line * 2 + line / 2, DISABLED_TEXT_COLOR);
+            int maxWidth = Mth.floor(this.innerRadius * TITLE_WIDTH_RATIO);
+            int y = cy + line + line / 2;
+            graphics.centeredText(
+                    this.font, this.truncate(shell.getDisplayName().getString(), maxWidth), cx, y, TEXT_COLOR);
+            Component location = shell.getLocationText();
+            if (location != null) {
+                y += this.font.lineHeight + 1;
+                graphics.centeredText(
+                        this.font, this.truncate(location.getString(), maxWidth), cx, y, DISABLED_TEXT_COLOR);
+            }
+            graphics.centeredText(this.font, RENAME_PROMPT, cx, y + this.font.lineHeight + 1, DISABLED_TEXT_COLOR);
         }
     }
 

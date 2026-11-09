@@ -13,13 +13,19 @@ import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentGetter;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.util.ProblemReporter;
+import net.minecraft.util.StringUtil;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -44,6 +50,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity
     protected final BooleanAnimator doorAnimator;
     protected ShellState shell;
     protected DyeColor color;
+    protected Component customName;
     protected int progressComparatorOutput;
     protected int inventoryComparatorOutput;
     private AbstractShellContainerBlockEntity bottomPart;
@@ -52,6 +59,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity
     private BlockPos syncedShellPos;
     private DyeColor syncedShellColor;
     private boolean syncedShellManualOnly;
+    private String syncedShellContainerName;
     private float syncedShellProgress;
     private DyeColor syncedColor;
     private boolean inventoryDirty;
@@ -98,6 +106,19 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity
         bottom.setChanged();
     }
 
+    @Nullable
+    public Component getCustomName() {
+        return this.getBottomPart().map(x -> x.customName).orElse(this.customName);
+    }
+
+    @Nullable
+    private String getContainerName() {
+        return this.customName == null
+                ? null
+                : StringUtil.truncateStringIfNecessary(
+                        this.customName.getString(), ShellState.MAX_CONTAINER_NAME_LENGTH, false);
+    }
+
     public int getProgressComparatorOutput() {
         return this.getBottomPart().map(x -> x.progressComparatorOutput).orElse(0);
     }
@@ -138,6 +159,10 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity
         if (this.shell != null && this.shell.isManualOnly() != this.isManualOnly()) {
             this.shell.setManualOnly(this.isManualOnly());
         }
+        String containerName = this.getContainerName();
+        if (this.shell != null && !Objects.equals(this.shell.getContainerName(), containerName)) {
+            this.shell.setContainerName(containerName);
+        }
 
         if (this.requiresSync()) {
             this.updateShell(this.shell != this.syncedShell, !this.visibleInventoryDirty);
@@ -146,6 +171,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity
             this.syncedShellPos = this.shell == null ? null : this.shell.getPos();
             this.syncedShellColor = this.shell == null ? null : this.shell.getColor();
             this.syncedShellManualOnly = this.shell != null && this.shell.isManualOnly();
+            this.syncedShellContainerName = this.shell == null ? null : this.shell.getContainerName();
             this.syncedShellProgress = this.shell == null ? -1 : this.shell.getProgress();
             this.syncedShell = this.shell;
             this.syncedColor = this.color;
@@ -171,6 +197,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity
                         && (!this.shell.getPos().equals(this.syncedShellPos)
                                 || !Objects.equals(this.shell.getColor(), this.syncedShellColor)
                                 || this.shell.isManualOnly() != this.syncedShellManualOnly
+                                || !Objects.equals(this.shell.getContainerName(), this.syncedShellContainerName)
                                 || this.shell.getProgress() != this.syncedShellProgress));
     }
 
@@ -279,6 +306,7 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity
             out.store("shell", CompoundTag.CODEC, this.shell.writeNbt(new CompoundTag()));
         }
         out.putInt("color", this.color == null ? -1 : this.color.getId());
+        out.storeNullable("CustomName", ComponentSerialization.CODEC, this.customName);
     }
 
     @Override
@@ -298,6 +326,25 @@ public abstract class AbstractShellContainerBlockEntity extends BlockEntity
 
         int colorId = in.getIntOr("color", -1);
         this.color = colorId == -1 ? null : DyeColor.byId(colorId);
+        this.customName = parseCustomNameSafe(in, "CustomName");
+    }
+
+    @Override
+    protected void applyImplicitComponents(DataComponentGetter components) {
+        super.applyImplicitComponents(components);
+        this.customName = components.get(DataComponents.CUSTOM_NAME);
+    }
+
+    @Override
+    protected void collectImplicitComponents(DataComponentMap.Builder components) {
+        super.collectImplicitComponents(components);
+        components.set(DataComponents.CUSTOM_NAME, this.getCustomName());
+    }
+
+    @Override
+    public void removeComponentsFromTag(ValueOutput output) {
+        super.removeComponentsFromTag(output);
+        output.discard("CustomName");
     }
 
     private static int reorderSlotIndex(int slot, SimpleInventory inventory) {

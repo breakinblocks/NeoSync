@@ -55,6 +55,7 @@ public final class ClientNetworkHandler {
                     updated.setColor(payload.color());
                     updated.setPos(payload.pos());
                     updated.setName(payload.name());
+                    updated.setContainerName(payload.containerName());
                     updated.setManualOnly(payload.manualOnly());
                 }
             }

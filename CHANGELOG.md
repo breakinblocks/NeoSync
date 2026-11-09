@@ -1,5 +1,12 @@
 # NeoSync Changelog
 
+## 1.7.7
+
+### Added
+
+- Shell Storages and Shell Constructors can be renamed in an anvil, and keep the name when picked back up. The shell selector shows that name for any shell stored there, so you can label places like "Main Base" or "Nether Outpost".
+- Hovering a shell in the shell selector shows where it is, under its name. Named shells used to hide their coordinates.
+
 ## 1.7.6
 
 ### Added
@@ -10,13 +17,13 @@
 
 ### Added
 
-- A client config option, `syncCameraAnimation` in `neosync-client.toml`, turns off the camera flight when you sync or die, for players it makes motion sick. Set it to `false` to cut straight to the new shell (FTBTesting/Testing-Issues#4851).
-- Scrolling the mouse wheel in the shell selector switches between worlds, the same as the up and down arrows. Hold Shift while scrolling to switch pages when a world has more shells than fit on one (FTBTesting/Testing-Issues#4860).
+- A client config option, `syncCameraAnimation` in `neosync-client.toml`, turns off the camera flight when you sync or die, for players it makes motion sick. Set it to `false` to cut straight to the new shell.
+- Scrolling the mouse wheel in the shell selector switches between worlds, the same as the up and down arrows. Hold Shift while scrolling to switch pages when a world has more shells than fit on one.
 
 ### Fixed
 
 - A shell you named keeps its name after you sync out of it and back into it. Leaving a shell used to store your body as a new, unnamed shell.
-- A long dimension name in the shell selector, such as a team base dimension, no longer runs across the shells beside it. It wraps onto a second line inside the ring and only gets smaller when two lines are not enough (FTBTesting/Testing-Issues#4852).
+- A long dimension name in the shell selector, such as a team base dimension, no longer runs across the shells beside it. It wraps onto a second line inside the ring and only gets smaller when two lines are not enough.
 
 ## 1.7.4
 

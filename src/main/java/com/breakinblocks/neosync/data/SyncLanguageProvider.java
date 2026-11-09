@@ -67,6 +67,7 @@ public final class SyncLanguageProvider extends LanguageProvider {
         add("gui.neosync.shell_selector.progress_percent", "%s%%");
         add("gui.neosync.shell_selector.manual", "Manual");
         add("gui.neosync.shell_selector.position", "%s, %s, %s");
+        add("gui.neosync.shell_selector.location", "%s (%s)");
         add("gui.neosync.shell_selector.rename.title", "Rename shell");
         add("gui.neosync.shell_selector.rename.hint", "Enter to save, Esc to cancel");
         add("gui.neosync.shell_selector.rename.prompt", "Right-click to rename");
