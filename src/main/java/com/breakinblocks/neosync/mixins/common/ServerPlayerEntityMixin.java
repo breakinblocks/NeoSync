@@ -450,8 +450,11 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
         } else {
             updated = this.shellsById.computeIfPresent(state.getUuid(), (a, b) -> state) != null;
         }
+        Tuple<ShellStateUpdateType, ShellState> pending = this.shellStateChanges.get(state.getUuid());
+        boolean unsent = pending != null && pending.getA() == ShellStateUpdateType.ADD;
         this.shellStateChanges.put(
-                state.getUuid(), new Tuple<>(updated ? ShellStateUpdateType.UPDATE : ShellStateUpdateType.ADD, state));
+                state.getUuid(),
+                new Tuple<>(updated && !unsent ? ShellStateUpdateType.UPDATE : ShellStateUpdateType.ADD, state));
     }
 
     @Inject(method = "doTick", at = @At("HEAD"))

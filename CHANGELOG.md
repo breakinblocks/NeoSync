@@ -1,5 +1,11 @@
 # NeoSync Changelog
 
+## 1.7.8
+
+### Fixed
+
+- A shell added and then changed in the same tick, such as an anchor placed by command and set to manual sync, now shows in the shell selector right away. The client was only sent the change for a shell it had never been told about, so the shell stayed missing until the player relogged.
+
 ## 1.7.7
 
 ### Added
