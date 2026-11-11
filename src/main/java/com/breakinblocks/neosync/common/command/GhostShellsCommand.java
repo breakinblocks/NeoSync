@@ -3,7 +3,7 @@ package com.breakinblocks.neosync.common.command;
 import com.breakinblocks.neosync.api.shell.Shell;
 import com.breakinblocks.neosync.api.shell.ShellState;
 import com.breakinblocks.neosync.api.shell.ShellStateContainer;
-import com.breakinblocks.neosync.common.utils.WorldUtil;
+import com.breakinblocks.neosync.common.utils.ShellIntegrity;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -21,9 +21,7 @@ import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.chunk.LevelChunk;
 
 public class GhostShellsCommand implements Command {
     private static final SimpleCommandExceptionType INVALID_ACTION_TYPE =
@@ -171,18 +169,6 @@ public class GhostShellsCommand implements Command {
     }
 
     private static Optional<ShellStateContainer> getShellContainer(MinecraftServer server, ShellState shellState) {
-        ServerLevel world = WorldUtil.findWorld(server.getAllLevels(), shellState.getWorld())
-                .orElse(null);
-        if (world == null) {
-            return Optional.empty();
-        }
-
-        LevelChunk chunk = world.getChunk(
-                shellState.getPos().getX() >> 4, shellState.getPos().getZ() >> 4);
-        if (chunk == null) {
-            return Optional.empty();
-        }
-
-        return Optional.ofNullable(ShellStateContainer.find(world, shellState));
+        return ShellIntegrity.findContainer(server, shellState);
     }
 }

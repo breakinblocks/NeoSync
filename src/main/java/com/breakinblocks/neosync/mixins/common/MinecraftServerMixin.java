@@ -58,7 +58,9 @@ public abstract class MinecraftServerMixin implements ShellStateManager {
     @Override
     public void add(ShellState state) {
         Shell shell = this.sync$getShellByItsState(state);
-        if (shell != null) {
+        if (shell == null) {
+            this.sync$putPendingUpdate(state, ShellStateUpdateType.ADD);
+        } else {
             shell.add(state);
         }
     }

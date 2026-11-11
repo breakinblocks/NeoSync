@@ -2,6 +2,7 @@ package com.breakinblocks.neosync.common.command;
 
 import com.breakinblocks.neosync.api.shell.Shell;
 import com.breakinblocks.neosync.api.shell.ShellState;
+import com.breakinblocks.neosync.common.utils.ShellIntegrity;
 import com.breakinblocks.neosync.common.utils.WorldUtil;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
@@ -70,10 +71,14 @@ public class AnchorCommand implements Command {
         int count = 0;
         for (ServerPlayer player : players) {
             Shell shell = (Shell) player;
+            if (onlyIfStranded) {
+                ShellIntegrity.heal(player);
+            }
             if (onlyIfStranded
                     && shell.getAvailableShellStates()
-                            .anyMatch(
-                                    x -> x.getProgress() >= ShellState.PROGRESS_DONE && worldId.equals(x.getWorld()))) {
+                            .anyMatch(x -> x.getProgress() >= ShellState.PROGRESS_DONE
+                                    && worldId.equals(x.getWorld())
+                                    && ShellIntegrity.isIntact(player.server, x))) {
                 context.getSource()
                         .sendSuccess(
                                 () -> Component.translatable(
